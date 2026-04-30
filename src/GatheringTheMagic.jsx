@@ -2961,7 +2961,7 @@ export default function GatheringTheMagic() {
         .mtgBtn:disabled { opacity: 0.4; cursor: not-allowed; }
         .mtgBtn:hover:not(:disabled) { border-color: #9a80c0; background: linear-gradient(180deg, #342850 0%, #1f183a 100%); }
         .dpadBtn {
-          width: 52px; height: 52px; background: #1a1428; border: 2px solid #4a3a68;
+          width: 58px; height: 58px; background: #1a1428; border: 2px solid #4a3a68;
           color: #e8dcc0; font-size: 22px; border-radius: 6px;
           display: flex; align-items: center; justify-content: center;
           user-select: none; -webkit-user-select: none; cursor: pointer;
@@ -3441,8 +3441,8 @@ function TopBar({ mapName, tokens, gold, team, mode, commanderColor, onMenu }) {
 function Controls({ onMove, onA, onB }) {
   const press = (fn) => (e) => { e.preventDefault(); fn(); };
   return (
-    <div style={{ width: 'min(96vw, 480px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', padding: '0 4px 12px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 52px)', gridTemplateRows: 'repeat(3, 52px)', gap: 4 }}>
+    <div style={{ width: 'min(96vw, 480px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', padding: '0 4px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 58px)', gridTemplateRows: 'repeat(3, 58px)', gap: 4 }}>
         <div></div>
         <button className="dpadBtn" onTouchStart={press(() => onMove('up'))} onMouseDown={press(() => onMove('up'))}>▲</button>
         <div></div>
@@ -3454,8 +3454,8 @@ function Controls({ onMove, onA, onB }) {
         <div></div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
-        <button className="mtgBtn" onTouchStart={press(onA)} onMouseDown={press(onA)} style={{ width: 62, height: 62, borderRadius: '50%', fontSize: 20, background: 'linear-gradient(180deg, #8a3a2a, #4a1e14)', borderColor: '#d87362' }}>A</button>
-        <button className="mtgBtn" onTouchStart={press(onB)} onMouseDown={press(onB)} style={{ width: 50, height: 50, borderRadius: '50%', fontSize: 15, background: 'linear-gradient(180deg, #2a4a8a, #141e4a)', borderColor: '#6c8ce0' }}>B</button>
+        <button className="mtgBtn" onTouchStart={press(onA)} onMouseDown={press(onA)} style={{ width: 70, height: 70, borderRadius: '50%', fontSize: 22, background: 'linear-gradient(180deg, #8a3a2a, #4a1e14)', borderColor: '#d87362' }}>A</button>
+        <button className="mtgBtn" onTouchStart={press(onB)} onMouseDown={press(onB)} style={{ width: 56, height: 56, borderRadius: '50%', fontSize: 17, background: 'linear-gradient(180deg, #2a4a8a, #141e4a)', borderColor: '#6c8ce0' }}>B</button>
       </div>
     </div>
   );
