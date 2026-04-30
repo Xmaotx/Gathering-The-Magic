@@ -1,0 +1,71 @@
+# Builds the Vite PWA and publishes it to GitHub Pages on every push to main.
+#
+# How it works:
+#   1. The build step runs `npm ci && npm run build`. The Vite config reads
+#      GH_PAGES_BASE from the environment so the bundle's asset paths point
+#      at /<repo-name>/ — required for project-pages URLs.
+#   2. The dist/ folder is uploaded as a Pages artifact and deployed.
+#
+# Setup (one-time, in your repo on GitHub):
+#   Settings → Pages → "Build and deployment" → Source: GitHub Actions
+#
+# After that, just push to main and your site appears at
+#   https://<user>.github.io/<repo>/
+name: Deploy PWA to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # Allow manual re-runs from the Actions tab
+  workflow_dispatch:
+
+# Pages deployments need these scopes
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Don't queue duplicate deploys; cancel in-flight runs when a new push lands
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        # Derive the base path from the repo name automatically, e.g.
+        # "gathering-the-magic" → "/gathering-the-magic/". This means you
+        # can rename the repo without touching vite.config.js.
+        env:
+          GH_PAGES_BASE: /${{ github.event.repository.name }}/
+        run: npm run build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
