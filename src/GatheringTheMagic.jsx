@@ -3041,8 +3041,8 @@ export default function GatheringTheMagic() {
 
           <div style={{ position: 'relative' }}>
             <canvas ref={canvasRef} style={{
-              width: 'min(92vw, 320px)',
-              height: 'min(92vw, 320px)',
+              width: 'min(96vw, 480px)',
+              height: 'min(96vw, 480px)',
               imageRendering: 'pixelated',
               border: '2px solid #4a3a68',
               borderRadius: 6,
@@ -3394,7 +3394,7 @@ function StarterScene({ mode, onPick }) {
 // =========================================================================
 function TopBar({ mapName, tokens, gold, team, mode, commanderColor, onMenu }) {
   return (
-    <div style={{ width: 'min(92vw, 320px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, fontSize: 12 }}>
+    <div style={{ width: 'min(96vw, 480px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, fontSize: 12 }}>
       <div>
         <div style={{ fontSize: 14, letterSpacing: 1, color: '#e8dcc0', display: 'flex', alignItems: 'center', gap: 6 }}>
           {mapName}
@@ -3441,7 +3441,7 @@ function TopBar({ mapName, tokens, gold, team, mode, commanderColor, onMenu }) {
 function Controls({ onMove, onA, onB }) {
   const press = (fn) => (e) => { e.preventDefault(); fn(); };
   return (
-    <div style={{ width: 'min(92vw, 380px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, padding: '0 4px' }}>
+    <div style={{ width: 'min(96vw, 480px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', padding: '0 4px 12px' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 52px)', gridTemplateRows: 'repeat(3, 52px)', gap: 4 }}>
         <div></div>
         <button className="dpadBtn" onTouchStart={press(() => onMove('up'))} onMouseDown={press(() => onMove('up'))}>▲</button>
