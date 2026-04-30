@@ -2,34 +2,34 @@
    viewport size. The game itself draws all its own decorative chrome. */
 *, *::before, *::after { box-sizing: border-box; }
 
-html, body, #root {
+html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
-  width: 100%;
   background: #0a0614;
   color: #e8dcc0;
-  /* Disable double-tap-to-zoom and overscroll bounce so the d-pad and
-     world-tap gestures feel native on phones. */
+  /* Disable double-tap-to-zoom but still allow vertical scroll. */
   touch-action: manipulation;
-  overscroll-behavior: none;
+  /* Block pull-to-refresh on Chrome mobile so dragging down inside a battle
+     doesn't accidentally reload the page. `contain` blocks the bounce but
+     keeps normal scrolling intact, unlike `none` which kills it altogether. */
+  overscroll-behavior-y: contain;
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
 }
 
 body {
-  /* Fonts the game expects (Cinzel + Silkscreen) load via Google Fonts in
-     the game's own <style> block. We just provide a sane system fallback. */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  /* Lock the body to viewport height so iOS doesn't reveal the address bar
-     when the player scrolls inside the game. */
-  height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
+  /* min-height (not height) so short scenes like the world map still fill the
+     viewport background, but tall scenes like the starter pick can grow and
+     trigger natural page scroll. */
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 #root {
   display: flex;
   align-items: stretch;
   justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
