@@ -1,0 +1,35 @@
+/* Reset + a black background so the game's UI sits on a clean canvas at any
+   viewport size. The game itself draws all its own decorative chrome. */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  background: #0a0614;
+  color: #e8dcc0;
+  /* Disable double-tap-to-zoom and overscroll bounce so the d-pad and
+     world-tap gestures feel native on phones. */
+  touch-action: manipulation;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  /* Fonts the game expects (Cinzel + Silkscreen) load via Google Fonts in
+     the game's own <style> block. We just provide a sane system fallback. */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Lock the body to viewport height so iOS doesn't reveal the address bar
+     when the player scrolls inside the game. */
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+#root {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
