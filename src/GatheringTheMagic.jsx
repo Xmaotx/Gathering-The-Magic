@@ -3441,7 +3441,7 @@ function TopBar({ mapName, tokens, gold, team, mode, commanderColor, onMenu }) {
 function Controls({ onMove, onA, onB }) {
   const press = (fn) => (e) => { e.preventDefault(); fn(); };
   return (
-    <div style={{ width: 'min(96vw, 480px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', marginBottom: 'auto', padding: '0 4px' }}>
+    <div style={{ width: 'min(96vw, 480px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', marginBottom: 'auto', padding: '0 24px 0 4px' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 58px)', gridTemplateRows: 'repeat(3, 58px)', gap: 4 }}>
         <div></div>
         <button className="dpadBtn" onTouchStart={press(() => onMove('up'))} onMouseDown={press(() => onMove('up'))}>▲</button>
@@ -3453,9 +3453,9 @@ function Controls({ onMove, onA, onB }) {
         <button className="dpadBtn" onTouchStart={press(() => onMove('down'))} onMouseDown={press(() => onMove('down'))}>▼</button>
         <div></div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
-        <button className="mtgBtn" onTouchStart={press(onA)} onMouseDown={press(onA)} style={{ width: 70, height: 70, borderRadius: '50%', fontSize: 22, background: 'linear-gradient(180deg, #8a3a2a, #4a1e14)', borderColor: '#d87362' }}>A</button>
-        <button className="mtgBtn" onTouchStart={press(onB)} onMouseDown={press(onB)} style={{ width: 56, height: 56, borderRadius: '50%', fontSize: 17, background: 'linear-gradient(180deg, #2a4a8a, #141e4a)', borderColor: '#6c8ce0' }}>B</button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-end' }}>
+        <button className="mtgBtn" onTouchStart={press(onA)} onMouseDown={press(onA)} style={{ width: 80, height: 80, borderRadius: '50%', fontSize: 24,  marginRight: 12, background: 'linear-gradient(180deg, #8a3a2a, #4a1e14)', borderColor: '#d87362' }}>A</button>
+        <button className="mtgBtn" onTouchStart={press(onB)} onMouseDown={press(onB)} style={{ width: 64, height: 64, borderRadius: '50%', fontSize: 19, background: 'linear-gradient(180deg, #2a4a8a, #141e4a)', borderColor: '#6c8ce0' }}>B</button>
       </div>
     </div>
   );
