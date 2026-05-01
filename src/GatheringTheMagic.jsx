@@ -2466,16 +2466,35 @@ export default function GatheringTheMagic() {
 
   // ---------- Keyboard ----------
   useEffect(() => {
-    const handler = (e) => {
+   const handler = (e) => {
+      // Dialog overlay takes priority over any underlying scene — close it first
+      // when X/Esc is pressed, mirroring the on-screen Continue button.
+      if (dialog) {
+        if (e.key === 'Escape' || e.key === 'x' || e.key === 'X') {
+          e.preventDefault();
+          dialog.onDone?.();
+          return;
+        }
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'z') {
+          e.preventDefault();
+          dialog.onDone?.();
+          return;
+        }
+      }
       if (scene === 'world') {
         if (e.key === 'ArrowUp' || e.key === 'w') { e.preventDefault(); move('up'); }
         else if (e.key === 'ArrowDown' || e.key === 's') { e.preventDefault(); move('down'); }
         else if (e.key === 'ArrowLeft' || e.key === 'a') { e.preventDefault(); move('left'); }
         else if (e.key === 'ArrowRight' || e.key === 'd') { e.preventDefault(); move('right'); }
         else if (e.key === 'Enter' || e.key === ' ' || e.key === 'z') { e.preventDefault(); interact(); }
-        else if (e.key === 'Escape' || e.key === 'x') { e.preventDefault(); audio.sfx.menuOpen(); setScene('menu'); }
-      } else if (scene === 'dialog' || dialog) {
-        if (e.key === 'Enter' || e.key === ' ' || e.key === 'z') dialog?.onDone?.();
+        else if (e.key === 'Escape' || e.key === 'x' || e.key === 'X') { e.preventDefault(); audio.sfx.menuOpen(); setScene('menu'); }
+      } else if (scene === 'menu' || scene === 'shop') {
+        // X/Esc closes any modal-like scene back to the world.
+        if (e.key === 'Escape' || e.key === 'x' || e.key === 'X') {
+          e.preventDefault();
+          audio.sfx.menuClose();
+          setScene('world');
+        }
       }
     };
     window.addEventListener('keydown', handler);
