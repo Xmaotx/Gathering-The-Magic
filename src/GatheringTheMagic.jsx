@@ -5881,8 +5881,8 @@ function TopBar({ mapName, tokens, gold, team, mode, commanderColor, hourOfDay, 
 function Controls({ onMove, onA, onB, sprinting, onToggleSprint }) {
   const press = (fn) => (e) => { e.preventDefault(); fn(); };
   return (
-    <div style={{ width: 'min(96vw, 480px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: -20, marginBottom: 'auto', padding: '0 24px 0 4px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 70px)', gridTemplateRows: 'repeat(3, 70px)', gap: 4 }}>
+    <div style={{ width: 'min(96vw, 480px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', marginBottom: 'auto', padding: '0 24px 0 4px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 58px)', gridTemplateRows: 'repeat(3, 58px)', gap: 4, marginTop: -10 }}>
         <div></div>
         <button className="dpadBtn" onTouchStart={press(() => onMove('up'))} onMouseDown={press(() => onMove('up'))}>▲</button>
         <div></div>
