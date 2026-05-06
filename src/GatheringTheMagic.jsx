@@ -108,6 +108,14 @@ const MOVES = {
   trample:        { name: 'Trample',        c: 'G',  p: 13, a: 85 },
   natures_might:  { name: "Nature's Might", c: 'G',  p: 16, a: 70, status: { kind: 'entangle', chance: 40 } },
   wildgrowth:     { name: 'Wildgrowth',     c: 'G',  p: 0,  a: 100, heal: 0.5 },
+  // ---- Sleep / Confuse / Curse moves ----
+  // Each new status has a flagship move so players can encounter and inflict them.
+  // Lullaby: blue, low damage, high sleep chance — the textbook control opener.
+  // Maddening Whisper: red, mid power, moderate confuse — blue & red overlap on chaos magic.
+  // Withering Hex: black, mid power, high curse chance — slow drain to pair with poison/drain.
+  lullaby:        { name: 'Lullaby',         c: 'U', p: 4,  a: 90, status: { kind: 'sleep',   chance: 55 } },
+  maddening_whisper: { name: 'Maddening Whisper', c: 'R', p: 11, a: 85, status: { kind: 'confuse', chance: 35 } },
+  withering_hex:  { name: 'Withering Hex',   c: 'B', p: 12, a: 85, status: { kind: 'curse',   chance: 45 } },
   // ---- Legendary boss signature moves (used by mono-color bosses inside their shrines) ----
   celestial_judgment: { name: 'Celestial Judgment', c: 'W', p: 22, a: 90, status: { kind: 'stun', chance: 30 } },
   sunken_tempest:     { name: 'Sunken Tempest',     c: 'U', p: 22, a: 85, status: { kind: 'freeze', chance: 35 } },
@@ -127,7 +135,7 @@ const DEX = {
   tideling:        { name: 'Tideling',        c: 'U', t: 'Merfolk',      hp: 22, atk: 7,  m: ['tide_slap','mind_wrack'], evo: { to: 'storm_leviathan', at: 6 }, learnset: { 8: 'counterspell' } },
   phantom_sprite:  { name: 'Phantom Sprite',  c: 'U', t: 'Spirit',       hp: 24, atk: 9,  m: ['mind_wrack','counterspell'], learnset: { 8: 'tide_slap' } },
   storm_leviathan: { name: 'Storm Leviathan', c: 'U', t: 'Leviathan',    hp: 42, atk: 11, m: ['tide_slap','counterspell'], learnset: { 8: 'whirlpool' } },
-  shade_whelp:     { name: 'Shade Whelp',     c: 'B', t: 'Shade',        hp: 24, atk: 7,  m: ['drain_life','dark_bite'], evo: { to: 'nightfall_wraith', at: 6 }, learnset: { 8: 'terror' } },
+  shade_whelp:     { name: 'Shade Whelp',     c: 'B', t: 'Shade',        hp: 24, atk: 7,  m: ['drain_life','dark_bite'], evo: { to: 'nightfall_wraith', at: 6 }, learnset: { 8: 'terror', 11: 'withering_hex' } },
   blood_imp:       { name: 'Blood Imp',       c: 'B', t: 'Imp',          hp: 22, atk: 9,  m: ['drain_life','terror'], learnset: { 8: 'dark_bite' } },
   nightfall_wraith:{ name: 'Nightfall Wraith',c: 'B', t: 'Wraith',       hp: 36, atk: 11, m: ['dark_bite','terror'], learnset: { 8: 'oblivion' } },
   emberkin:        { name: 'Emberkin',        c: 'R', t: 'Elemental',    hp: 21, atk: 8,  m: ['ember','lightning_bolt'], evo: { to: 'cinder_drake', at: 6 }, learnset: { 8: 'fireball' } },
@@ -139,12 +147,12 @@ const DEX = {
 
   // ---- Two-color creatures (10 guild pairs) ----
   skybinder:       { name: 'Skybinder',        c: 'WU', t: 'Azorius Sage',   hp: 30, atk: 9,  m: ['divine_light','counterspell'], learnset: { 10: 'mend' } },
-  mind_reaver:     { name: 'Mind Reaver',      c: 'UB', t: 'Dimir Agent',    hp: 28, atk: 10, m: ['mind_wrack','drain_life'], learnset: { 10: 'terror' } },
+  mind_reaver:     { name: 'Mind Reaver',      c: 'UB', t: 'Dimir Agent',    hp: 28, atk: 10, m: ['mind_wrack','drain_life'], learnset: { 10: 'terror', 12: 'lullaby' } },
   hellraiser:      { name: 'Hellraiser',       c: 'BR', t: 'Rakdos Cultist', hp: 30, atk: 11, m: ['dark_bite','fireball'], learnset: { 10: 'oblivion' } },
   warbeast:        { name: 'Warbeast',         c: 'RG', t: 'Gruul Brute',    hp: 34, atk: 11, m: ['ember','trample'], learnset: { 10: 'natures_might' } },
   verdant_paladin: { name: 'Verdant Paladin',  c: 'GW', t: 'Selesnya Knight',hp: 34, atk: 10, m: ['thorn_lash','smite'], learnset: { 10: 'wildgrowth' } },
   grim_priest:     { name: 'Grim Priest',      c: 'WB', t: 'Orzhov Acolyte', hp: 30, atk: 9,  m: ['mend','drain_life'], learnset: { 10: 'divine_light' } },
-  stormwright:     { name: 'Stormwright',      c: 'UR', t: 'Izzet Mage',     hp: 28, atk: 10, m: ['mind_wrack','lightning_bolt'], learnset: { 10: 'fireball' } },
+  stormwright:     { name: 'Stormwright',      c: 'UR', t: 'Izzet Mage',     hp: 28, atk: 10, m: ['mind_wrack','lightning_bolt'], learnset: { 10: 'fireball', 12: 'maddening_whisper' } },
   fungal_creeper:  { name: 'Fungal Creeper',   c: 'BG', t: 'Golgari Horror', hp: 34, atk: 10, m: ['drain_life','thorn_lash'], learnset: { 10: 'dark_bite' } },
   blazing_knight:  { name: 'Blazing Knight',   c: 'RW', t: 'Boros Legion',   hp: 32, atk: 11, m: ['fireball','smite'], learnset: { 10: 'ember' } },
   reef_prowler:    { name: 'Reef Prowler',     c: 'GU', t: 'Simic Hybrid',   hp: 30, atk: 10, m: ['thorn_lash','tide_slap'], learnset: { 10: 'counterspell' } },
@@ -236,6 +244,86 @@ for (const [zone, data] of Object.entries(SHRINE_DATA)) SHRINE_TO_ZONE[data.mapI
 // Set of all legendary creature ids — used to skip them in wild encounters and to detect boss fights.
 const LEGENDARY_IDS = new Set(['vigil_avatar','tidewarden','voidlord','pyreclaw','patriarch_wurm','the_planeswalker']);
 
+// ---- Daily Encounters ----
+// Once per real-world day, each zone has a chance to spawn a "phantom" variant
+// of a regular creature during a specific time-of-day window. These are stat-
+// boosted (+30% HP/atk), prefixed with a flavor word, and visually glowing in
+// battle so the player feels something rare just appeared.
+//
+// Each entry:
+//   id          — base DEX id to spawn (gets the variant treatment via createDailyVariant)
+//   zone        — map id where this can spawn
+//   hours       — [startHour, endHour) window in 24h time. Wraps midnight if start > end.
+//   prefix      — display name prefix ("Phantom", "Aurora", etc.)
+//   levelBonus  — bonus levels above the zone's normal range
+//   lore        — flavor line shown in the encounter intro
+//   glow        — hex color for the battle aura
+//
+// Spawn check: when triggerWildEncounter rolls and the time/zone match, AND
+// the player hasn't already encountered this entry today, roll DAILY_SPAWN_CHANCE
+// to upgrade the encounter into the phantom variant instead of the normal pool pick.
+const DAILY_SPAWN_CHANCE = 0.06;  // 6% chance per matching wild encounter
+const DAILY_ENCOUNTERS = [
+  {
+    key: 'phantom_sprite_rare', id: 'phantom_sprite',     // U spirit in wilds
+    zone: 'wilds',  hours: [20, 5],   // night (wraps midnight)
+    prefix: 'Spectral', levelBonus: 4,
+    lore: "A pale shimmer drifts among the trees — only seen in deep moonlight.",
+    glow: '#a8d0ff',
+  },
+  {
+    key: 'tideling_dawn', id: 'tideling',
+    zone: 'sanctum', hours: [6, 8],   // dawn
+    prefix: 'Aurora', levelBonus: 4,
+    lore: "Sunrise light glints across its scales — a creature of the threshold.",
+    glow: '#ffc8a8',
+  },
+  {
+    key: 'cinder_phoenix', id: 'cinder_drake',
+    zone: 'ashen',   hours: [11, 14], // midday — peak heat
+    prefix: 'Solar', levelBonus: 4,
+    lore: "Born of noon-day flame, it circles the highest cinders.",
+    glow: '#ffa848',
+  },
+  {
+    key: 'hollow_stalker', id: 'shade_whelp',
+    zone: 'umbral',  hours: [22, 4],  // deep night
+    prefix: 'Hollow', levelBonus: 4,
+    lore: "Eyes without pupils watch from the deepest dark.",
+    glow: '#9080c0',
+  },
+  {
+    key: 'sunsteed', id: 'aven_sentinel',
+    zone: 'plains',  hours: [18, 20], // dusk
+    prefix: 'Twilight', levelBonus: 4,
+    lore: "Wings catch the last rays of dusk, edged in molten gold.",
+    glow: '#f3d090',
+  },
+];
+// Helper: does the given hour fall inside the (possibly wrapping) window?
+function hourInWindow(hour, window) {
+  const [start, end] = window;
+  if (start <= end) return hour >= start && hour < end;
+  // Wraps midnight (e.g. [20, 5] = 20,21,22,23,0,1,2,3,4)
+  return hour >= start || hour < end;
+}
+// Real-world day number (UTC days since epoch). Used to lock daily encounters.
+function realDayNumber() {
+  return Math.floor(Date.now() / (24 * 60 * 60 * 1000));
+}
+// Find the daily encounter eligible right now in the given zone, or null.
+// Honors the once-per-day lock (lastDailyEncounters: { key: dayNumber }).
+function findEligibleDaily(zone, hour, lastDailyEncounters) {
+  const today = realDayNumber();
+  for (const entry of DAILY_ENCOUNTERS) {
+    if (entry.zone !== zone) continue;
+    if (!hourInWindow(hour, entry.hours)) continue;
+    if (lastDailyEncounters?.[entry.key] === today) continue;  // already caught/seen today
+    return entry;
+  }
+  return null;
+}
+
 function buildZonePool(zoneId) {
   const col = ZONE_COLOR[zoneId];
   const [lvLo, lvHi] = ZONE_LEVEL[zoneId];
@@ -287,9 +375,143 @@ const ITEMS = {
     name: 'Creature Card', kind: 'card', amount: 1, price: 40,
     desc: 'Bind a wild creature to your team.', icon: '◆',
   },
+  // Awarded by The Planeswalker after their defeat. A passive key item — owning
+  // it surfaces an "Open Vault" button in the Spellbook menu, letting the player
+  // reach the Hollow Vault from anywhere instead of trekking back to Keeper Solenne.
+  // kind: 'key' so the items list won't render a "Use" button (it's not consumable).
+  vault_sigil: {
+    name: 'Vault Sigil', kind: 'key', amount: 0, price: 0,
+    desc: 'Calls the Hollow Vault from any menu. A gift from the Planeswalker.', icon: '✦',
+  },
 };
 // Shop keeps a fixed stock order (display only)
 const SHOP_STOCK = ['potion', 'elixir', 'fullheal', 'revive', 'card'];
+
+// ---------- Weather / Terrain ----------
+// Each zone has an associated weather that's set on battle entry (via bgZone).
+// Weather modifies move damage by color and may also apply a small end-of-turn
+// effect to creatures of certain colors. The final boss has its own dramatic
+// "planar storm" weather.
+//
+// Field shape:
+//   name:    display label
+//   icon:    short symbol shown in the battle weather badge
+//   color:   border/glow tint for the badge
+//   boost:   color whose moves get +20% damage   (string or null)
+//   weaken:  color whose moves get -15% damage   (string or null)
+//   tickKind:'damage' | 'heal' | null            — applies to all creatures during the end-of-turn tick
+//   tickAmt: fraction of maxHp (e.g. 0.04)        — only used if tickKind set
+//   tickAffects: array of colors affected by the tick (e.g. ['R'] for sandstorm: only R is immune)
+//                semantics: 'damage' tickKind hits creatures whose primary color is NOT in tickAffects
+//                            'heal'   tickKind heals creatures whose primary color IS in tickAffects
+//   desc:    short flavor / mechanical line shown in the weather badge tooltip
+const WEATHER = {
+  sun: {
+    name: 'Brilliant Sun', icon: '☀', color: '#f3e3a8',
+    boost: 'W', weaken: 'U',
+    tickKind: null,
+    desc: 'White spells +20%. Blue spells -15%.',
+  },
+  rain: {
+    name: 'Drizzling Rain', icon: '☂', color: '#6cb8e0',
+    boost: 'U', weaken: 'R',
+    tickKind: null,
+    desc: 'Blue spells +20%. Red spells -15%.',
+  },
+  sandstorm: {
+    name: 'Sandstorm', icon: '⌇', color: '#d8a040',
+    boost: 'R', weaken: null,
+    tickKind: 'damage', tickAmt: 0.04, tickAffects: ['R'],
+    desc: 'Red spells +20%. Non-red creatures lose 4% HP each turn.',
+  },
+  bloom: {
+    name: 'Wildbloom', icon: '✿', color: '#6fb06f',
+    boost: 'G', weaken: null,
+    tickKind: 'heal', tickAmt: 0.03, tickAffects: ['G'],
+    desc: 'Green spells +20%. Green creatures regain 3% HP each turn.',
+  },
+  eclipse: {
+    name: 'Umbral Eclipse', icon: '☽', color: '#9080c0',
+    boost: 'B', weaken: 'W',
+    tickKind: null,
+    desc: 'Black spells +20%. White spells -15%.',
+  },
+  // Final boss — wild swings, no clean color advantage. Drama over balance.
+  planar: {
+    name: 'Planar Storm', icon: '✦', color: '#e8c860',
+    boost: null, weaken: null,
+    tickKind: 'damage', tickAmt: 0.03, tickAffects: ['W','U','B','R','G'],  // affects everyone (no color is a primary listed... wait that's inverted)
+    // Note: 'damage' affects creatures whose primary color is NOT in tickAffects.
+    // We instead want planar storm to chip everyone equally — set tickAffects to []
+    // so the "not in" check passes for all colors. Above is a bug-prone form;
+    // the actual logic uses [] below to mean "no one is immune".
+    desc: 'The Planeswalker bends magic itself. All creatures lose 3% HP each turn.',
+  },
+};
+// Fix planar's tickAffects to the intended empty list (all creatures take damage).
+WEATHER.planar.tickAffects = [];
+// Map zone → weather. Town and shrines get null (no weather indoors).
+const ZONE_WEATHER = {
+  plains: 'sun',
+  sanctum: 'rain',
+  ashen: 'sandstorm',
+  wilds: 'bloom',
+  umbral: 'eclipse',
+};
+// ---- Weather rolling ----
+// Weather is rolled ONCE when a battle starts and stored on `battle.weathers`
+// (an array, 0-2 entries). `weatherForBattle()` is a pure read — never re-rolls —
+// so the weather badges, damage calc, end-of-turn ticks, and battle log all see
+// the same values across the entire fight. (If this function were random per
+// call, badges would flicker and the damage calc would disagree with the tick.)
+//
+// The data shape is always an array (even when empty) to avoid null-checks
+// everywhere. A battle with no weather has `battle.weathers = []`.
+const WEATHER_CHANCE = 0.2;        // 20% chance the first weather spawns
+const WEATHER_DOUBLE_CHANCE = 0.2; // If a weather spawns, 20% chance a second one stacks
+                                   // Net: 20% single, 4% double, 76% none
+
+// rollWeathersForZone — called once at battle setup. Returns an array of weather keys
+// (0, 1, or 2 entries).
+//   - Planeswalker is hardcoded to ['planar'] (climactic, never random; never stacks)
+//   - Other battles roll their zone's weather at WEATHER_CHANCE
+//   - If the first roll succeeds, a SECOND distinct weather rolls at WEATHER_DOUBLE_CHANCE,
+//     drawn from the four other ZONE_WEATHER entries (NOT planar — that's boss-only)
+//   - Town and unmapped zones never spawn weather
+function rollWeathersForZone(zone, battleKind) {
+  if (battleKind === 'planeswalker') return ['planar'];
+  if (!zone) return [];
+  // Resolve the primary candidate (zone or shrine parent).
+  let primary = ZONE_WEATHER[zone];
+  if (!primary) {
+    const parent = SHRINE_TO_ZONE[zone];
+    if (parent) primary = ZONE_WEATHER[parent];
+  }
+  if (!primary) return [];
+  if (Math.random() >= WEATHER_CHANCE) return [];  // base roll failed
+  const result = [primary];
+  // Second roll — pick a different zone weather to stack. Excludes the primary
+  // (so we don't get e.g. Rain + Rain) and excludes 'planar' (boss exclusive).
+  if (Math.random() < WEATHER_DOUBLE_CHANCE) {
+    const others = Object.values(ZONE_WEATHER).filter(w => w !== primary);
+    if (others.length > 0) {
+      const second = others[Math.floor(Math.random() * others.length)];
+      result.push(second);
+    }
+  }
+  return result;
+}
+// Pure read — returns the array of active weather keys (always an array, possibly empty).
+function weathersForBattle(battle) {
+  return battle?.weathers || [];
+}
+// Convenience — returns the FIRST weather key (or null) for code paths that
+// only care about the primary (e.g., the old badge layout). Most call sites
+// should use weathersForBattle() and iterate.
+function weatherForBattle(battle) {
+  const arr = battle?.weathers || [];
+  return arr[0] || null;
+}
 
 // ---------- Status effects ----------
 // Each status has an icon, a tint for the card badge, and an `onTurnEnd` or `onTurnStart` hook.
@@ -305,6 +527,17 @@ const STATUSES = {
     desc: 'Skips next turn, then clears.' },
   entangle: { name: 'Entangle', icon: '❦',  color: '#6fb06f', c: 'G',
     desc: 'Deals 30% less damage.' },
+  // ---- New statuses (Sleep, Confuse, Curse) ----
+  // Each has a distinct mtg-flavored color identity and a different mechanical bite:
+  //   sleep   — full skip-turn (with wake chance) — blue lullaby/mind magic
+  //   confuse — 50% to attack self for chip damage instead of using the chosen move
+  //   curse   — burn-like end-of-turn HP loss but with a longer floor, no color-match damage
+  sleep:    { name: 'Sleep',    icon: '☾',  color: '#9080c0', c: 'U',
+    desc: 'Skips turns. 25% to wake each turn.' },
+  confuse:  { name: 'Confused', icon: '?',  color: '#d8a040', c: 'R',
+    desc: '50% chance to hit itself in confusion.' },
+  curse:    { name: 'Curse',    icon: '✟',  color: '#7a5a8a', c: 'B',
+    desc: 'Lingering hex — HP drains at end of turn.' },
 };
 
 function weightedPick(pool) {
@@ -325,6 +558,26 @@ function createCreature(id, level) {
     hp: maxHp, maxHp,
     baseAtk: d.atk,
     moves: d.m.slice(),
+  };
+}
+// Build a daily-encounter variant from a DAILY_ENCOUNTERS entry. Wraps the base
+// creature with a flavor prefix, +30% HP/atk, the entry's glow color (consumed
+// by the BattleScene to render an aura around the sprite), and a marker so we
+// can recognize it in code paths that need to (e.g., the codex doesn't double-
+// count the variant — the underlying id is still the base creature).
+function createDailyVariant(entry, baseLevel) {
+  const lv = baseLevel + entry.levelBonus;
+  const c = createCreature(entry.id, lv);
+  return {
+    ...c,
+    name: `${entry.prefix} ${c.name}`,           // e.g., "Spectral Phantom Sprite"
+    maxHp: Math.floor(c.maxHp * 1.3),
+    hp: Math.floor(c.maxHp * 1.3),
+    baseAtk: Math.floor(c.baseAtk * 1.3),
+    isDaily: true,
+    dailyKey: entry.key,
+    dailyGlow: entry.glow,
+    dailyLore: entry.lore,
   };
 }
 // Transform a creature into its evolved form, preserving identity/level/XP/HP ratio.
@@ -376,16 +629,68 @@ function tickStatusStart(creature) {
   if (kind === 'freeze') {
     // 30% to thaw
     if (Math.random() < 0.3) {
-      return { newCreature: { ...creature, status: null }, lines: [`${creature.name} thawed out!`], prevented: false };
+      return { newCreature: { ...creature, status: null }, lines: [`${displayName(creature)} thawed out!`], prevented: false };
     }
-    return { newCreature: creature, lines: [`${creature.name} is frozen solid!`], prevented: true };
+    return { newCreature: creature, lines: [`${displayName(creature)} is frozen solid!`], prevented: true };
   }
   if (kind === 'stun') {
     // Stun prevents this turn, then clears
-    return { newCreature: { ...creature, status: null }, lines: [`${creature.name} is stunned!`], prevented: true };
+    return { newCreature: { ...creature, status: null }, lines: [`${displayName(creature)} is stunned!`], prevented: true };
+  }
+  if (kind === 'sleep') {
+    // 25% to wake each turn — slightly stickier than freeze.
+    if (Math.random() < 0.25) {
+      return { newCreature: { ...creature, status: null }, lines: [`${displayName(creature)} woke up!`], prevented: false };
+    }
+    return { newCreature: creature, lines: [`${displayName(creature)} is fast asleep.`], prevented: true };
+  }
+  if (kind === 'confuse') {
+    // 50% chance to hit self for ~12% maxHp damage. The turn is consumed either way:
+    //   - hit self → damage applied here, prevented:true so no move resolves
+    //   - snap out → status persists but turn proceeds normally with no self-hit
+    // Confusion lifts on its own when turns runs out (handled in tickStatusEnd).
+    if (Math.random() < 0.5) {
+      const dmg = Math.max(1, Math.floor(creature.maxHp * 0.12));
+      const hurt = { ...creature, hp: Math.max(0, creature.hp - dmg) };
+      const lines = [`${displayName(creature)} is confused — it hurt itself! (-${dmg})`];
+      if (hurt.hp <= 0) lines.push(`${displayName(creature)} fainted from confusion!`);
+      return { newCreature: hurt, lines, prevented: true };
+    }
+    return { newCreature: creature, lines: [`${displayName(creature)} shakes off the confusion for a moment.`], prevented: false };
   }
   return { newCreature: creature, lines: [], prevented: false };
 }
+
+// Apply per-round weather effect to a single creature. Returns { creature, lines }.
+// Sandstorm-style 'damage' tick affects creatures whose primary color is NOT in tickAffects.
+// Bloom-style 'heal' tick heals creatures whose primary color IS in tickAffects.
+// Planar storm uses tickAffects=[] so the "not in" check passes for all colors,
+// hitting everyone equally.
+function applyWeatherTick(creature, weatherKey) {
+  if (!weatherKey || !creature || creature.hp <= 0) return { creature, lines: [] };
+  const w = WEATHER[weatherKey];
+  if (!w || !w.tickKind) return { creature, lines: [] };
+  const primary = primaryColor(creature.c);
+  const lines = [];
+  if (w.tickKind === 'damage') {
+    if (w.tickAffects.includes(primary)) return { creature, lines: [] };
+    const dmg = Math.max(1, Math.floor(creature.maxHp * w.tickAmt));
+    const hp = Math.max(0, creature.hp - dmg);
+    lines.push(`${displayName(creature)} is buffeted by the ${w.name.toLowerCase()}! (-${dmg})`);
+    if (hp <= 0) lines.push(`${displayName(creature)} fainted from the storm!`);
+    return { creature: { ...creature, hp }, lines };
+  }
+  if (w.tickKind === 'heal') {
+    if (!w.tickAffects.includes(primary)) return { creature, lines: [] };
+    if (creature.hp >= creature.maxHp) return { creature, lines: [] };
+    const heal = Math.max(1, Math.floor(creature.maxHp * w.tickAmt));
+    const hp = Math.min(creature.maxHp, creature.hp + heal);
+    lines.push(`${displayName(creature)} drinks in the ${w.name.toLowerCase()}. (+${hp - creature.hp})`);
+    return { creature: { ...creature, hp }, lines };
+  }
+  return { creature, lines: [] };
+}
+
 function tickStatusEnd(creature) {
   if (!creature.status || creature.hp <= 0) return { newCreature: creature, lines: [] };
   const { kind, turns } = creature.status;
@@ -395,24 +700,30 @@ function tickStatusEnd(creature) {
   if (kind === 'burn') {
     const dmg = Math.max(1, Math.floor(creature.maxHp * 0.08));
     hp = Math.max(0, hp - dmg);
-    lines.push(`${creature.name} is hurt by its burn! (-${dmg})`);
+    lines.push(`${displayName(creature)} is hurt by its burn! (-${dmg})`);
   } else if (kind === 'poison') {
     // Poison scales up each turn
     const stacks = 5 - Math.max(0, newStatus.turns);
     const dmg = Math.max(1, Math.floor(creature.maxHp * (0.05 + 0.02 * stacks)));
     hp = Math.max(0, hp - dmg);
-    lines.push(`${creature.name} suffers from poison! (-${dmg})`);
+    lines.push(`${displayName(creature)} suffers from poison! (-${dmg})`);
+  } else if (kind === 'curse') {
+    // Curse — flat 6% maxHp drain. Doesn't scale like poison; it's a slow bleed
+    // that pairs nicely with confuse/sleep to deny tempo.
+    const dmg = Math.max(1, Math.floor(creature.maxHp * 0.06));
+    hp = Math.max(0, hp - dmg);
+    lines.push(`The curse gnaws at ${displayName(creature)}! (-${dmg})`);
   }
   // entangle: no end-tick damage, just lingers
   if (newStatus.turns <= 0) {
     newStatus = null;
-    if (kind !== 'stun') lines.push(`${creature.name} recovered from ${STATUSES[kind].name.toLowerCase()}.`);
+    if (kind !== 'stun') lines.push(`${displayName(creature)} recovered from ${STATUSES[kind].name.toLowerCase()}.`);
   }
-  if (hp <= 0) lines.push(`${creature.name} fainted from status!`);
+  if (hp <= 0) lines.push(`${displayName(creature)} fainted from status!`);
   return { newCreature: { ...creature, hp, status: newStatus }, lines };
 }
 
-function calcDamage(attacker, defender, move) {
+function calcDamage(attacker, defender, move, weatherKeys = []) {
   if (move.p === 0) return { dmg: 0, mult: 1, crit: false, missed: false };
   if (Math.random() * 100 > move.a) return { dmg: 0, mult: 1, crit: false, missed: true };
   let mult = matchupMultiplier(move.c, defender.c);
@@ -423,10 +734,32 @@ function calcDamage(attacker, defender, move) {
   if (attacker.colorPenalties && move.c && attacker.colorPenalties[move.c] !== undefined) {
     mult *= attacker.colorPenalties[move.c];
   }
+  // Weather modifier — every active weather gets a chance to boost (+20%) or weaken (-15%).
+  // With stacked weathers a move can be boosted by one and weakened by another (e.g. a U
+  // move in Rain+Sun nets 1.2 × 0.85 ≈ 1.02, basically neutral). We track which weathers
+  // hit so the log can flavor it appropriately. Colorless moves (move.c === null) are
+  // unaffected. Accepts an array; legacy single-string callers still work via [].concat.
+  const wKeys = Array.isArray(weatherKeys) ? weatherKeys : (weatherKeys ? [weatherKeys] : []);
+  const boostedBy = [];
+  const weakenedBy = [];
+  if (move.c) {
+    for (const k of wKeys) {
+      const w = WEATHER[k];
+      if (!w) continue;
+      if (w.boost === move.c) { mult *= 1.2; boostedBy.push(k); }
+      else if (w.weaken === move.c) { mult *= 0.85; weakenedBy.push(k); }
+    }
+  }
   const crit = Math.random() < 0.08;
   const variance = 0.85 + Math.random() * 0.3;
   let dmg = Math.floor((move.p + atkOf(attacker) * 0.6) * mult * variance * (crit ? 1.7 : 1));
-  return { dmg: Math.max(1, dmg), mult, crit, missed: false };
+  return {
+    dmg: Math.max(1, dmg), mult, crit, missed: false,
+    boostedBy, weakenedBy,
+    // Back-compat fields for any caller that read these (currently used by applyMove logs)
+    weatherBoosted: boostedBy.length > 0,
+    weatherWeakened: weakenedBy.length > 0,
+  };
 }
 
 // ---------- Maps ----------
@@ -732,6 +1065,12 @@ const NPCS_TOWN = [
   { id: 'merle', x: 11, y: 4, face: 'down', color: '#9a6e3a', noBattle: true, isShop: true,
     name: 'Merle the Provisioner',
     dialog: "Potions, revives, fresh Creature Cards — whatever a planeswalker-in-training needs for the road." },
+  // ---- The Hollow Vault — overflow storage for caught creatures beyond the 6-slot team ----
+  // Themed as runic spirit-cages tended by a quiet keeper. Stationary, no battle, opens
+  // the VaultScene where the player can swap creatures freely between team and storage.
+  { id: 'vaultkeeper', x: 6, y: 10, face: 'down', color: '#5a7088', noBattle: true, isVault: true,
+    name: 'Keeper Solenne',
+    dialog: "Spirits whisper louder when caged in rune-iron. I tend them between your travels — if your hand is full, leave one with me. They'll keep, and they'll wait." },
   // ---- Lorekeeper hints at the shrine bosses (gating becomes lore exposition) ----
   { id: 'lorekeeper', x: 5, y: 5, face: 'right', color: '#7050a0', noBattle: true,
     name: 'Lorekeeper Vey',
@@ -830,6 +1169,13 @@ function generateTrainerTeam(npc, cycles) {
 }
 
 // ---------- Tile walk/interact helpers ----------
+// displayName — returns a creature's nickname if set, else its species name.
+// Used everywhere the creature is referenced in UI or log lines so renames apply
+// uniformly. The species name remains accessible as c.name for codex display.
+function displayName(c) {
+  return (c && c.nick) ? c.nick : (c ? c.name : '???');
+}
+
 function tileAt(map, x, y) {
   const tiles = MAPS[map].tiles;
   if (y < 0 || y >= tiles.length || x < 0 || x >= tiles[0].length) return 't';
@@ -839,7 +1185,7 @@ function isWalkable(tile) {
   // 'B' = building entrance (steppable, triggers transition)
   // 'F' = shrine floor (interior)
   // 'L' = legendary boss tile (steppable, triggers boss fight on contact)
-  return ['.', 'g', 'p', 'd', 'E', 's', 'a', 'l', 'u', 'o', 'm', 'v', 'c', 'f', 'B', 'F', 'L'].includes(tile);
+  return ['.', 'g', 'p', 'd', 'E',      'a', 'l', 'u', 'o', 'm', 'v', 'c', 'f', 'B', 'F', 'L'].includes(tile);
 }
 function hasEncounter(tile) {
   return ['g', 'l', 'o', 'v', 'f'].includes(tile);
@@ -999,160 +1345,657 @@ const audio = (() => {
     G: [293, 440, 587],     // organic open chord
   };
 
+  // ---- Reverb send bus -----------------------------------------------------
+  // A single shared feedback-delay reverb tail. Sounds that route through `reverbIn`
+  // get a smeared echo trail without the cost of a real convolution reverb.
+  // Built lazily on first use so we don't pay setup cost if the engine never wakes.
+  let reverbIn = null;
+  let reverbOut = null;
+  const ensureReverb = () => {
+    const c = ensureCtx();
+    if (!c || reverbIn) return reverbIn;
+    reverbIn = c.createGain(); reverbIn.gain.value = 1;
+    reverbOut = c.createGain(); reverbOut.gain.value = 0.32;  // wet level on the bus
+    // Two parallel delays at slightly different times for stereo-ish smear
+    const d1 = c.createDelay(1.0); d1.delayTime.value = 0.18;
+    const d2 = c.createDelay(1.0); d2.delayTime.value = 0.27;
+    const fb1 = c.createGain(); fb1.gain.value = 0.42;
+    const fb2 = c.createGain(); fb2.gain.value = 0.36;
+    const tone = c.createBiquadFilter(); tone.type = 'lowpass'; tone.frequency.value = 3200;
+    reverbIn.connect(d1); reverbIn.connect(d2);
+    d1.connect(fb1); fb1.connect(d1);   // feedback loops
+    d2.connect(fb2); fb2.connect(d2);
+    d1.connect(tone); d2.connect(tone);
+    tone.connect(reverbOut);
+    reverbOut.connect(masterGain);
+    return reverbIn;
+  };
+
+  // ---- FM synth voice ------------------------------------------------------
+  // A single carrier + modulator pair. Modulator FM-modulates the carrier's freq.
+  // ratio = mod_freq / carrier_freq. index = how strongly the mod swings the carrier
+  // (in carrier-freq units). preset hides common combinations (bell, pluck, brass, pad).
+  const FM_PRESETS = {
+    bell:  { carrierType: 'sine',     modType: 'sine',     ratio: 3.5, index: 4.5, attack: 0.005, hold: 0.02, decay: 0.45, release: 0.08, indexDecay: 0.30 },
+    pluck: { carrierType: 'triangle', modType: 'sine',     ratio: 2.0, index: 5.0, attack: 0.003, hold: 0.01, decay: 0.20, release: 0.04, indexDecay: 0.10 },
+    brass: { carrierType: 'sawtooth', modType: 'square',   ratio: 1.0, index: 1.4, attack: 0.012, hold: 0.04, decay: 0.18, release: 0.08, indexDecay: 0.20 },
+    pad:   { carrierType: 'triangle', modType: 'sine',     ratio: 0.5, index: 0.8, attack: 0.060, hold: 0.05, decay: 0.30, release: 0.20, indexDecay: 0.50 },
+    bass:  { carrierType: 'sawtooth', modType: 'sine',     ratio: 1.0, index: 0.5, attack: 0.005, hold: 0.04, decay: 0.18, release: 0.05, indexDecay: 0.10 },
+  };
+  const fmNote = (opts) => {
+    const c = ensureCtx();
+    if (!c || muted) return;
+    const {
+      freq = 440,
+      preset = 'pluck',
+      start = 0,
+      gain = 0.2,
+      dest = masterGain,
+      reverbSend = 0,           // 0..1 — how much to send to the reverb bus
+      vibrato = 0,              // depth in cents (0 = no vibrato)
+      vibratoRate = 5.5,        // Hz
+      durationMul = 1,          // multiplier on decay (lets music shorten/lengthen notes)
+    } = opts;
+    const p = FM_PRESETS[preset] || FM_PRESETS.pluck;
+    const t0 = c.currentTime + start;
+    const carrier = c.createOscillator();
+    const mod     = c.createOscillator();
+    const modGain = c.createGain();
+    const ampGain = c.createGain();
+    carrier.type = p.carrierType;
+    mod.type     = p.modType;
+    carrier.frequency.setValueAtTime(freq, t0);
+    mod.frequency.setValueAtTime(freq * p.ratio, t0);
+    // Modulation index envelope — punchy attack that decays for natural realism
+    const idxStart = freq * p.index;
+    modGain.gain.setValueAtTime(idxStart, t0);
+    modGain.gain.exponentialRampToValueAtTime(Math.max(idxStart * 0.18, 0.01), t0 + p.indexDecay);
+    // Amp envelope (ADSR-ish)
+    const attack  = p.attack;
+    const hold    = p.hold;
+    const decay   = p.decay * durationMul;
+    const release = p.release;
+    ampGain.gain.setValueAtTime(0, t0);
+    ampGain.gain.linearRampToValueAtTime(gain,        t0 + attack);
+    ampGain.gain.linearRampToValueAtTime(gain * 0.6,  t0 + attack + hold);
+    ampGain.gain.linearRampToValueAtTime(gain * 0.3,  t0 + attack + hold + decay * 0.6);
+    ampGain.gain.linearRampToValueAtTime(0,           t0 + attack + hold + decay + release);
+    // Optional vibrato — separate LFO modulating carrier freq directly (in cents)
+    if (vibrato > 0) {
+      const lfo = c.createOscillator();
+      const lfoGain = c.createGain();
+      lfo.type = 'sine';
+      lfo.frequency.value = vibratoRate;
+      // Center of vibrato kicks in after the attack so the initial pitch is stable
+      lfoGain.gain.setValueAtTime(0, t0);
+      lfoGain.gain.linearRampToValueAtTime(freq * vibrato / 1200, t0 + attack + hold + 0.05);
+      lfo.connect(lfoGain); lfoGain.connect(carrier.frequency);
+      lfo.start(t0); lfo.stop(t0 + attack + hold + decay + release + 0.05);
+    }
+    // Wire it up: mod -> modGain -> carrier.frequency, carrier -> ampGain -> dest (+reverb)
+    mod.connect(modGain); modGain.connect(carrier.frequency);
+    carrier.connect(ampGain); ampGain.connect(dest);
+    if (reverbSend > 0) {
+      const rIn = ensureReverb();
+      if (rIn) {
+        const sendGain = c.createGain();
+        sendGain.gain.value = reverbSend;
+        ampGain.connect(sendGain); sendGain.connect(rIn);
+      }
+    }
+    mod.start(t0);     mod.stop(t0 + attack + hold + decay + release + 0.05);
+    carrier.start(t0); carrier.stop(t0 + attack + hold + decay + release + 0.05);
+  };
+
+  // ---- Drum kit (synthesized, no samples) ----------------------------------
+  // Kick: low sine pitch-drop + click, Snare: noise+tone, Hat: high-passed noise.
+  const drum = (kind, opts = {}) => {
+    const c = ensureCtx();
+    if (!c || muted) return;
+    const { start = 0, gain = 0.3, dest = masterGain } = opts;
+    const t0 = c.currentTime + start;
+    if (kind === 'kick') {
+      const osc = c.createOscillator(); osc.type = 'sine';
+      const g = c.createGain();
+      osc.frequency.setValueAtTime(140, t0);
+      osc.frequency.exponentialRampToValueAtTime(40, t0 + 0.10);
+      g.gain.setValueAtTime(0, t0);
+      g.gain.linearRampToValueAtTime(gain, t0 + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.18);
+      osc.connect(g); g.connect(dest);
+      osc.start(t0); osc.stop(t0 + 0.22);
+    } else if (kind === 'snare') {
+      // Tone component (200Hz pop) + filtered noise (snare crack)
+      const buf = getNoiseBuf(); if (!buf) return;
+      const src = c.createBufferSource(); src.buffer = buf;
+      const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1200;
+      const ng = c.createGain();
+      ng.gain.setValueAtTime(0, t0);
+      ng.gain.linearRampToValueAtTime(gain * 0.9, t0 + 0.003);
+      ng.gain.exponentialRampToValueAtTime(0.001, t0 + 0.13);
+      src.connect(hp); hp.connect(ng); ng.connect(dest);
+      src.start(t0); src.stop(t0 + 0.16);
+      // Body tone
+      const osc = c.createOscillator(); osc.type = 'triangle';
+      const og = c.createGain();
+      osc.frequency.setValueAtTime(220, t0);
+      osc.frequency.exponentialRampToValueAtTime(160, t0 + 0.06);
+      og.gain.setValueAtTime(0, t0);
+      og.gain.linearRampToValueAtTime(gain * 0.4, t0 + 0.003);
+      og.gain.exponentialRampToValueAtTime(0.001, t0 + 0.10);
+      osc.connect(og); og.connect(dest);
+      osc.start(t0); osc.stop(t0 + 0.12);
+    } else if (kind === 'hat') {
+      const buf = getNoiseBuf(); if (!buf) return;
+      const src = c.createBufferSource(); src.buffer = buf;
+      const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 6000;
+      const g = c.createGain();
+      g.gain.setValueAtTime(0, t0);
+      g.gain.linearRampToValueAtTime(gain * 0.5, t0 + 0.002);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.05);
+      src.connect(hp); hp.connect(g); g.connect(dest);
+      src.start(t0); src.stop(t0 + 0.07);
+    } else if (kind === 'crash') {
+      const buf = getNoiseBuf(); if (!buf) return;
+      const src = c.createBufferSource(); src.buffer = buf;
+      const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 4000;
+      const g = c.createGain();
+      g.gain.setValueAtTime(0, t0);
+      g.gain.linearRampToValueAtTime(gain * 0.6, t0 + 0.003);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.50);
+      src.connect(hp); hp.connect(g); g.connect(dest);
+      src.start(t0); src.stop(t0 + 0.55);
+    }
+  };
+
   // === SFX: catalog of named effects =========================================
+  // Many of these now layer multiple voices for richer "DS-era" texture.
   const sfx = {
     // UI
     menuOpen: () => { wake(); note({ freq: 660, freqEnd: 880, type: 'square', attack: 0.005, decay: 0.06, gain: 0.18 }); },
     menuClose:() => { wake(); note({ freq: 880, freqEnd: 440, type: 'square', attack: 0.005, decay: 0.06, gain: 0.18 }); },
     blip:     () => { wake(); note({ freq: 720, type: 'square', attack: 0.003, decay: 0.04, gain: 0.14 }); },
-    confirm:  () => { wake(); note({ freq: 523, type: 'triangle', decay: 0.05, gain: 0.18 }); note({ freq: 784, type: 'triangle', start: 0.06, decay: 0.08, gain: 0.18 }); },
-    deny:     () => { wake(); note({ freq: 220, type: 'square', decay: 0.12, gain: 0.18 }); },
-    // Movement
+    confirm:  () => { wake(); fmNote({ freq: 523, preset: 'bell', gain: 0.18, reverbSend: 0.2 }); fmNote({ freq: 784, preset: 'bell', start: 0.06, gain: 0.18, reverbSend: 0.2 }); },
+    deny:     () => { wake(); note({ freq: 220, type: 'square', decay: 0.12, gain: 0.18 }); note({ freq: 175, type: 'sawtooth', start: 0.04, decay: 0.10, gain: 0.14 }); },
+    // Movement — quiet alternating click; deliberately stays the original simple osc
     step: (() => {
       let toggle = false;
       return () => { wake(); toggle = !toggle; note({ freq: toggle ? 180 : 200, type: 'square', attack: 0.002, hold: 0.005, decay: 0.02, release: 0.01, gain: 0.06 }); };
     })(),
-    // Battle: attack flavor by color, plus a percussive impact stinger
+    // Battle: attack flavor by color — now layered with whoosh + impact
     attack: (color) => {
       wake();
       const arr = COLOR_FREQ[color] || [330, 440, 550];
-      arr.forEach((f, i) => note({
-        freq: f, freqEnd: f * (color === 'R' ? 0.7 : 1.05),
-        type: color === 'R' ? 'sawtooth' : (color === 'U' ? 'sine' : 'triangle'),
-        start: i * 0.03, attack: 0.005, hold: 0.02, decay: 0.12, gain: 0.16
+      // Layer 1: noise whoosh (the spell winding up)
+      noise({ gain: 0.12, attack: 0.04, decay: 0.14, lowpass: 1800 });
+      // Layer 2: FM tone cluster (spell timbre — color-coded)
+      const preset = color === 'R' ? 'brass' : (color === 'U' ? 'bell' : (color === 'B' ? 'pad' : (color === 'G' ? 'pluck' : 'bell')));
+      arr.forEach((f, i) => fmNote({
+        freq: f, preset, start: i * 0.03, gain: 0.18, reverbSend: 0.25,
       }));
+      // Layer 3: bass thump on the downbeat
+      drum('kick', { gain: 0.22, start: 0.02 });
     },
-    hit:        () => { wake(); noise({ gain: 0.35, decay: 0.09, lowpass: 1200 }); note({ freq: 110, freqEnd: 70, type: 'square', decay: 0.08, gain: 0.18 }); },
-    crit:       () => { wake(); noise({ gain: 0.45, decay: 0.16, lowpass: 2400 }); note({ freq: 880, freqEnd: 220, type: 'sawtooth', decay: 0.20, gain: 0.22 }); },
-    miss:       () => { wake(); note({ freq: 240, freqEnd: 180, type: 'sine', decay: 0.10, gain: 0.14 }); },
-    notVeryEffective: () => { wake(); note({ freq: 200, type: 'sine', decay: 0.12, gain: 0.12 }); },
-    superEffective:   () => { wake(); note({ freq: 880, freqEnd: 1320, type: 'square', decay: 0.10, gain: 0.18 }); note({ freq: 660, freqEnd: 990, type: 'triangle', start: 0.05, decay: 0.10, gain: 0.18 }); },
-    heal:       () => { wake(); [523, 659, 784, 1047].forEach((f, i) => note({ freq: f, type: 'sine', start: i * 0.04, decay: 0.18, gain: 0.16 })); },
-    statusApply:() => { wake(); note({ freq: 392, type: 'square', decay: 0.05, gain: 0.14 }); note({ freq: 466, type: 'square', start: 0.05, decay: 0.06, gain: 0.14 }); },
-    faint:      () => { wake(); note({ freq: 440, freqEnd: 110, type: 'sawtooth', attack: 0.01, decay: 0.45, gain: 0.22 }); },
+    hit:        () => { wake(); noise({ gain: 0.32, decay: 0.09, lowpass: 1200 }); drum('kick', { gain: 0.20 }); fmNote({ freq: 110, preset: 'bass', gain: 0.15, durationMul: 0.5 }); },
+    crit:       () => { wake(); noise({ gain: 0.45, decay: 0.16, lowpass: 2400 }); drum('kick', { gain: 0.30 }); drum('snare', { gain: 0.30, start: 0.04 }); fmNote({ freq: 880, preset: 'brass', gain: 0.22, reverbSend: 0.3 }); fmNote({ freq: 220, preset: 'brass', start: 0.05, gain: 0.20 }); },
+    miss:       () => { wake(); note({ freq: 240, freqEnd: 180, type: 'sine', decay: 0.10, gain: 0.14 }); noise({ gain: 0.10, decay: 0.12, lowpass: 600, start: 0.02 }); },
+    notVeryEffective: () => { wake(); fmNote({ freq: 200, preset: 'pad', gain: 0.14, durationMul: 1.2 }); },
+    superEffective:   () => { wake(); fmNote({ freq: 880,  preset: 'bell', gain: 0.18, reverbSend: 0.4 }); fmNote({ freq: 1320, preset: 'bell', start: 0.05, gain: 0.18, reverbSend: 0.4 }); fmNote({ freq: 1760, preset: 'bell', start: 0.10, gain: 0.16, reverbSend: 0.4 }); },
+    heal:       () => { wake(); [523, 659, 784, 1047].forEach((f, i) => fmNote({ freq: f, preset: 'bell', start: i * 0.05, gain: 0.16, reverbSend: 0.5 })); },
+    statusApply:() => { wake(); fmNote({ freq: 392, preset: 'pluck', gain: 0.14 }); fmNote({ freq: 466, preset: 'pluck', start: 0.05, gain: 0.14 }); },
+    faint:      () => { wake(); fmNote({ freq: 440, preset: 'pad', gain: 0.22, durationMul: 2 }); note({ freq: 440, freqEnd: 110, type: 'sawtooth', attack: 0.01, decay: 0.45, gain: 0.18 }); drum('kick', { gain: 0.2, start: 0.4 }); },
     catchTry:   () => {
       wake();
-      // Three rising clicks
-      [0, 0.18, 0.36].forEach((t, i) => note({ freq: 660 + i * 80, type: 'square', start: t, attack: 0.004, decay: 0.05, gain: 0.18 }));
+      [0, 0.18, 0.36].forEach((t, i) => fmNote({ freq: 660 + i * 80, preset: 'pluck', start: t, gain: 0.18 }));
     },
     catchSuccess: () => {
       wake();
-      [523, 659, 784, 1047, 1319].forEach((f, i) => note({ freq: f, type: 'triangle', start: i * 0.07, decay: 0.16, gain: 0.20 }));
+      [523, 659, 784, 1047, 1319].forEach((f, i) => fmNote({ freq: f, preset: 'bell', start: i * 0.07, gain: 0.20, reverbSend: 0.4 }));
     },
-    catchFail: () => { wake(); note({ freq: 440, freqEnd: 220, type: 'square', decay: 0.18, gain: 0.18 }); },
+    catchFail: () => { wake(); note({ freq: 440, freqEnd: 220, type: 'square', decay: 0.18, gain: 0.18 }); drum('snare', { gain: 0.18, start: 0.10 }); },
     // Progression
-    levelUp:   () => { wake(); [523, 659, 784, 1047].forEach((f, i) => note({ freq: f, type: 'square', start: i * 0.06, decay: 0.10, gain: 0.20 })); },
-    learnMove: () => { wake(); [659, 784, 988].forEach((f, i) => note({ freq: f, type: 'triangle', start: i * 0.05, decay: 0.14, gain: 0.18 })); },
-    grafted:   () => { wake(); [440, 554, 659, 880].forEach((f, i) => note({ freq: f, type: 'sine', start: i * 0.05, decay: 0.18, gain: 0.18 })); },
+    levelUp:   () => { wake(); [523, 659, 784, 1047].forEach((f, i) => fmNote({ freq: f, preset: 'bell', start: i * 0.06, gain: 0.20, reverbSend: 0.3 })); fmNote({ freq: 1568, preset: 'bell', start: 0.30, gain: 0.18, reverbSend: 0.5 }); },
+    learnMove: () => { wake(); [659, 784, 988].forEach((f, i) => fmNote({ freq: f, preset: 'bell', start: i * 0.05, gain: 0.18, reverbSend: 0.4 })); },
+    grafted:   () => { wake(); [440, 554, 659, 880].forEach((f, i) => fmNote({ freq: f, preset: 'bell', start: i * 0.05, gain: 0.18, reverbSend: 0.5 })); },
     // World events
     victory:   () => {
       wake();
       const m = [523, 659, 784, 1047, 1319, 1568];
-      m.forEach((f, i) => note({ freq: f, type: 'square', start: i * 0.10, decay: 0.14, gain: 0.20 }));
+      m.forEach((f, i) => fmNote({ freq: f, preset: 'brass', start: i * 0.10, gain: 0.20, reverbSend: 0.25 }));
+      drum('kick', { gain: 0.22, start: 0 });
+      drum('snare', { gain: 0.20, start: 0.30 });
     },
-    defeat:    () => { wake(); [440, 392, 349, 294, 220].forEach((f, i) => note({ freq: f, type: 'sawtooth', start: i * 0.12, decay: 0.30, gain: 0.20 })); },
+    defeat:    () => { wake(); [440, 392, 349, 294, 220].forEach((f, i) => fmNote({ freq: f, preset: 'brass', start: i * 0.12, gain: 0.20, durationMul: 1.5 })); drum('kick', { gain: 0.20, start: 0.55 }); },
     medallion: (color) => {
       wake();
       const arr = COLOR_FREQ[color] || [880, 1320];
-      arr.forEach((f, i) => note({ freq: f, type: 'sine', start: i * 0.08, decay: 0.50, gain: 0.22 }));
-      // a sparkly tail
-      [1760, 2093, 2637].forEach((f, i) => note({ freq: f, type: 'triangle', start: 0.25 + i * 0.05, decay: 0.20, gain: 0.14 }));
+      arr.forEach((f, i) => fmNote({ freq: f, preset: 'bell', start: i * 0.08, gain: 0.22, reverbSend: 0.6, vibrato: 8 }));
+      [1760, 2093, 2637].forEach((f, i) => fmNote({ freq: f, preset: 'bell', start: 0.25 + i * 0.05, gain: 0.14, reverbSend: 0.5 }));
     },
     bossEntrance: () => {
       wake();
-      // Low descending rumble + dissonant overtones
-      note({ freq: 110, freqEnd: 55, type: 'sawtooth', decay: 0.7, gain: 0.30 });
-      note({ freq: 73, freqEnd: 36, type: 'square', start: 0.05, decay: 0.7, gain: 0.18 });
+      // Low descending rumble + dissonant overtones + impact
+      fmNote({ freq: 110, preset: 'bass', gain: 0.30, durationMul: 4 });
+      fmNote({ freq: 73,  preset: 'bass', start: 0.05, gain: 0.20, durationMul: 4 });
       noise({ gain: 0.20, decay: 0.6, lowpass: 600 });
+      drum('kick', { gain: 0.32, start: 0 });
+      drum('crash', { gain: 0.22, start: 0.10 });
     },
-    // ---- Battle entrance jingles (Pokémon-style "DOO DOO DOO da DAH!" stings) ----
-    // 'wild' is shorter and brighter; 'trainer' is longer and more dramatic.
-    // Boss/Planeswalker fights use bossEntrance / planarBurst instead.
     battleStart: (kind) => {
       wake();
       if (kind === 'wild') {
-        // Quick ascending arpeggio → bright "ta-da" chord, ~700ms total
-        // Bass thump on the downbeat
-        note({ freq: 130, type: 'sawtooth', start: 0, decay: 0.15, gain: 0.22 });
-        noise({ start: 0, gain: 0.25, decay: 0.08, lowpass: 500 });
-        // Rising lead line (G–C–E–G)
+        // Quick ascending arpeggio → bright "ta-da" chord
+        drum('kick', { gain: 0.22, start: 0 });
+        drum('snare', { gain: 0.18, start: 0.06 });
         [392, 523, 659, 784].forEach((f, i) =>
-          note({ freq: f, type: 'square', start: 0.04 + i * 0.07, attack: 0.005, hold: 0.02, decay: 0.06, gain: 0.20 })
+          fmNote({ freq: f, preset: 'pluck', start: 0.04 + i * 0.07, gain: 0.20, reverbSend: 0.2 })
         );
-        // Final chord stab (C-major triad held briefly)
+        // Final chord stab
         [523, 659, 784].forEach(f =>
-          note({ freq: f, type: 'square', start: 0.36, attack: 0.005, hold: 0.05, decay: 0.28, gain: 0.20 })
+          fmNote({ freq: f, preset: 'brass', start: 0.36, gain: 0.18, reverbSend: 0.3, durationMul: 1.5 })
         );
-        // Bass landing note on the chord
-        note({ freq: 196, type: 'sawtooth', start: 0.36, decay: 0.30, gain: 0.20 });
+        fmNote({ freq: 196, preset: 'bass', start: 0.36, gain: 0.20, durationMul: 1.5 });
+        drum('crash', { gain: 0.18, start: 0.36 });
       } else {
-        // Trainer: longer fanfare with a held final chord, ~1100ms total
-        // Two percussive hits frame the phrase
-        noise({ start: 0, gain: 0.30, decay: 0.10, lowpass: 400 });
-        noise({ start: 0.48, gain: 0.30, decay: 0.14, lowpass: 400 });
-        // Bass progression (i → V → i)
-        note({ freq: 147, type: 'sawtooth', start: 0,    decay: 0.18, gain: 0.22 });
-        note({ freq: 196, type: 'sawtooth', start: 0.24, decay: 0.18, gain: 0.20 });
-        note({ freq: 147, type: 'sawtooth', start: 0.48, decay: 0.45, gain: 0.22 });
-        // Lead line: descending then ascending fanfare with a final flourish
+        // Trainer: longer, more dramatic
+        drum('kick',  { start: 0,    gain: 0.28 });
+        drum('snare', { start: 0.24, gain: 0.22 });
+        drum('kick',  { start: 0.48, gain: 0.28 });
+        fmNote({ freq: 147, preset: 'bass', start: 0,    gain: 0.22, durationMul: 1.3 });
+        fmNote({ freq: 196, preset: 'bass', start: 0.24, gain: 0.20, durationMul: 1.3 });
+        fmNote({ freq: 147, preset: 'bass', start: 0.48, gain: 0.22, durationMul: 2 });
         [784, 659, 523, 659, 880, 1047].forEach((f, i) =>
-          note({ freq: f, type: 'square', start: 0.05 + i * 0.07, attack: 0.005, hold: 0.02, decay: 0.07, gain: 0.20 })
+          fmNote({ freq: f, preset: 'pluck', start: 0.05 + i * 0.07, gain: 0.20, reverbSend: 0.25 })
         );
-        // Final triumphant chord (Am-ish: A-C-E)
         [440, 523, 659, 880].forEach(f =>
-          note({ freq: f, type: 'triangle', start: 0.55, attack: 0.01, hold: 0.10, decay: 0.40, gain: 0.20 })
+          fmNote({ freq: f, preset: 'brass', start: 0.55, gain: 0.20, reverbSend: 0.35, durationMul: 2 })
         );
-        // High sparkle on top of the final chord
-        note({ freq: 1319, type: 'square', start: 0.65, decay: 0.25, gain: 0.14 });
+        fmNote({ freq: 1319, preset: 'bell', start: 0.65, gain: 0.16, reverbSend: 0.5 });
+        drum('crash', { gain: 0.22, start: 0.55 });
       }
     },
     planarBurst: () => {
       wake();
-      // The Planeswalker's signature: all five color clusters layered in fast succession
       ['W', 'U', 'B', 'R', 'G'].forEach((col, i) => {
         const arr = COLOR_FREQ[col] || [440];
-        arr.forEach((f, j) => note({ freq: f * 1.5, type: 'triangle', start: i * 0.04 + j * 0.01, decay: 0.18, gain: 0.10 }));
+        const preset = col === 'R' ? 'brass' : (col === 'U' ? 'bell' : (col === 'B' ? 'pad' : (col === 'G' ? 'pluck' : 'bell')));
+        arr.forEach((f, j) => fmNote({ freq: f * 1.5, preset, start: i * 0.04 + j * 0.01, gain: 0.10, reverbSend: 0.5 }));
       });
       noise({ gain: 0.30, decay: 0.4, lowpass: 3000, start: 0.1 });
+      drum('crash', { gain: 0.30, start: 0 });
     },
     fanfare: () => {
       wake();
       [392, 523, 659, 784, 1047, 1319, 1568, 2093].forEach((f, i) =>
-        note({ freq: f, type: 'square', start: i * 0.09, decay: 0.16, gain: 0.22 })
+        fmNote({ freq: f, preset: 'brass', start: i * 0.09, gain: 0.22, reverbSend: 0.3 })
       );
+      drum('crash', { gain: 0.18, start: 0 });
+      drum('kick',  { gain: 0.22, start: 0.36 });
+      drum('snare', { gain: 0.20, start: 0.54 });
     },
   };
 
-  // === MUSIC: very simple loop-per-zone, layered triangle/square arp =========
-  // Each track is a sequence of (freq, dur) tuples. We schedule them in batches with a
-  // setInterval and a stop function. Switching tracks re-creates the schedule.
+  // === MUSIC ================================================================
+  // Multi-track music: each track is a set of parallel layers (melody, bass, drums,
+  // harmony) sharing a tempo and step grid. Each step plays whichever notes from
+  // each layer fall on that step. Layers are scheduled together so they stay in sync.
+  //
+  // Note format:
+  //   melody / bass / harmony : array of frequencies (number, or 0 for rest)
+  //   drums : array of '.', 'k' (kick), 's' (snare), 'h' (hat), 'x' (crash)
+  //           multiple drums on the same step encoded as combinations: 'kh', 'sh' etc.
+  //
+  // Each track also picks instrument presets per layer.
   const TRACKS = {
-    town:    { tempo: 120, notes: [392, 0, 523, 0, 659, 0, 587, 0, 523, 0, 440, 0, 523, 0, 587, 0], type: 'triangle' },
-    wilds:   { tempo: 96,  notes: [294, 0, 392, 0, 440, 0, 392, 0, 349, 0, 294, 0, 262, 0, 294, 0], type: 'triangle' },
-    plains:  { tempo: 110, notes: [523, 659, 784, 659, 523, 659, 880, 659, 784, 659, 523, 392, 440, 523, 659, 784], type: 'sine' },
-    sanctum: { tempo: 80,  notes: [262, 0, 311, 0, 392, 0, 466, 0, 392, 0, 311, 0, 262, 0, 233, 0], type: 'sine' },
-    ashen:   { tempo: 130, notes: [220, 277, 330, 277, 220, 277, 330, 415, 330, 277, 220, 165, 196, 220, 277, 330], type: 'square' },
-    umbral:  { tempo: 70,  notes: [196, 0, 233, 0, 277, 0, 233, 0, 196, 0, 175, 0, 196, 0, 220, 0], type: 'sawtooth' },
-    boss:    { tempo: 140, notes: [110, 165, 196, 165, 110, 165, 220, 247, 220, 165, 110, 87, 110, 131, 165, 196], type: 'sawtooth' },
-    final:   { tempo: 150, notes: [220, 261, 311, 392, 466, 392, 311, 261, 220, 196, 165, 196, 220, 261, 311, 392], type: 'square' },
-    // ---- Title medley ----
-    // 32-note main theme in C major. Four 8-step phrases:
-    //   A. Statement — climbing from C up to C, quoting the town opening (C-E-G-C)
-    //   B. Development — F-major detour echoing the plains lift
-    //   C. Rising climax — G-mixolydian ascent reaching the high G
-    //   D. Resolution — graceful descent back to root with a breath at the end
-    // Triangle wave keeps it warm; tempo 105 gives a confident heroic pace (~9s loop).
-    title:   { tempo: 105, notes: [
-      // A — statement: "C-E-G-C-B-A-G-E"
-      523, 659, 784, 1047, 988, 880, 784, 659,
-      // B — development: "F-A-C-A-F-D-C-rest"
-      698, 880, 1047, 880, 698, 587, 523, 0,
-      // C — rising: "G-B-D-B-E-D-B-G" (climax on the high E)
-      784, 988, 1175, 988, 1319, 1175, 988, 784,
-      // D — resolution: "A-G-F-D-C-D-F-rest"
-      880, 784, 698, 587, 523, 587, 698, 0,
-    ], type: 'triangle' },
+    // ============================================================================
+    // Each track is structured A — B — A' — C across 64 steps (~4× the old length).
+    // A   = the original 16-step phrase (the recognizable theme, preserved verbatim).
+    // B   = a variation that develops the theme — usually moves to a related key.
+    // A'  = the theme returning, often with small ornaments on the harmony/bass.
+    // C   = a closing/climax phrase that resolves back to root in time for the loop.
+    // ============================================================================
+
+    town: {
+      tempo: 120,
+      // Cheerful market town. C major theme; B detours through A minor (relative);
+      // A' returns; C closes with a IV-V-I cadence into the loop.
+      melody: [
+        // A — original theme
+        523, 0, 659, 0, 784, 0, 659, 0, 587, 0, 523, 0, 440, 0, 523, 0,
+        // B — A minor detour (sixth color)
+        440, 0, 523, 0, 659, 0, 523, 0, 494, 0, 440, 0, 392, 0, 440, 0,
+        // A' — theme returns
+        523, 0, 659, 0, 784, 0, 659, 0, 587, 0, 523, 0, 440, 0, 523, 0,
+        // C — IV-V-I closing flourish
+        698, 0, 784, 0, 880, 0, 784, 0, 698, 0, 587, 0, 523, 0,   0, 0,
+      ],
+      harmony: [
+        262, 0,   0, 0, 392, 0,   0, 0, 349, 0,   0, 0, 262, 0,   0, 0,
+        220, 0,   0, 0, 330, 0,   0, 0, 247, 0,   0, 0, 220, 0,   0, 0,
+        262, 0,   0, 0, 392, 0,   0, 0, 349, 0,   0, 0, 262, 0,   0, 0,
+        349, 0,   0, 0, 392, 0,   0, 0, 262, 0,   0, 0, 262, 0,   0, 0,
+      ],
+      bass: [
+        131, 0,   0, 0, 196, 0,   0, 0, 175, 0,   0, 0, 131, 0,   0, 0,
+        110, 0,   0, 0, 165, 0,   0, 0, 123, 0,   0, 0, 110, 0,   0, 0,
+        131, 0,   0, 0, 196, 0,   0, 0, 175, 0,   0, 0, 131, 0,   0, 0,
+        175, 0,   0, 0, 196, 0,   0, 0, 131, 0,   0, 0, 131, 0,   0, 0,
+      ],
+      drums: [
+        'k', '.', 'h', '.', 's', '.', 'h', '.', 'k', '.', 'h', '.', 's', '.', 'h', '.',
+        'k', '.', 'h', '.', 's', '.', 'h', '.', 'k', '.', 'h', '.', 's', '.', 'h', 'h',
+        'k', '.', 'h', '.', 's', '.', 'h', '.', 'k', '.', 'h', '.', 's', '.', 'h', '.',
+        'k', '.', 'h', 'h', 's', '.', 'h', '.', 'k', '.', 'h', '.', 's', '.', 'h', 'x',
+      ],
+      melodyPreset: 'pluck', harmonyPreset: 'pad', bassPreset: 'bass',
+      reverb: 0.18,
+    },
+
+    wilds: {
+      tempo: 96,
+      // Mysterious forest. D minor theme; B explores upper register;
+      // A' returns; C resolves slowly downward into a hushed ending.
+      melody: [
+        // A — original
+        294, 0, 0, 392, 440, 0, 0, 392, 349, 0, 0, 294, 262, 0, 0, 294,
+        // B — upper register variation, F-major flavor
+        349, 0, 0, 440, 523, 0, 0, 440, 392, 0, 0, 349, 294, 0, 0, 349,
+        // A' — theme returns
+        294, 0, 0, 392, 440, 0, 0, 392, 349, 0, 0, 294, 262, 0, 0, 294,
+        // C — soft resolve back to D
+        262, 0, 0, 294, 349, 0, 0, 294, 262, 0, 0, 220, 196, 0, 0,   0,
+      ],
+      harmony: [
+        196, 0, 0,   0, 220, 0, 0,   0, 175, 0, 0,   0, 131, 0, 0,   0,
+        220, 0, 0,   0, 262, 0, 0,   0, 196, 0, 0,   0, 175, 0, 0,   0,
+        196, 0, 0,   0, 220, 0, 0,   0, 175, 0, 0,   0, 131, 0, 0,   0,
+        131, 0, 0,   0, 175, 0, 0,   0, 131, 0, 0,   0,  98, 0, 0,   0,
+      ],
+      bass: [
+        98,  0, 0,   0, 110, 0, 0,   0,  87, 0, 0,   0,  65, 0, 0,   0,
+        87,  0, 0,   0, 110, 0, 0,   0,  98, 0, 0,   0,  87, 0, 0,   0,
+        98,  0, 0,   0, 110, 0, 0,   0,  87, 0, 0,   0,  65, 0, 0,   0,
+        65,  0, 0,   0,  87, 0, 0,   0,  65, 0, 0,   0,  49, 0, 0,   0,
+      ],
+      drums: [
+        'k', '.', 'h', '.', 's', '.', 'h', '.', 'k', '.', 'h', 'h', 's', '.', 'h', '.',
+        'k', '.', 'h', '.', 's', '.', 'h', 'h', 'k', '.', 'h', 'h', 's', '.', 'h', '.',
+        'k', '.', 'h', '.', 's', '.', 'h', '.', 'k', '.', 'h', 'h', 's', '.', 'h', '.',
+        'k', '.', '.', '.', 's', '.', '.', '.', 'k', '.', '.', '.', 'h', '.', '.', '.',
+      ],
+      melodyPreset: 'pluck', harmonyPreset: 'pad', bassPreset: 'bass',
+      reverb: 0.32,
+    },
+
+    plains: {
+      tempo: 110,
+      // Heavenly bells. C major theme; B lifts through G major; A' returns;
+      // C is a soaring climactic phrase ending on the high tonic.
+      melody: [
+        // A — original
+        523, 659, 784, 659, 523, 659, 880, 659, 784, 659, 523, 392, 440, 523, 659, 784,
+        // B — G major lift (V chord)
+        587, 740, 880, 740, 587, 740, 988, 740, 880, 740, 587, 440, 494, 587, 740, 880,
+        // A' — theme returns
+        523, 659, 784, 659, 523, 659, 880, 659, 784, 659, 523, 392, 440, 523, 659, 784,
+        // C — climb to high C and resolve
+        880, 988, 1047, 988, 1047, 1175, 1319, 1175, 1047, 988, 880, 784, 659, 784, 1047, 0,
+      ],
+      harmony: [
+        262, 0, 392, 0, 262, 0, 440, 0, 392, 0, 262, 0, 220, 0, 392, 0,
+        294, 0, 440, 0, 294, 0, 494, 0, 440, 0, 294, 0, 247, 0, 440, 0,
+        262, 0, 392, 0, 262, 0, 440, 0, 392, 0, 262, 0, 220, 0, 392, 0,
+        440, 0, 523, 0, 587, 0, 659, 0, 523, 0, 440, 0, 392, 0, 523, 0,
+      ],
+      bass: [
+        131, 0, 0, 0, 131, 0, 0, 0, 196, 0, 0, 0, 110, 0, 0, 0,
+        147, 0, 0, 0, 147, 0, 0, 0, 220, 0, 0, 0, 123, 0, 0, 0,
+        131, 0, 0, 0, 131, 0, 0, 0, 196, 0, 0, 0, 110, 0, 0, 0,
+        220, 0, 0, 0, 262, 0, 0, 0, 196, 0, 0, 0, 131, 0, 0, 0,
+      ],
+      drums: [
+        'k', '.', 'h', 'h', 's', '.', 'h', 'h', 'k', '.', 'h', 'h', 's', '.', 'h', '.',
+        'k', '.', 'h', 'h', 's', '.', 'h', 'h', 'k', '.', 'h', 'h', 's', '.', 'h', 'h',
+        'k', '.', 'h', 'h', 's', '.', 'h', 'h', 'k', '.', 'h', 'h', 's', '.', 'h', '.',
+        'k', '.', 'h', 'h', 's', 'h', 'h', 'h', 'k', 'h', 'h', 'h', 's', 'h', 'h', 'x',
+      ],
+      melodyPreset: 'bell', harmonyPreset: 'pad', bassPreset: 'bass',
+      reverb: 0.45,
+    },
+
+    sanctum: {
+      tempo: 80,
+      // Ethereal cathedral, slow. C minor theme; B drifts upward toward E♭ major;
+      // A' returns; C settles back to C minor with a hushed final chord.
+      melody: [
+        // A — original
+        262, 0, 311, 0, 392, 0, 466, 0, 392, 0, 311, 0, 262, 0, 233, 0,
+        // B — drift up (E♭ major)
+        311, 0, 392, 0, 466, 0, 587, 0, 466, 0, 392, 0, 311, 0, 277, 0,
+        // A' — theme returns
+        262, 0, 311, 0, 392, 0, 466, 0, 392, 0, 311, 0, 262, 0, 233, 0,
+        // C — quiet resolution
+        233, 0, 262, 0, 311, 0, 262, 0, 233, 0, 196, 0, 262, 0,   0, 0,
+      ],
+      harmony: [
+        131, 0, 156, 0, 196, 0, 233, 0, 196, 0, 156, 0, 131, 0, 117, 0,
+        156, 0, 196, 0, 233, 0, 294, 0, 233, 0, 196, 0, 156, 0, 138, 0,
+        131, 0, 156, 0, 196, 0, 233, 0, 196, 0, 156, 0, 131, 0, 117, 0,
+        117, 0, 131, 0, 156, 0, 131, 0, 117, 0,  98, 0, 131, 0,   0, 0,
+      ],
+      bass: [
+        65,  0, 0, 0,  98, 0, 0, 0,  98, 0, 0, 0,  65, 0, 0, 0,
+        78,  0, 0, 0, 117, 0, 0, 0, 117, 0, 0, 0,  78, 0, 0, 0,
+        65,  0, 0, 0,  98, 0, 0, 0,  98, 0, 0, 0,  65, 0, 0, 0,
+        49,  0, 0, 0,  65, 0, 0, 0,  49, 0, 0, 0,  65, 0, 0, 0,
+      ],
+      drums: [
+        'k', '.', '.', '.', 'h', '.', '.', '.', 's', '.', '.', '.', 'h', '.', '.', '.',
+        'k', '.', '.', '.', 'h', '.', '.', '.', 's', '.', '.', '.', 'h', '.', '.', '.',
+        'k', '.', '.', '.', 'h', '.', '.', '.', 's', '.', '.', '.', 'h', '.', '.', '.',
+        'k', '.', '.', '.', '.', '.', '.', '.', 's', '.', '.', '.', '.', '.', '.', '.',
+      ],
+      melodyPreset: 'bell', harmonyPreset: 'pad', bassPreset: 'pad',
+      reverb: 0.55,
+    },
+
+    ashen: {
+      tempo: 130,
+      // Driving, industrial. A minor theme; B raises tension via diminished tones;
+      // A' returns; C is a heavier driving section before looping back.
+      melody: [
+        // A — original
+        220, 277, 330, 277, 220, 277, 330, 415, 330, 277, 220, 165, 196, 220, 277, 330,
+        // B — tension build, with diminished color (E♭/F♯)
+        247, 311, 370, 311, 247, 311, 370, 466, 370, 311, 247, 185, 220, 247, 311, 370,
+        // A' — theme returns
+        220, 277, 330, 277, 220, 277, 330, 415, 330, 277, 220, 165, 196, 220, 277, 330,
+        // C — heavy descending close
+        415, 330, 277, 220, 415, 330, 277, 220, 196, 165, 131, 110, 165, 196, 220, 165,
+      ],
+      harmony: [
+        110, 0, 165, 0, 110, 0, 165, 0, 138, 0, 110, 0,  98, 0, 138, 0,
+        123, 0, 185, 0, 123, 0, 185, 0, 156, 0, 123, 0, 110, 0, 156, 0,
+        110, 0, 165, 0, 110, 0, 165, 0, 138, 0, 110, 0,  98, 0, 138, 0,
+        165, 0, 138, 0, 165, 0, 138, 0,  98, 0,  82, 0, 110, 0, 138, 0,
+      ],
+      bass: [
+        55, 0, 0, 0,  55, 0, 0, 0,  73, 0, 0, 0,  49, 0, 0, 0,
+        62, 0, 0, 0,  62, 0, 0, 0,  82, 0, 0, 0,  55, 0, 0, 0,
+        55, 0, 0, 0,  55, 0, 0, 0,  73, 0, 0, 0,  49, 0, 0, 0,
+        82, 0, 0, 0,  82, 0, 0, 0,  49, 0, 0, 0,  55, 0, 0, 0,
+      ],
+      drums: [
+        'k', 'h', 's', 'h', 'k', 'h', 's', 'h', 'k', 'h', 's', 'h', 'k', 'h', 's', 'x',
+        'k', 'h', 's', 'h', 'k', 'h', 's', 'h', 'k', 'h', 's', 'h', 'k', 'h', 's', 'x',
+        'k', 'h', 's', 'h', 'k', 'h', 's', 'h', 'k', 'h', 's', 'h', 'k', 'h', 's', 'x',
+        'k', 'h', 's', 'x', 'k', 'h', 's', 'x', 'k', 'h', 's', 'h', 'k', 'h', 's', 'x',
+      ],
+      melodyPreset: 'brass', harmonyPreset: 'brass', bassPreset: 'bass',
+      reverb: 0.2,
+    },
+
+    umbral: {
+      tempo: 70,
+      // Foggy, dread-laden. G minor theme; B descends further into the abyss;
+      // A' returns; C drifts back up to the home note over a deep pad.
+      melody: [
+        // A — original
+        196, 0, 233, 0, 277, 0, 233, 0, 196, 0, 175, 0, 196, 0, 220, 0,
+        // B — descend further (lower octave)
+        175, 0, 196, 0, 233, 0, 196, 0, 175, 0, 147, 0, 165, 0, 196, 0,
+        // A' — theme returns
+        196, 0, 233, 0, 277, 0, 233, 0, 196, 0, 175, 0, 196, 0, 220, 0,
+        // C — drift back up
+        220, 0, 247, 0, 277, 0, 247, 0, 220, 0, 196, 0, 175, 0, 196, 0,
+      ],
+      harmony: [
+        98,  0, 117, 0, 138, 0, 117, 0,  98, 0,  87, 0,  98, 0, 110, 0,
+        87,  0,  98, 0, 117, 0,  98, 0,  87, 0,  73, 0,  82, 0,  98, 0,
+        98,  0, 117, 0, 138, 0, 117, 0,  98, 0,  87, 0,  98, 0, 110, 0,
+        110, 0, 123, 0, 138, 0, 123, 0, 110, 0,  98, 0,  87, 0,  98, 0,
+      ],
+      bass: [
+        49,  0, 0, 0,  65, 0, 0, 0,  49, 0, 0, 0,  43, 0, 0, 0,
+        43,  0, 0, 0,  49, 0, 0, 0,  43, 0, 0, 0,  37, 0, 0, 0,
+        49,  0, 0, 0,  65, 0, 0, 0,  49, 0, 0, 0,  43, 0, 0, 0,
+        55,  0, 0, 0,  62, 0, 0, 0,  49, 0, 0, 0,  43, 0, 0, 0,
+      ],
+      drums: [
+        'k', '.', '.', '.', 'h', '.', '.', '.', 'k', '.', '.', '.', 'h', '.', '.', '.',
+        'k', '.', '.', '.', 'h', '.', '.', '.', 'k', '.', '.', '.', 'h', '.', '.', '.',
+        'k', '.', '.', '.', 'h', '.', '.', '.', 'k', '.', '.', '.', 'h', '.', '.', '.',
+        'k', '.', '.', '.', 'h', '.', '.', 'h', 'k', '.', '.', '.', 'h', '.', '.', 'x',
+      ],
+      melodyPreset: 'pad', harmonyPreset: 'pad', bassPreset: 'pad',
+      reverb: 0.50,
+    },
+
+    boss: {
+      tempo: 140,
+      // Intense legendary battle. A minor theme; B raises the urgency;
+      // A' returns; C is a heavier riff sweeping back to the loop.
+      melody: [
+        // A — original
+        220, 247, 220, 165, 110, 165, 220, 247, 220, 165, 110,  87, 110, 131, 165, 196,
+        // B — fifth higher (more intensity)
+        330, 370, 330, 247, 165, 247, 330, 370, 330, 247, 165, 131, 165, 196, 247, 294,
+        // A' — theme returns
+        220, 247, 220, 165, 110, 165, 220, 247, 220, 165, 110,  87, 110, 131, 165, 196,
+        // C — driving climax descent
+        262, 247, 220, 196, 247, 220, 196, 165, 220, 196, 165, 131, 165, 196, 220, 247,
+      ],
+      harmony: [
+        110,   0, 110,   0,  55,   0, 110,   0, 110,   0,  55,   0,  55,   0,  82,   0,
+        165,   0, 165,   0,  82,   0, 165,   0, 165,   0,  82,   0,  82,   0, 123,   0,
+        110,   0, 110,   0,  55,   0, 110,   0, 110,   0,  55,   0,  55,   0,  82,   0,
+        131,   0, 110,   0,  98,   0, 110,   0, 110,   0,  82,   0,  82,   0, 110,   0,
+      ],
+      bass: [
+        55,    0,   0,   0,  55,   0,   0,   0,  55,   0,   0,   0,  41,   0,   0,   0,
+        82,    0,   0,   0,  82,   0,   0,   0,  82,   0,   0,   0,  62,   0,   0,   0,
+        55,    0,   0,   0,  55,   0,   0,   0,  55,   0,   0,   0,  41,   0,   0,   0,
+        65,    0,   0,   0,  49,   0,   0,   0,  55,   0,   0,   0,  41,   0,   0,   0,
+      ],
+      drums: [
+        'k', 'h', 's', 'h', 'k', 'h', 's', 'h', 'k', 'h', 's', 'h', 'k', 'h', 's', 'x',
+        'k', 'h', 's', 'h', 'k', 'h', 's', 'h', 'k', 'h', 's', 'h', 'k', 'h', 's', 'x',
+        'k', 'h', 's', 'h', 'k', 'h', 's', 'h', 'k', 'h', 's', 'h', 'k', 'h', 's', 'x',
+        'k', 'h', 's', 'x', 'k', 'h', 's', 'x', 'k', 'h', 's', 'h', 'k', 'h', 's', 'x',
+      ],
+      melodyPreset: 'brass', harmonyPreset: 'brass', bassPreset: 'bass',
+      reverb: 0.25,
+    },
+
+    final: {
+      tempo: 150,
+      // Planeswalker. A minor theme that climbs; B reaches even higher;
+      // A' returns; C is an epic ascending climax that resolves into the loop.
+      melody: [
+        // A — original
+        220, 261, 311, 392, 466, 392, 311, 261, 220, 196, 165, 196, 220, 261, 311, 392,
+        // B — same shape, higher (one octave up center)
+        440, 523, 587, 698, 880, 698, 587, 523, 440, 392, 330, 392, 440, 523, 587, 698,
+        // A' — theme returns
+        220, 261, 311, 392, 466, 392, 311, 261, 220, 196, 165, 196, 220, 261, 311, 392,
+        // C — epic climbing climax
+        523, 587, 698, 784, 880, 988, 1047, 988, 880, 784, 698, 587, 523, 466, 392, 440,
+      ],
+      harmony: [
+        110, 131, 156, 196, 233, 196, 156, 131, 110,  98,  82,  98, 110, 131, 156, 196,
+        220, 261, 294, 349, 440, 349, 294, 261, 220, 196, 165, 196, 220, 261, 294, 349,
+        110, 131, 156, 196, 233, 196, 156, 131, 110,  98,  82,  98, 110, 131, 156, 196,
+        261, 294, 349, 392, 440, 494, 523, 494, 440, 392, 349, 294, 261, 233, 196, 220,
+      ],
+      bass: [
+        55,    0,   0,   0,  73,   0,   0,   0,  55,   0,   0,   0,  49,   0,   0,   0,
+        82,    0,   0,   0, 110,   0,   0,   0,  82,   0,   0,   0,  73,   0,   0,   0,
+        55,    0,   0,   0,  73,   0,   0,   0,  55,   0,   0,   0,  49,   0,   0,   0,
+        65,    0,   0,   0, 110,   0,   0,   0, 110,   0,   0,   0,  55,   0,   0,   0,
+      ],
+      drums: [
+        'k', 'h', 's', 'h', 'k', 'h', 's', 'h', 'k', 'h', 's', 'h', 'k', 'x', 's', 'x',
+        'k', 'h', 's', 'h', 'k', 'h', 's', 'x', 'k', 'h', 's', 'h', 'k', 'x', 's', 'x',
+        'k', 'h', 's', 'h', 'k', 'h', 's', 'h', 'k', 'h', 's', 'h', 'k', 'x', 's', 'x',
+        'k', 'h', 's', 'x', 'k', 'h', 's', 'x', 'k', 'h', 's', 'x', 'k', 'x', 's', 'x',
+      ],
+      melodyPreset: 'brass', harmonyPreset: 'brass', bassPreset: 'bass',
+      reverb: 0.30,
+    },
+
+    title: {
+      tempo: 105,
+      // Heroic title medley. The original was already 32 steps — we extend
+      // by adding a bridge (B) before the resolution and a tag (C) after it.
+      melody: [
+        // A — original first half
+        523, 659, 784, 1047, 988, 880, 784, 659,
+        698, 880, 1047, 880, 698, 587, 523, 0,
+        // B — original second half (climb + descent)
+        784, 988, 1175, 988, 1319, 1175, 988, 784,
+        880, 784, 698, 587, 523, 587, 698, 0,
+        // A' — restate the heroic opening
+        523, 659, 784, 1047, 988, 880, 784, 659,
+        698, 880, 1047, 880, 698, 587, 523, 0,
+        // C — triumphant tag and quiet breath
+        1047, 1175, 1319, 1568, 1319, 1175, 1047, 880,
+        784, 880, 698, 587, 523, 392, 523, 0,
+      ],
+      harmony: [
+        262,   0, 392,   0, 330,   0, 262,   0,
+        349,   0, 440,   0, 349,   0, 262,   0,
+        392,   0, 494,   0, 440,   0, 392,   0,
+        440,   0, 349,   0, 262,   0, 349,   0,
+        262,   0, 392,   0, 330,   0, 262,   0,
+        349,   0, 440,   0, 349,   0, 262,   0,
+        523,   0, 659,   0, 523,   0, 440,   0,
+        392,   0, 349,   0, 262,   0, 196,   0,
+      ],
+      bass: [
+        131, 0, 0, 0, 0, 0, 196, 0,
+        175, 0, 0, 0, 131, 0, 0, 0,
+        196, 0, 0, 0, 165, 0, 0, 0,
+        220, 0, 175, 0, 131, 0, 165, 0,
+        131, 0, 0, 0, 0, 0, 196, 0,
+        175, 0, 0, 0, 131, 0, 0, 0,
+        262, 0, 0, 0, 220, 0, 0, 0,
+        196, 0, 175, 0, 131, 0, 98,  0,
+      ],
+      drums: [
+        'k', '.', 'h', '.', 's', '.', 'h', '.',
+        'k', '.', 'h', '.', 's', '.', 'h', '.',
+        'k', '.', 'h', 'h', 's', '.', 'h', '.',
+        'k', '.', 'h', '.', 's', '.', 'h', 'x',
+        'k', '.', 'h', '.', 's', '.', 'h', '.',
+        'k', '.', 'h', '.', 's', '.', 'h', '.',
+        'k', 'h', 's', 'h', 'k', 'h', 's', 'x',
+        'k', '.', 'h', '.', 's', '.', '.', '.',
+      ],
+      melodyPreset: 'bell', harmonyPreset: 'pad', bassPreset: 'bass',
+      reverb: 0.38,
+    },
   };
+
   // Internal version — assumes the user has interacted and the context is available.
   const startMusicInternal = (key) => {
     if (music.key === key) return;
@@ -1164,18 +2007,34 @@ const audio = (() => {
     const stepSec = 60 / track.tempo / 2; // 8th-note resolution
     let stepIdx = 0;
     let nextTime = c.currentTime + 0.05;
-    // Schedule a window of 16 notes ahead at a time so we never starve.
+    const len = track.melody.length;
+    // Schedule a window of notes ahead at a time so we never starve.
     const tick = () => {
-      // Stale-time recovery: if `nextTime` is behind the audio clock (e.g., the context was
-      // suspended for a while or the tab was backgrounded), snap forward so we don't waste
-      // schedules trying to play notes "in the past" — those silently get dropped, which used
-      // to leave a long gap of silence after the user finally clicked. This is the bug fix.
+      // Stale-time recovery: if `nextTime` is behind the audio clock, snap forward.
       if (nextTime < c.currentTime) nextTime = c.currentTime + 0.05;
       const horizon = c.currentTime + 0.5;
       while (nextTime < horizon) {
-        const f = track.notes[stepIdx % track.notes.length];
-        if (f > 0) {
-          note({ freq: f, type: track.type, start: nextTime - c.currentTime, attack: 0.01, hold: 0.01, decay: stepSec * 0.6, release: 0.02, gain: 0.18, dest: musicGain });
+        const idx = stepIdx % len;
+        const startOff = nextTime - c.currentTime;
+        const reverbSend = track.reverb || 0;
+        // Melody — full volume, reverb send for sparkle
+        const m = track.melody[idx];
+        if (m > 0) fmNote({ freq: m, preset: track.melodyPreset, start: startOff, gain: 0.16, durationMul: 0.9, reverbSend, dest: musicGain });
+        // Harmony — quieter, longer notes
+        const h = track.harmony && track.harmony[idx];
+        if (h > 0) fmNote({ freq: h, preset: track.harmonyPreset, start: startOff, gain: 0.09, durationMul: 1.4, reverbSend: reverbSend * 0.7, dest: musicGain });
+        // Bass — lowest layer, no reverb (keep it tight)
+        const b = track.bass && track.bass[idx];
+        if (b > 0) fmNote({ freq: b, preset: track.bassPreset, start: startOff, gain: 0.13, durationMul: 1.2, dest: musicGain });
+        // Drums — string codes; one or two letters per step
+        const d = track.drums && track.drums[idx];
+        if (d && d !== '.') {
+          for (const ch of d) {
+            if (ch === 'k') drum('kick',  { start: startOff, gain: 0.16, dest: musicGain });
+            if (ch === 's') drum('snare', { start: startOff, gain: 0.13, dest: musicGain });
+            if (ch === 'h') drum('hat',   { start: startOff, gain: 0.09, dest: musicGain });
+            if (ch === 'x') drum('crash', { start: startOff, gain: 0.10, dest: musicGain });
+          }
         }
         stepIdx++;
         nextTime += stepSec;
@@ -1294,6 +2153,85 @@ async function clearSave() {
 export default function GatheringTheMagic() {
   // ---- meta ----
   const [scene, setScene] = useState('title'); // title | world | battle | menu | dialog | starter
+
+  // ---- Nickname prompt ----
+  // After catching a creature, we stash its uid here. The prompt opens the
+  // moment the player exits the battle (so it doesn't compete with the catch
+  // animation/results). Set to null to dismiss; otherwise renders a modal.
+  const [pendingNicknameUid, setPendingNicknameUid] = useState(null);
+  // Generic rename target for the menu's "Rename" button. Kept separate so
+  // post-catch and menu rename can coexist if needed.
+  const [renameUid, setRenameUid] = useState(null);
+  // After catching while the team is full, the new creature is auto-deposited
+  // in the vault and its uid is stashed here. After the battle ends (iris-out),
+  // endBattle() copies it to vaultSwapUid which renders the modal.
+  const [pendingVaultSwapUid, setPendingVaultSwapUid] = useState(null);
+  // The actual modal trigger for the post-catch "swap or keep" prompt. Set by
+  // endBattle from pendingVaultSwapUid so the prompt opens AFTER the iris
+  // transition, not on top of the battle results screen.
+  const [vaultSwapUid, setVaultSwapUid] = useState(null);
+  // Which scene the vault was opened FROM ('world' if entered via Keeper Solenne,
+  // 'menu' if entered via the Vault Sigil). Drives the close-button destination.
+  const [vaultOrigin, setVaultOrigin] = useState('world');
+
+  // ---- Auto-save indicator ----
+  // Brief flash shown when performSave() is called, so the player has visual
+  // confirmation their progress is being persisted. Cleared after ~1s.
+  const [savingFlash, setSavingFlash] = useState(false);
+
+  // ---- Sprint mode (run shoes) ----
+  // When true, the per-step movement lock duration is halved, doubling the player's
+  // effective walk speed. Toggled via the on-screen sprint button or the R key,
+  // and held while the B button or Shift is pressed.
+  const [sprinting, setSprinting] = useState(false);
+  const sprintHeldRef = useRef(false);
+  // Effective sprint = toggle OR holding the sprint key/button
+  const isSprintActive = () => sprinting || sprintHeldRef.current;
+
+  // ---- NPC wandering ----
+  // Each NPC periodically takes a step within a 4x4 box around their authored
+  // home position, picking from up/down/left/right. Movement is gated on:
+  //   - target tile is walkable
+  //   - target tile isn't where the player is
+  //   - target tile isn't where another NPC currently is
+  //   - target tile is within ±2 tiles of the NPC's authored position
+  // npcMoveState[npcId] = { dx, dy, face } where dx/dy are offsets from the
+  // authored position. The renderer adds these offsets to the authored x/y.
+  // Player collision and interaction logic both look up the wandered position.
+  const [npcMoveState, setNpcMoveState] = useState({});
+  // Helper: returns the live position of an NPC (authored + wander offset).
+  const npcLivePos = (n) => {
+    const off = npcMoveState[n.id];
+    return off ? { x: n.x + off.dx, y: n.y + off.dy, face: off.face } : { x: n.x, y: n.y, face: n.face };
+  };
+
+  // ---- Scene transition FX ----
+  // Brief overlay animation played when we change scenes. Used for battle entry/
+  // exit and (lightly) map transitions. The actual scene swap happens at the
+  // midpoint of the animation so the player sees the new scene as the iris opens.
+  // null = no transition, otherwise: { kind: 'irisIn' | 'irisOut' | 'fade', key: number }
+  const [transitionFx, setTransitionFx] = useState(null);
+  // Run an iris-close transition, swap scene at the midpoint, then iris-open.
+  // `swap` is a callback that performs the actual scene change.
+  const playSceneTransition = (kind, swap) => {
+    if (kind === 'iris') {
+      setTransitionFx({ kind: 'irisIn', key: Date.now() });
+      // At ~340ms (slightly past the iris-close midpoint) the screen is fully black —
+      // perform the actual scene swap, then start the iris-open phase.
+      setTimeout(() => {
+        swap();
+        setTransitionFx({ kind: 'irisOut', key: Date.now() + 1 });
+      }, 340);
+      // Clear after both phases complete (~720ms total)
+      setTimeout(() => setTransitionFx(null), 720);
+    } else if (kind === 'fade') {
+      setTransitionFx({ kind: 'fade', key: Date.now() });
+      setTimeout(() => { swap(); }, 200);
+      setTimeout(() => setTransitionFx(null), 400);
+    } else {
+      swap();
+    }
+  };
   const [loaded, setLoaded] = useState(false);
   const [hasSave, setHasSave] = useState(false);
   const [storageBroken, setStorageBroken] = useState(false);
@@ -1303,7 +2241,15 @@ export default function GatheringTheMagic() {
   const [currentMap, setCurrentMap] = useState('town');
   const [player, setPlayer] = useState({ x: 7, y: 11, face: 'down' });
   const [team, setTeam] = useState([]);
+  // The Hollow Vault — overflow storage for caught creatures beyond the 6-slot team.
+  // Unbounded; persists across saves; never auto-prunes. Players deposit/withdraw via the
+  // Vault Keeper NPC in town, or auto-deposit when catching while the team is full.
+  const [vaultCreatures, setVaultCreatures] = useState([]);
   const [codex, setCodex] = useState({}); // { id: { caught: n, seen: n } }
+  // Daily-encounter lock — { entryKey: realDayNumber } so each phantom variant can
+  // appear at most once per real-world day. Persisted in saves so quitting and
+  // returning the same day doesn't re-roll the chance. Cleared on new game.
+  const [lastDailyEncounters, setLastDailyEncounters] = useState({});
   const [defeated, setDefeated] = useState([]); // npc ids
   // How many times the player has cleared all five zone trainers. Each cycle the trainer
   // teams reroll fresh from the zone pool with levels = base + (2 × cycles).
@@ -1330,6 +2276,129 @@ export default function GatheringTheMagic() {
   // ---- canvas ref ----
   const canvasRef = useRef(null);
   const stepLock = useRef(false);
+
+  // ---- animation tick ----
+  // Drives water shimmer, lava flicker, idle bobs, magic-circle pulse, ambient
+  // zone particles. Increments at ~9fps while in the world scene; the canvas-
+  // draw effect's deps include `animFrame` so the canvas redraws each tick.
+  const [animFrame, setAnimFrame] = useState(0);
+  useEffect(() => {
+    if (scene !== 'world') return;
+    const id = setInterval(() => setAnimFrame(f => (f + 1) % 1000), 110);
+    return () => clearInterval(id);
+  }, [scene]);
+
+  // ---- Day/night cycle ----
+  // A virtual day is 24 real-time minutes (1 minute = 1 hour). The hour is
+  // computed from real time so it's consistent across saves and continues
+  // even while in a menu. Tints the world canvas with a subtle color overlay
+  // and shows a phase icon in the TopBar.
+  const [hourOfDay, setHourOfDay] = useState(() => {
+    const minutesSinceEpoch = Date.now() / 60000;
+    return Math.floor(minutesSinceEpoch % 24);
+  });
+  useEffect(() => {
+    const id = setInterval(() => {
+      const minutesSinceEpoch = Date.now() / 60000;
+      setHourOfDay(Math.floor(minutesSinceEpoch % 24));
+    }, 5000);  // poll every 5s — hour changes every 60s anyway
+    return () => clearInterval(id);
+  }, []);
+
+  // ---- Mini-map toggle ----
+  const [miniMapOpen, setMiniMapOpen] = useState(false);
+
+  // ---- NPC wandering tick ----
+  // Every 700ms, each NPC has a chance to take a step. NPCs that are defeated
+  // stay put (out of politeness — and so a beaten trainer doesn't chase you).
+  // Specific NPCs that should stay anchored are excluded by id (board, shrine
+  // attendants, shop). Each step is validated against walkability, the player
+  // position, and other NPCs' wandered positions to avoid overlap.
+  const STATIONARY_NPC_IDS = new Set(['board', 'merle', 'lorekeeper', 'guide', 'vaultkeeper']);
+  const WANDER_RADIUS = 2;          // ±2 tiles from home = 4x4 box
+  const STEP_CHANCE = 0.22;         // per-NPC chance per tick to attempt a step
+  // Refs for player + defeated so the wander effect doesn't reset every step.
+  const playerRef = useRef(player);
+  const defeatedRef = useRef(defeated);
+  useEffect(() => { playerRef.current = player; }, [player]);
+  useEffect(() => { defeatedRef.current = defeated; }, [defeated]);
+  useEffect(() => {
+    if (scene !== 'world') return;
+    // Reset wander state on map change so we always start at authored positions.
+    setNpcMoveState({});
+    const id = setInterval(() => {
+      setNpcMoveState(prev => {
+        const npcs = currentMap === 'town' ? NPCS_TOWN : (NPCS_ZONE[currentMap] || []);
+        if (npcs.length === 0) return prev;
+        const next = { ...prev };
+        const livePlayer = playerRef.current;
+        const liveDefeated = defeatedRef.current;
+        // Build a set of tiles that are CURRENTLY occupied by NPCs (using the
+        // new state we're building, so within-tick changes are reflected).
+        const occupied = new Set();
+        for (const n of npcs) {
+          const off = next[n.id];
+          const px = n.x + (off ? off.dx : 0);
+          const py = n.y + (off ? off.dy : 0);
+          occupied.add(`${px},${py}`);
+        }
+        for (const n of npcs) {
+          if (STATIONARY_NPC_IDS.has(n.id)) continue;
+          if (liveDefeated.includes(n.id)) continue;
+          if (Math.random() > STEP_CHANCE) continue;
+          // Pick a random direction; if blocked, just face that way (look around)
+          const dirs = [
+            { dx: 0, dy: -1, face: 'up'    },
+            { dx: 0, dy:  1, face: 'down'  },
+            { dx:-1, dy:  0, face: 'left'  },
+            { dx: 1, dy:  0, face: 'right' },
+          ];
+          const dir = dirs[Math.floor(Math.random() * 4)];
+          const cur = next[n.id] || { dx: 0, dy: 0, face: n.face };
+          const newDx = cur.dx + dir.dx;
+          const newDy = cur.dy + dir.dy;
+          // Stay within wander radius
+          if (Math.abs(newDx) > WANDER_RADIUS || Math.abs(newDy) > WANDER_RADIUS) {
+            // Out of bounds — just turn to face that direction
+            next[n.id] = { dx: cur.dx, dy: cur.dy, face: dir.face };
+            continue;
+          }
+          const targetX = n.x + newDx;
+          const targetY = n.y + newDy;
+          // Tile must be walkable
+          const t = tileAt(currentMap, targetX, targetY);
+          if (!isWalkable(t)) {
+            next[n.id] = { dx: cur.dx, dy: cur.dy, face: dir.face };
+            continue;
+          }
+          // Tile mustn't be the player
+          if (livePlayer.x === targetX && livePlayer.y === targetY) {
+            next[n.id] = { dx: cur.dx, dy: cur.dy, face: dir.face };
+            continue;
+          }
+          // Tile mustn't be another NPC's current position
+          const targetKey = `${targetX},${targetY}`;
+          if (occupied.has(targetKey)) {
+            next[n.id] = { dx: cur.dx, dy: cur.dy, face: dir.face };
+            continue;
+          }
+          // Don't step onto an encounter tile (high grass/fire/etc) so NPCs don't
+          // accidentally start spawning encounters under themselves.
+          if (hasEncounter(t)) {
+            next[n.id] = { dx: cur.dx, dy: cur.dy, face: dir.face };
+            continue;
+          }
+          // Free up the previous tile, take the new one
+          const prevKey = `${n.x + cur.dx},${n.y + cur.dy}`;
+          occupied.delete(prevKey);
+          occupied.add(targetKey);
+          next[n.id] = { dx: newDx, dy: newDy, face: dir.face };
+        }
+        return next;
+      });
+    }, 700);
+    return () => clearInterval(id);
+  }, [scene, currentMap]);
 
   // ---------- Initial load ----------
   useEffect(() => {
@@ -1397,28 +2466,67 @@ export default function GatheringTheMagic() {
   const currentStateRef = useRef(null);
   // Keep a ref of the latest state so save callbacks always grab fresh values.
   useEffect(() => {
-    currentStateRef.current = { currentMap, player, team, codex, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated };
-  }, [currentMap, player, team, codex, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated]);
+    currentStateRef.current = { currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated };
+  }, [currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated]);
 
   const performSave = async () => {
     const snap = currentStateRef.current;
     if (!snap) return false;
-    return await saveGame({ ...snap, scene: 'world' });
+    // Flash the auto-save indicator briefly. We only flash on successful save
+    // so a failed save (rate-limited, storage broken) doesn't lie to the user.
+    const ok = await saveGame({ ...snap, scene: 'world' });
+    if (ok) {
+      setSavingFlash(true);
+      setTimeout(() => setSavingFlash(false), 1100);
+    }
+    return ok;
   };
 
   // ---------- Start new / continue ----------
   const startNew = () => {
     audio.wake();
     setCurrentMap('town'); setPlayer({ x: 7, y: 11, face: 'down' });
-    setTeam([]); setCodex({}); setDefeated([]); setTokens(5); setGold(60); setItems({ potion: 2 });
+    setTeam([]); setVaultCreatures([]); setCodex({}); setLastDailyEncounters({}); setDefeated([]); setTokens(5); setGold(60); setItems({ potion: 2 });
     setMode('classic'); setCommanderColor(""); setTrainerCycles(0);
     setMedallions([]); setPlaneswalkerDefeated(false); setChampionLearnPending(false);
+    // Mark tutorial pending — the effect above will fire once the player lands
+    // in the world (after picking mode + starter).
+    setTutorialPending(true);
     setScene('modeSelect');
   };
   const pickMode = (chosenMode) => {
     setMode(chosenMode);
     setScene('starter');
   };
+  // ---- Tutorial trigger ----
+  // True for fresh games; we trip a one-shot dialog cascade after the player
+  // lands in the town for the first time. Cleared after the tutorial runs so
+  // it doesn't pester the player on subsequent loads.
+  const [tutorialPending, setTutorialPending] = useState(false);
+  // Run the tutorial once `tutorialPending` flips true and we're in the world.
+  useEffect(() => {
+    if (!tutorialPending) return;
+    if (scene !== 'world') return;
+    // Brief delay so the player sees the town for a moment first.
+    const id = setTimeout(() => {
+      setDialog({
+        lines: [
+          "Welcome to Runesmith Hollow, planeswalker.",
+          "Use the d-pad to walk. Press the ⚡ button (or R on keyboard) to sprint.",
+          "Press A to talk to people, examine signs, or interact with the shrine in the center of town.",
+          "Tall grass, lava, and other special tiles in the wilds may spawn wild creatures. Throw a Creature Card to bind them to your team.",
+          "Tap the 🗺 icon (or M) to open the map. The Spellbook menu (B button) holds your team, codex, and items.",
+          "Five trainers patrol the zones — defeat them to unlock their shrine bosses. Bring back five medallions and the central shrine will sing.",
+        ],
+        onDone: () => {
+          setDialog(null);
+          setTutorialPending(false);
+        },
+      });
+    }, 600);
+    return () => clearTimeout(id);
+  }, [tutorialPending, scene]);
+
   const continueSave = async () => {
     audio.wake();
     try {
@@ -1434,7 +2542,11 @@ export default function GatheringTheMagic() {
       setCurrentMap(s.currentMap || 'town');
       setPlayer(s.player || { x: 7, y: 11, face: 'down' });
       setTeam(s.team);
+      // Vault may not exist on older saves — default to empty so loading legacy runs is safe.
+      setVaultCreatures(Array.isArray(s.vaultCreatures) ? s.vaultCreatures : []);
       setCodex(s.codex || {});
+      // Older saves won't have this — default to {} so the daily lock starts fresh.
+      setLastDailyEncounters(s.lastDailyEncounters || {});
       setDefeated(s.defeated || []);
       setTokens(s.tokens ?? 5);
       setGold(s.gold ?? 0);
@@ -1480,7 +2592,9 @@ export default function GatheringTheMagic() {
   const move = useCallback((dir) => {
     if (scene !== 'world' || stepLock.current) return;
     stepLock.current = true;
-    setTimeout(() => { stepLock.current = false; }, 120);
+    // Sprint halves the step lock for 2x effective walk speed
+    const lockDuration = isSprintActive() ? 60 : 120;
+    setTimeout(() => { stepLock.current = false; }, lockDuration);
 
     setPlayer((pp) => {
       let nx = pp.x, ny = pp.y, face = dir;
@@ -1491,9 +2605,14 @@ export default function GatheringTheMagic() {
       const t = tileAt(currentMap, nx, ny);
       if (!isWalkable(t)) return { ...pp, face };
 
-      // Block on NPCs
+      // Block on NPCs (using their wandered live position, not authored)
       const npcList = currentMap === 'town' ? NPCS_TOWN : (NPCS_ZONE[currentMap] || []);
-      if (npcList.some(n => n.x === nx && n.y === ny)) return { ...pp, face };
+      if (npcList.some(n => {
+        const off = npcMoveState[n.id];
+        const lx = n.x + (off ? off.dx : 0);
+        const ly = n.y + (off ? off.dy : 0);
+        return lx === nx && ly === ny;
+      })) return { ...pp, face };
 
       // ---- Building entrance ('B') — only enterable after first full zone-trainer clear ----
       if (t === 'B') {
@@ -1596,13 +2715,15 @@ export default function GatheringTheMagic() {
 
       // Encounter? (Skip in shrine interiors — those have no ambient encounters; only the boss.)
       if (!SHRINE_TO_ZONE[currentMap] && hasEncounter(t) && Math.random() < 0.16) {
-        setTimeout(() => triggerWildEncounter(), 100);
+        // Capture the encounter tile so the battle scene can theme its backdrop.
+        const encTile = t;
+        setTimeout(() => triggerWildEncounter(encTile), 100);
       }
       // Soft step click — quiet enough not to fatigue, alternates pitch via the closure inside audio.
       audio.sfx.step();
       return { x: nx, y: ny, face };
     });
-  }, [scene, currentMap, trainerCycles, medallions]);
+  }, [scene, currentMap, trainerCycles, medallions, npcMoveState]);
 
   // ---------- Interact ----------
   const interact = useCallback(() => {
@@ -1620,9 +2741,16 @@ export default function GatheringTheMagic() {
     if (t === 's') {
       const allMedallions = ['W','U','B','R','G'].every(c => medallions.includes(c));
       if (allMedallions && !planeswalkerDefeated) {
-        // Final boss prompt
+        // Heal first — interacting with the shrine should always restore your
+        // team, even on the run-up to the Planeswalker fight (otherwise the
+        // player can't recover after losing the boss without leaving and
+        // returning, which is bad UX).
+        setTeam((tm) => tm.map(c => ({ ...c, hp: c.maxHp, status: null })));
+        audio.sfx.heal();
+        // Then show the boss prompt; Continue starts the fight.
         setDialog({
           lines: [
+            "The shrine pulses with light — your team is restored to full strength.",
             "Five medallions, five wakings. The shrine flares to life beneath your fingertips.",
             "A figure crystallizes at the heart of the light — eyes burning with all five colors.",
             "\"You've gathered the magic. Now spend it.\" — The Planeswalker draws its spark.",
@@ -1644,14 +2772,24 @@ export default function GatheringTheMagic() {
       return;
     }
 
-    // NPC interaction (town or zone)
+    // NPC interaction (town or zone) — match against the wandered live position.
     const npcList = currentMap === 'town' ? NPCS_TOWN : (NPCS_ZONE[currentMap] || []);
-    const n = npcList.find(n => n.x === tx && n.y === ty);
+    const n = npcList.find(n => {
+      const off = npcMoveState[n.id];
+      const lx = n.x + (off ? off.dx : 0);
+      const ly = n.y + (off ? off.dy : 0);
+      return lx === tx && ly === ty;
+    });
     if (n) {
       if (n.isShop) {
         setDialog({
           lines: [`${n.name}: "${n.dialog}"`],
           onDone: () => { setDialog(null); setScene('shop'); }
+        });
+      } else if (n.isVault) {
+        setDialog({
+          lines: [`${n.name}: "${n.dialog}"`],
+          onDone: () => { setDialog(null); setVaultOrigin('world'); setScene('vault'); }
         });
       } else if (n.noBattle) {
         setDialog({ lines: [`${n.name}: "${n.dialog}"`], onDone: () => setDialog(null) });
@@ -1668,7 +2806,7 @@ export default function GatheringTheMagic() {
         });
       }
     }
-  }, [scene, player, currentMap, defeated, medallions, planeswalkerDefeated]);
+  }, [scene, player, currentMap, defeated, medallions, planeswalkerDefeated, npcMoveState]);
 
   // ---------- Battle refs (always read latest state) ----------
   const battleRef = useRef(null);
@@ -1735,24 +2873,65 @@ export default function GatheringTheMagic() {
 
   const firstAlive = (tm) => tm.findIndex(c => c.hp > 0);
 
-  const triggerWildEncounter = () => {
+  const triggerWildEncounter = (encTile = null) => {
     const tm = teamRef.current;
     if (tm.length === 0 || firstAlive(tm) < 0) return;
     const pool = ZONE_POOLS[currentMap] || ZONE_POOLS.wilds;
     const pick = weightedPick(pool);
     const lv = pick.lv[0] + Math.floor(Math.random() * (pick.lv[1] - pick.lv[0] + 1));
-    const enemy = createCreature(pick.id, lv);
-    setCodex((cx) => ({ ...cx, [pick.id]: { caught: cx[pick.id]?.caught || 0, seen: (cx[pick.id]?.seen || 0) + 1 }}));
+
+    // ---- Daily-encounter check ----
+    // If a daily creature is eligible (right zone, right hour, hasn't appeared
+    // today) and the small chance succeeds, replace this wild pick with the
+    // phantom variant. The encounter log gets a flavor lore line so the player
+    // knows something special is happening, and we lock the entry for the rest
+    // of the real-world day.
+    let enemy;
+    let dailyEntry = null;
+    const eligible = findEligibleDaily(currentMap, hourOfDay, lastDailyEncounters);
+    if (eligible && Math.random() < DAILY_SPAWN_CHANCE) {
+      dailyEntry = eligible;
+      enemy = createDailyVariant(eligible, lv);
+      // Lock for the rest of today regardless of catch outcome — the spawn
+      // itself is the event. Using realDayNumber() so the lock survives saves.
+      setLastDailyEncounters(prev => ({ ...prev, [eligible.key]: realDayNumber() }));
+    } else {
+      enemy = createCreature(pick.id, lv);
+    }
+    setCodex((cx) => ({ ...cx, [enemy.id]: { caught: cx[enemy.id]?.caught || 0, seen: (cx[enemy.id]?.seen || 0) + 1 }}));
+    // Roll weather ONCE at battle start (20% single, 4% double). Result stored
+    // on the battle object so badge / damage calc / tick / log all agree.
+    const ws = rollWeathersForZone(currentMap, 'wild');
+    const initLog = [];
+    if (ws.length === 2) {
+      // Stacked weather is rare and dramatic — give it its own intro line.
+      initLog.push(`The ${WEATHER[ws[0]].name.toLowerCase()} and ${WEATHER[ws[1]].name.toLowerCase()} converge!`);
+    } else if (ws.length === 1) {
+      initLog.push(`The ${WEATHER[ws[0]].name.toLowerCase()} sweeps the field.`);
+    }
+    if (dailyEntry) {
+      // Lead with lore for the rare encounter — then the standard "appeared!" line.
+      initLog.push(dailyEntry.lore);
+      initLog.push(`A ${displayName(enemy)} emerges!`);
+      // Cue the catch-success jingle (lighter, mystical) to tip off "this is special".
+      // Cheaper than authoring a new SFX and the player will recognize the rarity.
+      setTimeout(() => audio.sfx.medallion(primaryColor(enemy.c)), 300);
+    } else {
+      initLog.push(`A wild ${displayName(enemy)} appeared!`);
+    }
     setBattle({
       kind: 'wild',
       enemyTeam: [enemy],
       enemyIdx: 0,
       myIdx: firstAlive(tm),
-      log: [`A wild ${enemy.name} appeared!`],
+      log: initLog,
       turn: 'player',
       intro: true,
+      bgZone: currentMap,
+      bgTile: encTile,
+      weathers: ws,
     });
-    setScene('battle');
+    playSceneTransition('iris', () => setScene('battle'));
     // Wild battle entrance jingle (~700ms) — plays solo while music is suppressed by the intro flag.
     audio.sfx.battleStart('wild');
     // After ~1s, drop the intro flag so move buttons activate AND battle music fades in.
@@ -1770,17 +2949,28 @@ export default function GatheringTheMagic() {
     et.forEach(e => {
       setCodex((cx) => ({ ...cx, [e.id]: { caught: cx[e.id]?.caught || 0, seen: (cx[e.id]?.seen || 0) + 1 }}));
     });
+    const ws_t = rollWeathersForZone(currentMap, 'trainer');
+    const initLog_t = [];
+    if (ws_t.length === 2) {
+      initLog_t.push(`The ${WEATHER[ws_t[0]].name.toLowerCase()} and ${WEATHER[ws_t[1]].name.toLowerCase()} converge!`);
+    } else if (ws_t.length === 1) {
+      initLog_t.push(`The ${WEATHER[ws_t[0]].name.toLowerCase()} sweeps the field.`);
+    }
+    initLog_t.push(`${npc.name} wants to duel!`);
+    initLog_t.push(`${npc.name} sends out ${et[0].name}!`);
     setBattle({
       kind: 'trainer',
       npc,
       enemyTeam: et,
       enemyIdx: 0,
       myIdx: Math.max(0, firstAlive(tm)),
-      log: [`${npc.name} wants to duel!`, `${npc.name} sends out ${et[0].name}!`],
+      log: initLog_t,
       turn: 'player',
       intro: true,
+      bgZone: currentMap,
+      weathers: ws_t,
     });
-    setScene('battle');
+    playSceneTransition('iris', () => setScene('battle'));
     // Trainer entrance jingle (~1100ms) — slightly longer/more dramatic than wild.
     audio.sfx.battleStart('trainer');
     // Hold the intro a bit longer than wild so the trainer fanfare plays out before music.
@@ -1796,6 +2986,15 @@ export default function GatheringTheMagic() {
     const tm = teamRef.current;
     const boss = createCreature(sd.bossId, sd.bossLv);
     setCodex((cx) => ({ ...cx, [boss.id]: { caught: cx[boss.id]?.caught || 0, seen: (cx[boss.id]?.seen || 0) + 1 }}));
+    const ws_lg = rollWeathersForZone(currentMap, 'legendary');
+    const initLog_lg = [];
+    if (ws_lg.length === 2) {
+      initLog_lg.push(`The ${WEATHER[ws_lg[0]].name.toLowerCase()} and ${WEATHER[ws_lg[1]].name.toLowerCase()} converge!`);
+    } else if (ws_lg.length === 1) {
+      initLog_lg.push(`The ${WEATHER[ws_lg[0]].name.toLowerCase()} sweeps the field.`);
+    }
+    initLog_lg.push(`${boss.name} stirs from its long sleep!`);
+    initLog_lg.push(`Its eyes lock on you — there's no walking away from this.`);
     setBattle({
       kind: 'legendary',
       zoneId,
@@ -1803,15 +3002,14 @@ export default function GatheringTheMagic() {
       enemyTeam: [boss],
       enemyIdx: 0,
       myIdx: Math.max(0, firstAlive(tm)),
-      log: [
-        `${boss.name} stirs from its long sleep!`,
-        `Its eyes lock on you — there's no walking away from this.`,
-      ],
+      log: initLog_lg,
       turn: 'player',
       intro: true,
       bossKind: 'legendary',
+      bgZone: currentMap,
+      weathers: ws_lg,
     });
-    setScene('battle');
+    playSceneTransition('iris', () => setScene('battle'));
     audio.sfx.bossEntrance();
     setTimeout(() => {
       setBattle(b => b ? { ...b, intro: false } : b);
@@ -1831,13 +3029,18 @@ export default function GatheringTheMagic() {
       myIdx: Math.max(0, firstAlive(tm)),
       log: [
         `THE PLANESWALKER manifests in a halo of five colors!`,
+        `Reality buckles — a Planar Storm engulfs the arena!`,
         `"Show me the magic you've gathered."`,
       ],
       turn: 'player',
       intro: true,
       bossKind: 'planeswalker',
+      bgZone: currentMap,
+      // Planar Storm is hard-coded — the climactic boss always brings the storm.
+      // Never stacks (the storm is already absolute chaos).
+      weathers: ['planar'],
     });
-    setScene('battle');
+    playSceneTransition('iris', () => setScene('battle'));
     audio.sfx.bossEntrance();
     setTimeout(() => audio.sfx.planarBurst(), 600);
     setTimeout(() => {
@@ -1862,16 +3065,19 @@ export default function GatheringTheMagic() {
       else newEnemyTeam[b.enemyIdx] = healed;
       lines.push(`Restored ${h} HP.`);
       audio.sfx.heal();
-      return { newTeam, newEnemyTeam, lines };
+      const fx = { kind: 'heal', color: move.c || 'W', side, key: Date.now() + Math.random() };
+      return { newTeam, newEnemyTeam, lines, fx };
     }
 
     // Cue the spell-color flavor as soon as the move is resolved.
     audio.sfx.attack(move.c);
-    const res = calcDamage(attacker, defender, move);
+    const wKeys = weathersForBattle(b);
+    const res = calcDamage(attacker, defender, move, wKeys);
     if (res.missed) {
       lines.push('It missed!');
       audio.sfx.miss();
-      return { newTeam, newEnemyTeam, lines };
+      const fx = { kind: 'miss', color: move.c || 'W', side, key: Date.now() + Math.random() };
+      return { newTeam, newEnemyTeam, lines, fx };
     }
     const hurt = { ...defender, hp: Math.max(0, defender.hp - res.dmg) };
     if (side === 'player') newEnemyTeam[b.enemyIdx] = hurt;
@@ -1882,6 +3088,14 @@ export default function GatheringTheMagic() {
     if (res.mult > 1) { lines.push("It's devastatingly effective!"); audio.sfx.superEffective(); }
     else if (res.mult < 1) { lines.push('It barely lands.'); audio.sfx.notVeryEffective(); }
     if (res.crit) lines.push('A critical hit!');
+    // Surface weather-specific flavor — name the actual weather that boosted or
+    // weakened (handles the stacked case where one boosts and another weakens).
+    for (const k of res.boostedBy) {
+      lines.push(`The ${WEATHER[k].name.toLowerCase()} amplifies the spell!`);
+    }
+    for (const k of res.weakenedBy) {
+      lines.push(`The ${WEATHER[k].name.toLowerCase()} dampens the spell.`);
+    }
     lines.push(`${defender.name} took ${res.dmg} damage.`);
     if (move.drain) {
       const drainAmt = Math.floor(res.dmg * move.drain);
@@ -1905,7 +3119,14 @@ export default function GatheringTheMagic() {
         }
       }
     }
-    return { newTeam, newEnemyTeam, lines };
+    const fx = {
+      kind: res.crit ? 'crit' : (res.mult > 1 ? 'super' : (res.mult < 1 ? 'weak' : 'hit')),
+      color: move.c || 'W',
+      side,
+      dmg: res.dmg,
+      key: Date.now() + Math.random(),
+    };
+    return { newTeam, newEnemyTeam, lines, fx };
   }
 
   // Apply XP and any resulting level-ups to a single creature.
@@ -2017,15 +3238,34 @@ export default function GatheringTheMagic() {
       const actor = t[b.myIdx];
       const { newCreature, lines: tickLines } = tickStatusEnd(actor);
       if (tickLines.length > 0) lines.push(...tickLines);
-      if (newCreature !== actor) {
-        t = [...t]; t[b.myIdx] = newCreature;
+      let updated = newCreature;
+      // Weather tick — applies to the creature that just acted, once per turn.
+      // With stacked weather, each active weather gets its own tick (e.g. Bloom
+      // heals while Sandstorm chips — both fire and the log shows both).
+      // Skipped if status tick already KO'd the creature, and stops mid-loop
+      // if a weather KO's it (no point ticking the next weather on a corpse).
+      for (const wKey of weathersForBattle(b)) {
+        if (updated.hp <= 0) break;
+        const { creature: w2, lines: wLines } = applyWeatherTick(updated, wKey);
+        if (wLines.length > 0) lines.push(...wLines);
+        updated = w2;
+      }
+      if (updated !== actor) {
+        t = [...t]; t[b.myIdx] = updated;
       }
     } else {
       const actor = b.enemyTeam[b.enemyIdx];
       const { newCreature, lines: tickLines } = tickStatusEnd(actor);
       if (tickLines.length > 0) lines.push(...tickLines);
-      if (newCreature !== actor) {
-        const newEnemyTeam = [...b.enemyTeam]; newEnemyTeam[b.enemyIdx] = newCreature;
+      let updated = newCreature;
+      for (const wKey of weathersForBattle(b)) {
+        if (updated.hp <= 0) break;
+        const { creature: w2, lines: wLines } = applyWeatherTick(updated, wKey);
+        if (wLines.length > 0) lines.push(...wLines);
+        updated = w2;
+      }
+      if (updated !== actor) {
+        const newEnemyTeam = [...b.enemyTeam]; newEnemyTeam[b.enemyIdx] = updated;
         b = { ...b, enemyTeam: newEnemyTeam };
       }
     }
@@ -2034,7 +3274,7 @@ export default function GatheringTheMagic() {
     const me = t[b.myIdx];
 
     if (enemy.hp <= 0) {
-      lines.push(`${enemy.name} fainted!`);
+      lines.push(`${displayName(enemy)} fainted!`);
       audio.sfx.faint();
       const { newTeam: afterXP, lines: xpLines, pendingLearns, pendingGrafts } = grantXP(t, b.myIdx, enemy);
       lines.push(...xpLines);
@@ -2103,6 +3343,11 @@ export default function GatheringTheMagic() {
         lines.push(`THE PLANESWALKER bows its head. "The spark... is yours."`);
         lines.push(`Your commander absorbs a fragment of planar power!`);
         lines.push(`+${reward} gold.`);
+        // Vault Sigil — a permanent gift that surfaces an "Open Vault" button in
+        // the menu. Only awarded on first defeat (a no-op if somehow already owned).
+        lines.push(`The Planeswalker presses a rune-iron sigil into your palm — "For the spirits that wait. Call them when you must."`);
+        lines.push(`Received the Vault Sigil!`);
+        setItems(it => ({ ...it, vault_sigil: 1 }));
         setGold(g => g + reward);
         setPlaneswalkerDefeated(true);
         setChampionLearnPending(true);
@@ -2120,7 +3365,7 @@ export default function GatheringTheMagic() {
     }
 
     if (me.hp <= 0) {
-      lines.push(`${me.name} fainted!`);
+      lines.push(`${displayName(me)} fainted!`);
       audio.sfx.faint();
       const aliveIdx = t.findIndex(c => c.hp > 0);
       if (aliveIdx < 0) {
@@ -2163,14 +3408,16 @@ export default function GatheringTheMagic() {
         return;
       }
       // status cleared (thaw) but didn't skip: proceed with move on updated team
-      const { newTeam: afterMoveTeam, newEnemyTeam, lines } = applyMove(newBattle, newTeam, 'player', moveKey);
-      const finalBattle = { ...newBattle, enemyTeam: newEnemyTeam, log: [...newBattle.log, ...lines] };
+      const { newTeam: afterMoveTeam, newEnemyTeam, lines, fx } = applyMove(newBattle, newTeam, 'player', moveKey);
+      const finalBattle = { ...newBattle, enemyTeam: newEnemyTeam, log: [...newBattle.log, ...lines], fx };
       postStep(finalBattle, afterMoveTeam, 'player');
+      if (fx) setTimeout(() => setBattle(bb => bb && bb.fx && bb.fx.key === fx.key ? { ...bb, fx: null } : bb), 700);
       return;
     }
-    const { newTeam, newEnemyTeam, lines } = applyMove(b, t, 'player', moveKey);
-    const newBattle = { ...b, enemyTeam: newEnemyTeam, log: [...b.log, ...lines] };
+    const { newTeam, newEnemyTeam, lines, fx } = applyMove(b, t, 'player', moveKey);
+    const newBattle = { ...b, enemyTeam: newEnemyTeam, log: [...b.log, ...lines], fx };
     postStep(newBattle, newTeam, 'player');
+    if (fx) setTimeout(() => setBattle(bb => bb && bb.fx && bb.fx.key === fx.key ? { ...bb, fx: null } : bb), 700);
   };
 
   const enemyAction = () => {
@@ -2200,9 +3447,10 @@ export default function GatheringTheMagic() {
         const attacks = candidates.filter(x => !x.m.heal);
         pickedKey = attacks[Math.floor(Math.random() * attacks.length)].k;
       }
-      const { newTeam, newEnemyTeam: nnet, lines } = applyMove(newBattle, t, 'enemy', pickedKey);
-      const finalBattle = { ...newBattle, enemyTeam: nnet, log: [...newBattle.log, ...lines] };
+      const { newTeam, newEnemyTeam: nnet, lines, fx } = applyMove(newBattle, t, 'enemy', pickedKey);
+      const finalBattle = { ...newBattle, enemyTeam: nnet, log: [...newBattle.log, ...lines], fx };
       postStep(finalBattle, newTeam, 'enemy');
+      if (fx) setTimeout(() => setBattle(bb => bb && bb.fx && bb.fx.key === fx.key ? { ...bb, fx: null } : bb), 700);
       return;
     }
 
@@ -2214,9 +3462,10 @@ export default function GatheringTheMagic() {
       const attacks = candidates.filter(x => !x.m.heal);
       pickedKey = attacks[Math.floor(Math.random() * attacks.length)].k;
     }
-    const { newTeam, newEnemyTeam, lines } = applyMove(b, t, 'enemy', pickedKey);
-    const newBattle = { ...b, enemyTeam: newEnemyTeam, log: [...b.log, ...lines] };
+    const { newTeam, newEnemyTeam, lines, fx } = applyMove(b, t, 'enemy', pickedKey);
+    const newBattle = { ...b, enemyTeam: newEnemyTeam, log: [...b.log, ...lines], fx };
     postStep(newBattle, newTeam, 'enemy');
+    if (fx) setTimeout(() => setBattle(bb => bb && bb.fx && bb.fx.key === fx.key ? { ...bb, fx: null } : bb), 700);
   };
 
   const tryCatch = () => {
@@ -2234,9 +3483,13 @@ export default function GatheringTheMagic() {
       return;
     }
     // Phase 1: show throwing card animation, freeze inputs
-    setBattle({ ...b, turn: 'catching', throwing: true, log: [...b.log, `You hurl a Creature Card at ${b.enemyTeam[b.enemyIdx].name}!`] });
+    setBattle({ ...b, turn: 'catching', throwing: true, log: [...b.log, `You hurl a Creature Card at ${displayName(b.enemyTeam[b.enemyIdx])}!`] });
     setTokens(v => v - 1);
     audio.sfx.catchTry();
+    // Layer additional click-clusters timed to wobble 2 and wobble 3 so each
+    // shake has its own audible "tension" tick.
+    setTimeout(() => audio.sfx.catchTry(), 460);
+    setTimeout(() => audio.sfx.catchTry(), 880);
     // Phase 2 (after ~750ms): resolve catch outcome
     setTimeout(() => {
       const b2 = battleRef.current;
@@ -2248,10 +3501,20 @@ export default function GatheringTheMagic() {
       const t2 = teamRef.current;
       const lines = [];
       if (success) {
-        lines.push(`${enemy.name} was bound to your service!`);
+        lines.push(`${displayName(enemy)} was bound to your service!`);
         const caught = { ...enemy, hp: Math.max(1, enemy.hp) };
-        if (t2.length < 6) setTeam(tt => [...tt, caught]);
-        else lines.push(`(Team full — ${enemy.name} drifts away.)`);
+        if (t2.length < 6) {
+          setTeam(tt => [...tt, caught]);
+          // Stash this newly-caught uid so we can prompt for a nickname after
+          // the battle ends (so the prompt doesn't fight the battle results screen).
+          setPendingNicknameUid(caught.uid);
+        } else {
+          // Team full — auto-deposit to the Hollow Vault. The post-battle prompt
+          // lets the player swap immediately if they'd rather keep the new bind.
+          setVaultCreatures(v => [...v, caught]);
+          lines.push(`(Team full — ${displayName(enemy)} sent to the Hollow Vault.)`);
+          setPendingVaultSwapUid(caught.uid);
+        }
         setCodex(cx => ({ ...cx, [enemy.id]: { caught: (cx[enemy.id]?.caught || 0) + 1, seen: cx[enemy.id]?.seen || 1 }}));
         setBattle({ ...b2, log: [...b2.log, ...lines], turn: 'end', result: 'catch', throwing: false });
         audio.sfx.catchSuccess();
@@ -2261,7 +3524,7 @@ export default function GatheringTheMagic() {
         audio.sfx.catchFail();
         setTimeout(() => enemyAction(), 550);
       }
-    }, 750);
+    }, 1700);
   };
 
   const tryFlee = () => {
@@ -2365,14 +3628,14 @@ export default function GatheringTheMagic() {
     if (ci >= 0) {
       const creature = t[ci];
       if (forgetIdx < 0) {
-        newLines.push(`${creature.name} did not learn ${MOVES[next.move].name}.`);
+        newLines.push(`${displayName(creature)} did not learn ${MOVES[next.move].name}.`);
       } else {
         const forgotten = creature.moves[forgetIdx];
         const newMoves = creature.moves.slice();
         newMoves[forgetIdx] = next.move;
         const nt = [...t]; nt[ci] = { ...creature, moves: newMoves };
         setTeam(nt);
-        newLines.push(`${creature.name} forgot ${MOVES[forgotten].name} and learned ${MOVES[next.move].name}!`);
+        newLines.push(`${displayName(creature)} forgot ${MOVES[forgotten].name} and learned ${MOVES[next.move].name}!`);
       }
     }
     setBattle({ ...b, log: newLines, pendingLearns: rest });
@@ -2396,13 +3659,13 @@ export default function GatheringTheMagic() {
       if (choice.action === 'lock') {
         const nt = [...t]; nt[ci] = { ...creature, graftLocked: true, lastGraftAddedColor: null };
         setTeam(nt);
-        newLines.push(`${creature.name}'s color identity is locked. No further color grafts will be offered.`);
+        newLines.push(`${displayName(creature)}'s color identity is locked. No further color grafts will be offered.`);
       } else if (choice.action === 'skip') {
         // Color milestone declined for now — don't lock, just defer to the next color milestone.
         // Clear the new-color flag so the follow-up attack milestone falls back to "any color".
         const nt = [...t]; nt[ci] = { ...creature, lastGraftAddedColor: null };
         setTeam(nt);
-        newLines.push(`${creature.name} resists the call — for now.`);
+        newLines.push(`${displayName(creature)} resists the call — for now.`);
       } else if (choice.action === 'add') {
         const newColor = choice.color;
         const order = [...(creature.colorAddOrder || colorsOf(creature.c))];
@@ -2419,7 +3682,7 @@ export default function GatheringTheMagic() {
         const nt = [...t]; nt[ci] = { ...creature, c: newC, colorAddOrder: order, colorPenalties: penalties, lastGraftAddedColor: newColor };
         setTeam(nt);
         setCommanderColor(newC);
-        newLines.push(`✦ ${creature.name} grafted ${COLOR_NAME[newColor]} onto its identity!`);
+        newLines.push(`✦ ${displayName(creature)} grafted ${COLOR_NAME[newColor]} onto its identity!`);
         if (lastAdded && lastAdded !== newColor) {
           newLines.push(`(${COLOR_NAME[lastAdded]} attacks now do ${Math.round(penalties[lastAdded] * 100)}% damage.)`);
         }
@@ -2428,13 +3691,13 @@ export default function GatheringTheMagic() {
         if (creature.moves.length < 4) {
           const nt = [...t]; nt[ci] = { ...creature, moves: [...creature.moves, choice.move], lastGraftAddedColor: null };
           setTeam(nt);
-          newLines.push(`${creature.name} learned ${MOVES[choice.move].name}!`);
+          newLines.push(`${displayName(creature)} learned ${MOVES[choice.move].name}!`);
         } else {
           // Keep the flag clear regardless of whether the player chooses to forget or skip the queued learn.
           const nt = [...t]; nt[ci] = { ...creature, lastGraftAddedColor: null };
           setTeam(nt);
           newPendingLearns = [...newPendingLearns, { uid: creature.uid, move: choice.move }];
-          newLines.push(`${creature.name} wants to learn ${MOVES[choice.move].name}...`);
+          newLines.push(`${displayName(creature)} wants to learn ${MOVES[choice.move].name}...`);
         }
       } else if (choice.action === 'skip-attack') {
         // Player declined the attack offer. Clear flag.
@@ -2447,15 +3710,29 @@ export default function GatheringTheMagic() {
   };
 
   const endBattle = () => {
-    setBattle(null);
-    setScene('world');
+    // Iris-out transition back to the overworld. We clear `battle` immediately so
+    // the battle UI stops animating, but the iris hides the abrupt scene swap.
+    playSceneTransition('iris', () => {
+      setBattle(null);
+      setScene('world');
+      // If we caught a creature, prompt for a nickname now (after the iris).
+      if (pendingNicknameUid) {
+        setRenameUid(pendingNicknameUid);
+        setPendingNicknameUid(null);
+      }
+      // If the catch overflowed (team was full), now offer to swap a member out.
+      if (pendingVaultSwapUid) {
+        setVaultSwapUid(pendingVaultSwapUid);
+        setPendingVaultSwapUid(null);
+      }
+    });
     // Status effects clear when battle ends
     setTeam(tm => tm.map(c => c.status ? { ...c, status: null } : c));
     if (battle?.result === 'lose') {
       // "faint" → restore to shrine
       setTeam(tm => tm.map(c => ({ ...c, hp: Math.ceil(c.maxHp * 0.5), status: null })));
       setCurrentMap('town');
-      setPlayer({ x: 7, y: 6, face: 'down' });
+      setPlayer({ x: 7, y: 7, face: 'up' });
       showToast('You were revived at the shrine.');
     }
     // Save after each battle — but skip if rate-limited.
@@ -2466,450 +3743,1075 @@ export default function GatheringTheMagic() {
 
   // ---------- Keyboard ----------
   useEffect(() => {
-   const handler = (e) => {
-      // Dialog overlay takes priority over any underlying scene — close it first
-      // when X/Esc is pressed, mirroring the on-screen Continue button.
-      if (dialog) {
-        if (e.key === 'Escape' || e.key === 'x' || e.key === 'X') {
-          e.preventDefault();
-          dialog.onDone?.();
-          return;
-        }
-        if (e.key === 'Enter' || e.key === ' ' || e.key === 'z') {
-          e.preventDefault();
-          dialog.onDone?.();
-          return;
-        }
-      }
+    const handler = (e) => {
       if (scene === 'world') {
         if (e.key === 'ArrowUp' || e.key === 'w') { e.preventDefault(); move('up'); }
         else if (e.key === 'ArrowDown' || e.key === 's') { e.preventDefault(); move('down'); }
         else if (e.key === 'ArrowLeft' || e.key === 'a') { e.preventDefault(); move('left'); }
         else if (e.key === 'ArrowRight' || e.key === 'd') { e.preventDefault(); move('right'); }
         else if (e.key === 'Enter' || e.key === ' ' || e.key === 'z') { e.preventDefault(); interact(); }
-        else if (e.key === 'Escape' || e.key === 'x' || e.key === 'X') { e.preventDefault(); audio.sfx.menuOpen(); setScene('menu'); }
-      } else if (scene === 'menu' || scene === 'shop') {
-        // X/Esc closes any modal-like scene back to the world.
-        if (e.key === 'Escape' || e.key === 'x' || e.key === 'X') {
-          e.preventDefault();
-          audio.sfx.menuClose();
-          setScene('world');
-        }
+        else if (e.key === 'Escape' || e.key === 'x') { e.preventDefault(); audio.sfx.menuOpen(); setScene('menu'); }
+        else if (e.key === 'Shift') { sprintHeldRef.current = true; }
+        else if (e.key === 'r' || e.key === 'R') { e.preventDefault(); setSprinting(v => !v); }
+        else if (e.key === 'm' || e.key === 'M') { e.preventDefault(); setMiniMapOpen(v => !v); }
+      } else if (scene === 'dialog' || dialog) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'z') dialog?.onDone?.();
       }
     };
+    const upHandler = (e) => {
+      if (e.key === 'Shift') sprintHeldRef.current = false;
+    };
     window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener('keyup', upHandler);
+    return () => {
+      window.removeEventListener('keydown', handler);
+      window.removeEventListener('keyup', upHandler);
+    };
   }, [scene, move, interact, dialog]);
 
-  // ---------- Canvas draw ----------
+  // ---------- Canvas draw (Top-down 2.5D / "DS-era") ----------
+  // Axis-aligned tile grid (no isometric rotation) — but elevated objects (trees,
+  // rocks, walls, buildings, shrines) get real depth: visible trunks, side faces,
+  // height extending UP into the row above. Characters and elevated objects are
+  // drawn after ground in row-by-row Y order so the player correctly walks behind
+  // trees, etc. animFrame drives water shimmer, lava flicker, idle bobs, magic-
+  // circle pulse, and ambient zone particles.
   useEffect(() => {
     if (scene !== 'world') return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+
     const TILE = 32;
     const map = MAPS[currentMap].tiles;
     const W = map[0].length, H = map.length;
     const VW = 10, VH = 10;
 
-    // camera centered on player
-    let camX = Math.max(0, Math.min(player.x - Math.floor(VW / 2), W - VW));
-    let camY = Math.max(0, Math.min(player.y - Math.floor(VH / 2), H - VH));
+    // camera centered on player (clamped to map bounds, like the original)
+    const camX = Math.max(0, Math.min(player.x - Math.floor(VW / 2), W - VW));
+    const camY = Math.max(0, Math.min(player.y - Math.floor(VH / 2), H - VH));
 
     canvas.width = VW * TILE;
     canvas.height = VH * TILE;
+    const CW = canvas.width, CH = canvas.height;
 
-    // background
-    ctx.fillStyle = '#0a0a0f';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // zone-tinted background gradient (subtle — fills any gaps at map edges)
+    const bg = ctx.createLinearGradient(0, 0, 0, CH);
+    if (currentMap === 'ashen')   { bg.addColorStop(0, '#1c0e08'); bg.addColorStop(1, '#080406'); }
+    else if (currentMap === 'sanctum') { bg.addColorStop(0, '#0a1830'); bg.addColorStop(1, '#040814'); }
+    else if (currentMap === 'umbral')  { bg.addColorStop(0, '#0c0a18'); bg.addColorStop(1, '#040208'); }
+    else if (currentMap === 'wilds')   { bg.addColorStop(0, '#0e1a18'); bg.addColorStop(1, '#040806'); }
+    else if (currentMap === 'plains')  { bg.addColorStop(0, '#1a1a28'); bg.addColorStop(1, '#08080e'); }
+    else if (SHRINE_TO_ZONE[currentMap]) { bg.addColorStop(0, '#150f24'); bg.addColorStop(1, '#08060e'); }
+    else { bg.addColorStop(0, '#0a0a14'); bg.addColorStop(1, '#060608'); }
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, CW, CH);
 
-    const drawTile = (t, px, py) => {
-      const x = px * TILE, y = py * TILE;
+    // small color helpers (for character shading)
+    const hexToRgb = (hex) => {
+      const h = hex.replace('#', '');
+      return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
+    };
+    const rgbToHex = (r, g, b) => {
+      const t = (n) => Math.round(Math.max(0, Math.min(255, n))).toString(16).padStart(2, '0');
+      return '#' + t(r) + t(g) + t(b);
+    };
+    const shade = (hex, factor) => {
+      const c = hexToRgb(hex);
+      return rgbToHex(c.r * factor, c.g * factor, c.b * factor);
+    };
+
+    // ---- ground tile (flat 32x32 square at tile pos) ----
+    const drawGround = (t, gx, gy) => {
+      const sx = (gx - camX) * TILE;
+      const sy = (gy - camY) * TILE;
       switch (t) {
-        case '.':
-          ctx.fillStyle = '#4a7a3a'; ctx.fillRect(x, y, TILE, TILE);
+        case '.': {
+          ctx.fillStyle = '#4a7a3a'; ctx.fillRect(sx, sy, TILE, TILE);
           ctx.fillStyle = '#3d6a30';
           for (let i = 0; i < 3; i++) {
-            const px2 = x + ((px * 7 + py * 13 + i * 11) % TILE);
-            const py2 = y + ((px * 11 + py * 5 + i * 7) % TILE);
-            ctx.fillRect(px2, py2, 2, 2);
+            const dx = (gx * 7 + gy * 13 + i * 11) % TILE;
+            const dy = (gx * 11 + gy * 5 + i * 7) % TILE;
+            ctx.fillRect(sx + dx, sy + dy, 2, 2);
           }
           break;
-        case 'g':
-          ctx.fillStyle = '#2e5a22'; ctx.fillRect(x, y, TILE, TILE);
+        }
+        case 'g': {
+          ctx.fillStyle = '#2e5a22'; ctx.fillRect(sx, sy, TILE, TILE);
           ctx.fillStyle = '#1c3a14';
           for (let i = 0; i < 6; i++) {
-            const gx = x + ((px * 3 + i * 5) % TILE);
-            const gy = y + ((py * 7 + i * 11) % TILE);
-            ctx.fillRect(gx, gy, 2, 4);
+            const dx = (gx * 3 + i * 5) % TILE;
+            const dy = (gy * 7 + i * 11) % TILE;
+            ctx.fillRect(sx + dx, sy + dy, 2, 4);
           }
           ctx.strokeStyle = '#3a7028'; ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.moveTo(x + 8, y + 22); ctx.lineTo(x + 12, y + 14);
-          ctx.moveTo(x + 20, y + 26); ctx.lineTo(x + 24, y + 18);
+          ctx.moveTo(sx + 8, sy + 22); ctx.lineTo(sx + 12, sy + 14);
+          ctx.moveTo(sx + 20, sy + 26); ctx.lineTo(sx + 24, sy + 18);
           ctx.stroke();
           break;
-        case 'p':
-          ctx.fillStyle = '#c9a96a'; ctx.fillRect(x, y, TILE, TILE);
+        }
+        case 'p': {
+          ctx.fillStyle = '#c9a96a'; ctx.fillRect(sx, sy, TILE, TILE);
           ctx.fillStyle = '#a08850';
           for (let i = 0; i < 4; i++) {
-            const px2 = x + ((px * 7 + i * 9) % TILE);
-            const py2 = y + ((py * 11 + i * 5) % TILE);
-            ctx.fillRect(px2, py2, 3, 2);
+            const dx = (gx * 7 + i * 9) % TILE;
+            const dy = (gy * 11 + i * 5) % TILE;
+            ctx.fillRect(sx + dx, sy + dy, 3, 2);
           }
           break;
-        case 't':
-          ctx.fillStyle = '#4a7a3a'; ctx.fillRect(x, y, TILE, TILE);
-          ctx.fillStyle = '#3a2616'; ctx.fillRect(x + 14, y + 20, 4, 10);
-          ctx.fillStyle = '#1f4a1a';
-          ctx.beginPath(); ctx.arc(x + 16, y + 14, 11, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#2b6024';
-          ctx.beginPath(); ctx.arc(x + 12, y + 12, 6, 0, Math.PI * 2); ctx.fill();
-          break;
-        case 'r':
-          ctx.fillStyle = '#8a3a2a'; ctx.fillRect(x, y, TILE, TILE);
-          ctx.fillStyle = '#6a2818';
-          for (let i = 0; i < TILE; i += 4) ctx.fillRect(x, y + i, TILE, 1);
-          break;
-        case 'w':
-          ctx.fillStyle = '#b59a7a'; ctx.fillRect(x, y, TILE, TILE);
-          ctx.strokeStyle = '#7a6040'; ctx.lineWidth = 1;
-          ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
-          break;
-        case 'd':
-          ctx.fillStyle = '#b59a7a'; ctx.fillRect(x, y, TILE, TILE);
-          ctx.fillStyle = '#3a2414'; ctx.fillRect(x + 8, y + 6, 16, 22);
-          ctx.fillStyle = '#d4b060'; ctx.fillRect(x + 20, y + 16, 2, 3);
-          break;
-        case 's':
-          ctx.fillStyle = '#4a7a3a'; ctx.fillRect(x, y, TILE, TILE);
-          ctx.fillStyle = '#b8a070'; ctx.fillRect(x + 6, y + 10, 20, 18);
-          ctx.fillStyle = '#e8d080'; ctx.fillRect(x + 10, y + 6, 12, 6);
-          ctx.fillStyle = '#fff5c0'; ctx.fillRect(x + 14, y + 14, 4, 8);
-          // glow
-          const grad = ctx.createRadialGradient(x + 16, y + 14, 2, x + 16, y + 14, 18);
-          grad.addColorStop(0, 'rgba(255,240,180,0.6)');
-          grad.addColorStop(1, 'rgba(255,240,180,0)');
-          ctx.fillStyle = grad; ctx.fillRect(x - 4, y - 4, TILE + 8, TILE + 8);
-          break;
-        case 'E':
-          ctx.fillStyle = '#c9a96a'; ctx.fillRect(x, y, TILE, TILE);
-          ctx.fillStyle = '#7a5a20'; ctx.fillRect(x + 12, y + 8, 8, 4);
-          ctx.fillRect(x + 12, y + 20, 8, 4);
-          break;
-        case 'a':
-          // ash ground (safe, in Ashen Wastes)
-          ctx.fillStyle = '#6a5a52'; ctx.fillRect(x, y, TILE, TILE);
-          ctx.fillStyle = '#544842';
-          for (let i = 0; i < 4; i++) {
-            const px2 = x + ((px * 13 + py * 7 + i * 11) % TILE);
-            const py2 = y + ((px * 5 + py * 11 + i * 9) % TILE);
-            ctx.fillRect(px2, py2, 2, 1);
-          }
-          break;
-        case 'l':
-          // lava vent (encounter, Ashen Wastes)
-          ctx.fillStyle = '#6a5a52'; ctx.fillRect(x, y, TILE, TILE);
-          ctx.fillStyle = '#e06020';
-          ctx.fillRect(x + 6, y + 6, 20, 20);
-          ctx.fillStyle = '#ffa040';
+        }
+        case 'a': {
+          ctx.fillStyle = '#5a4e48'; ctx.fillRect(sx, sy, TILE, TILE);
+          ctx.fillStyle = '#3a322e';
           for (let i = 0; i < 5; i++) {
-            const gx = x + 6 + ((px * 3 + i * 7) % 18);
-            const gy = y + 6 + ((py * 5 + i * 11) % 18);
-            ctx.fillRect(gx, gy, 2, 2);
+            const dx = (gx * 13 + gy * 7 + i * 11) % TILE;
+            const dy = (gx * 5 + gy * 11 + i * 9) % TILE;
+            ctx.fillRect(sx + dx, sy + dy, 2, 1);
           }
-          ctx.fillStyle = '#ffee60';
-          ctx.fillRect(x + 14, y + 12, 3, 3);
           break;
-        case 'u':
-          // shallow water (safe, Sanctum)
-          ctx.fillStyle = '#3a6a90'; ctx.fillRect(x, y, TILE, TILE);
-          ctx.strokeStyle = '#4a88b0'; ctx.lineWidth = 1;
+        }
+        case 'l': {
+          // ash floor under the lava
+          ctx.fillStyle = '#3a2418'; ctx.fillRect(sx, sy, TILE, TILE);
+          // hot lava pool, pulsing
+          const pulse = 0.6 + 0.4 * Math.abs(Math.sin((animFrame + gx * 7 + gy * 11) * 0.45));
+          ctx.fillStyle = `rgba(224, 96, 32, ${pulse})`;
+          ctx.fillRect(sx + 4, sy + 4, TILE - 8, TILE - 8);
+          // glowing core
+          ctx.fillStyle = '#ffaa40';
+          ctx.fillRect(sx + 12, sy + 12, 8, 8);
+          ctx.fillStyle = '#ffee80';
+          ctx.fillRect(sx + 14, sy + 14, 4, 4);
+          // ember sparks
+          if ((gx + gy + animFrame) % 4 === 0) {
+            ctx.fillStyle = 'rgba(255, 220, 100, 0.9)';
+            ctx.fillRect(sx + 6 + ((animFrame + gx) % 6), sy + 4, 1, 1);
+          }
+          break;
+        }
+        case 'u': {
+          ctx.fillStyle = '#3a6a90'; ctx.fillRect(sx, sy, TILE, TILE);
+          // shimmer streaks (animated)
+          const phase = (animFrame + gx * 2 + gy * 3) % 8;
+          ctx.strokeStyle = '#5a8ac0'; ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.moveTo(x + 4, y + 8); ctx.lineTo(x + 14, y + 10); ctx.moveTo(x + 18, y + 18); ctx.lineTo(x + 28, y + 20);
+          ctx.moveTo(sx + 4 + phase, sy + 8); ctx.lineTo(sx + 14 + phase, sy + 10);
+          ctx.moveTo(sx + 18 - phase, sy + 18); ctx.lineTo(sx + 28 - phase, sy + 20);
           ctx.stroke();
           break;
-        case 'o':
-          // deep pool (encounter, Sanctum)
-          ctx.fillStyle = '#1a3a60'; ctx.fillRect(x, y, TILE, TILE);
+        }
+        case 'o': {
+          ctx.fillStyle = '#1a3a60'; ctx.fillRect(sx, sy, TILE, TILE);
           ctx.fillStyle = '#2b5088';
-          for (let i = 0; i < 4; i++) {
-            const gx = x + ((px * 7 + i * 9) % TILE);
-            const gy = y + ((py * 5 + i * 11) % TILE);
-            ctx.fillRect(gx, gy, 3, 2);
+          for (let i = 0; i < 3; i++) {
+            const dx = (gx * 7 + i * 9) % TILE;
+            const dy = (gy * 5 + i * 11) % TILE;
+            ctx.fillRect(sx + dx, sy + dy, 3, 2);
           }
-          ctx.strokeStyle = '#6cb8e0'; ctx.lineWidth = 1;
+          // expanding ripple
+          const phase = (animFrame + gx + gy) % 8;
+          const rad = 3 + phase;
+          const alpha = Math.max(0, 1 - phase / 8);
+          ctx.strokeStyle = `rgba(108, 184, 224, ${alpha * 0.7})`;
+          ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(x + 16, y + 16, 6, 0, Math.PI * 2);
+          ctx.arc(sx + 16, sy + 16, rad, 0, Math.PI * 2);
           ctx.stroke();
           break;
-        case 'm':
-          // moss ground (safe, Umbral)
-          ctx.fillStyle = '#2a3a26'; ctx.fillRect(x, y, TILE, TILE);
+        }
+        case 'm': {
+          ctx.fillStyle = '#2a3a26'; ctx.fillRect(sx, sy, TILE, TILE);
           ctx.fillStyle = '#1a2818';
           for (let i = 0; i < 4; i++) {
-            const px2 = x + ((px * 7 + i * 5) % TILE);
-            const py2 = y + ((py * 11 + i * 7) % TILE);
-            ctx.fillRect(px2, py2, 2, 2);
+            const dx = (gx * 7 + i * 5) % TILE;
+            const dy = (gy * 11 + i * 7) % TILE;
+            ctx.fillRect(sx + dx, sy + dy, 2, 2);
           }
           break;
-        case 'v':
-          // vine thicket (encounter, Umbral)
-          ctx.fillStyle = '#1a2814'; ctx.fillRect(x, y, TILE, TILE);
+        }
+        case 'v': {
+          ctx.fillStyle = '#1a2814'; ctx.fillRect(sx, sy, TILE, TILE);
           ctx.strokeStyle = '#4a2a5a'; ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.moveTo(x + 4, y + 4); ctx.lineTo(x + 16, y + 14); ctx.lineTo(x + 12, y + 26);
-          ctx.moveTo(x + 28, y + 6); ctx.lineTo(x + 22, y + 18); ctx.lineTo(x + 26, y + 28);
+          ctx.moveTo(sx + 4, sy + 4); ctx.lineTo(sx + 16, sy + 14); ctx.lineTo(sx + 12, sy + 26);
+          ctx.moveTo(sx + 28, sy + 6); ctx.lineTo(sx + 22, sy + 18); ctx.lineTo(sx + 26, sy + 28);
           ctx.stroke();
-          ctx.fillStyle = '#6a3a80';
-          ctx.fillRect(x + 14, y + 12, 3, 3);
-          ctx.fillRect(x + 22, y + 18, 3, 3);
+          ctx.fillStyle = '#7a3a98';
+          ctx.fillRect(sx + 14, sy + 12, 3, 3);
+          ctx.fillRect(sx + 22, sy + 18, 3, 3);
           break;
-        case 'k':
-          // rock (blocking)
-          ctx.fillStyle = '#6a5a52'; ctx.fillRect(x, y, TILE, TILE);
-          ctx.fillStyle = '#3a3028';
-          ctx.beginPath();
-          ctx.moveTo(x + 6, y + 22); ctx.lineTo(x + 10, y + 8); ctx.lineTo(x + 20, y + 6);
-          ctx.lineTo(x + 26, y + 14); ctx.lineTo(x + 24, y + 26); ctx.closePath();
-          ctx.fill();
-          ctx.fillStyle = '#8a7870';
-          ctx.fillRect(x + 12, y + 12, 5, 3);
-          break;
-        case 'c':
-          // chalky plains (safe, white-tinted ground)
-          ctx.fillStyle = '#d8cca0'; ctx.fillRect(x, y, TILE, TILE);
+        }
+        case 'c': {
+          ctx.fillStyle = '#d8cca0'; ctx.fillRect(sx, sy, TILE, TILE);
           ctx.fillStyle = '#c8b88c';
           for (let i = 0; i < 4; i++) {
-            const px2 = x + ((px * 5 + i * 7) % TILE);
-            const py2 = y + ((py * 11 + i * 9) % TILE);
-            ctx.fillRect(px2, py2, 2, 1);
+            const dx = (gx * 5 + i * 7) % TILE;
+            const dy = (gy * 11 + i * 9) % TILE;
+            ctx.fillRect(sx + dx, sy + dy, 2, 1);
           }
           break;
-        case 'f':
-          // flower field (encounter, white-biased)
-          ctx.fillStyle = '#bccc88'; ctx.fillRect(x, y, TILE, TILE);
-          // tall grass marks
-          ctx.fillStyle = '#8aa050';
+        }
+        case 'f': {
+          ctx.fillStyle = '#bcd088'; ctx.fillRect(sx, sy, TILE, TILE);
+          ctx.fillStyle = '#7a9248';
           for (let i = 0; i < 5; i++) {
-            const gx = x + ((px * 7 + i * 5) % TILE);
-            const gy = y + ((py * 11 + i * 9) % TILE);
-            ctx.fillRect(gx, gy, 1, 3);
+            const dx = (gx * 7 + i * 5) % TILE;
+            const dy = (gy * 11 + i * 9) % TILE;
+            ctx.fillRect(sx + dx, sy + dy, 1, 3);
           }
-          // bright flowers
-          const flowerColors = ['#fff8c8', '#f8d8e8', '#e8f4ff', '#ffe8a8'];
+          const cols = ['#fff8c8', '#f8d8e8', '#e8f4ff', '#ffe8a8'];
           for (let i = 0; i < 3; i++) {
-            ctx.fillStyle = flowerColors[(px + py + i) % 4];
-            const fx = x + 4 + ((px * 13 + i * 11) % 22);
-            const fy = y + 4 + ((py * 7 + i * 13) % 22);
+            ctx.fillStyle = cols[(gx + gy + i) % cols.length];
+            const fx = sx + 4 + ((gx * 13 + i * 11) % 22);
+            const fy = sy + 4 + ((gy * 7 + i * 13) % 22);
             ctx.fillRect(fx, fy, 3, 3);
             ctx.fillStyle = '#e8c860';
             ctx.fillRect(fx + 1, fy + 1, 1, 1);
           }
           break;
-        case 'B': {
-          // Building entrance — appearance depends on which zone we're in.
-          // First paint the surrounding ground so the door blends in naturally.
-          if (currentMap === 'wilds') { ctx.fillStyle = '#4a7a3a'; }
-          else if (currentMap === 'ashen') { ctx.fillStyle = '#6a5a52'; }
-          else if (currentMap === 'sanctum') { ctx.fillStyle = '#3a6a90'; }
-          else if (currentMap === 'umbral') { ctx.fillStyle = '#2a3a26'; }
-          else if (currentMap === 'plains') { ctx.fillStyle = '#d8cca0'; }
-          else { ctx.fillStyle = '#444'; }
-          ctx.fillRect(x, y, TILE, TILE);
-          // Building silhouette — themed per zone
-          if (currentMap === 'wilds') {
-            // Burrow — a dark mound with a black hole in the front
-            ctx.fillStyle = '#3a2616';
-            ctx.beginPath(); ctx.ellipse(x + 16, y + 22, 13, 9, 0, Math.PI, 0); ctx.fill();
-            ctx.fillStyle = '#0a0608';
-            ctx.beginPath(); ctx.ellipse(x + 16, y + 22, 7, 5, 0, Math.PI, 0); ctx.fill();
-            // grass tufts on top
-            ctx.fillStyle = '#1f4a1a';
-            ctx.fillRect(x + 8, y + 12, 2, 3); ctx.fillRect(x + 22, y + 11, 2, 4);
-          } else if (currentMap === 'ashen') {
-            // Cave mouth — jagged dark opening in stone
-            ctx.fillStyle = '#1a1410';
-            ctx.beginPath();
-            ctx.moveTo(x + 6, y + 28); ctx.lineTo(x + 8, y + 12);
-            ctx.lineTo(x + 12, y + 6); ctx.lineTo(x + 20, y + 6);
-            ctx.lineTo(x + 24, y + 12); ctx.lineTo(x + 26, y + 28);
-            ctx.closePath(); ctx.fill();
-            // glowing embers inside
-            ctx.fillStyle = '#e06020';
-            ctx.fillRect(x + 14, y + 22, 2, 2); ctx.fillRect(x + 18, y + 24, 2, 2);
-            // outer rock texture
-            ctx.fillStyle = '#3a3028';
-            ctx.fillRect(x + 2, y + 14, 3, 3); ctx.fillRect(x + 27, y + 16, 3, 3);
-          } else if (currentMap === 'sanctum') {
-            // Reed hut on a small island
-            ctx.fillStyle = '#5a8aa8'; ctx.fillRect(x + 4, y + 22, 24, 6); // islet
-            ctx.fillStyle = '#8a7048'; ctx.fillRect(x + 8, y + 14, 16, 10); // walls
-            ctx.fillStyle = '#5a3018'; // door
-            ctx.fillRect(x + 14, y + 18, 4, 6);
-            // thatched roof
-            ctx.fillStyle = '#a88040';
-            ctx.beginPath();
-            ctx.moveTo(x + 6, y + 14); ctx.lineTo(x + 16, y + 4); ctx.lineTo(x + 26, y + 14);
-            ctx.closePath(); ctx.fill();
-            ctx.strokeStyle = '#705028'; ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(x + 8, y + 12); ctx.lineTo(x + 24, y + 12); ctx.stroke();
-          } else if (currentMap === 'umbral') {
-            // Withered shack — leaning planks
-            ctx.fillStyle = '#3a2818';
-            ctx.fillRect(x + 6, y + 12, 20, 16);
-            // plank lines
-            ctx.strokeStyle = '#1a0e08'; ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(x + 11, y + 12); ctx.lineTo(x + 11, y + 28);
-            ctx.moveTo(x + 16, y + 12); ctx.lineTo(x + 16, y + 28);
-            ctx.moveTo(x + 21, y + 12); ctx.lineTo(x + 21, y + 28);
-            ctx.stroke();
-            // crooked roof
-            ctx.fillStyle = '#2a1a10';
-            ctx.beginPath();
-            ctx.moveTo(x + 4, y + 12); ctx.lineTo(x + 14, y + 4); ctx.lineTo(x + 28, y + 12);
-            ctx.closePath(); ctx.fill();
-            // dark doorway
-            ctx.fillStyle = '#0a0608'; ctx.fillRect(x + 13, y + 18, 6, 10);
-          } else if (currentMap === 'plains') {
-            // Heavenly gates — pearl pillars with golden trim
-            ctx.fillStyle = '#fff5e0';
-            ctx.fillRect(x + 6, y + 8, 5, 22);
-            ctx.fillRect(x + 21, y + 8, 5, 22);
-            // golden capital
-            ctx.fillStyle = '#e8c860';
-            ctx.fillRect(x + 5, y + 6, 7, 3);
-            ctx.fillRect(x + 20, y + 6, 7, 3);
-            // arch
-            ctx.strokeStyle = '#e8c860'; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.arc(x + 16, y + 8, 9, Math.PI, 0); ctx.stroke();
-            // light pouring through
-            ctx.fillStyle = 'rgba(255,245,200,0.5)';
-            ctx.fillRect(x + 12, y + 11, 8, 18);
-          } else {
-            // generic doorway fallback
-            ctx.fillStyle = '#3a2414'; ctx.fillRect(x + 8, y + 6, 16, 22);
-            ctx.fillStyle = '#d4b060'; ctx.fillRect(x + 20, y + 16, 2, 3);
-          }
+        }
+        case 'F': {
+          ctx.fillStyle = '#3a3242'; ctx.fillRect(sx, sy, TILE, TILE);
+          ctx.fillStyle = '#2a2230';
+          ctx.fillRect(sx, sy, TILE, 1); ctx.fillRect(sx, sy + TILE - 1, TILE, 1);
+          ctx.fillRect(sx, sy, 1, TILE); ctx.fillRect(sx + TILE - 1, sy, 1, TILE);
+          ctx.fillStyle = '#5a4a78';
+          ctx.fillRect(sx + 6, sy + 10, 1, 1);
+          ctx.fillRect(sx + 22, sy + 18, 1, 1);
+          ctx.fillRect(sx + 12, sy + 24, 1, 1);
           break;
         }
-        case 'F':
-          // Shrine interior floor — neutral stone slab with a faint magic sheen
-          ctx.fillStyle = '#3a3242'; ctx.fillRect(x, y, TILE, TILE);
-          ctx.fillStyle = '#2a2230';
-          ctx.fillRect(x, y, TILE, 1); ctx.fillRect(x, y + TILE - 1, TILE, 1);
-          ctx.fillRect(x, y, 1, TILE); ctx.fillRect(x + TILE - 1, y, 1, TILE);
-          // subtle rune speckle
-          ctx.fillStyle = '#5a4a78';
-          ctx.fillRect(x + 6, y + 10, 1, 1); ctx.fillRect(x + 22, y + 18, 1, 1);
-          ctx.fillRect(x + 12, y + 24, 1, 1);
-          break;
         case 'L': {
-          // Legendary boss tile — pulsing summoning circle in the shrine's color.
-          // After defeating the boss (medallion collected), the circle fades to a soft afterglow.
+          // shrine floor under the magic circle
+          ctx.fillStyle = '#3a3242'; ctx.fillRect(sx, sy, TILE, TILE);
           const zoneId = SHRINE_TO_ZONE[currentMap];
           const sd = zoneId && SHRINE_DATA[zoneId];
           const col = sd ? COLOR_HEX[sd.color] : '#fff';
           const deep = sd ? COLOR_DEEP[sd.color] : '#444';
           const claimed = sd && medallions.includes(sd.color);
-          // base floor under the circle
-          ctx.fillStyle = '#3a3242'; ctx.fillRect(x, y, TILE, TILE);
-          // outer rim
-          ctx.strokeStyle = claimed ? '#5a4a78' : col;
-          ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.arc(x + 16, y + 16, 13, 0, Math.PI * 2); ctx.stroke();
-          // inner sigil
-          ctx.strokeStyle = claimed ? '#3a3050' : deep;
-          ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.arc(x + 16, y + 16, 8, 0, Math.PI * 2); ctx.stroke();
-          // cross-rune
-          ctx.beginPath();
-          ctx.moveTo(x + 16, y + 6); ctx.lineTo(x + 16, y + 26);
-          ctx.moveTo(x + 6, y + 16); ctx.lineTo(x + 26, y + 16);
-          ctx.stroke();
-          // glow center (only when active)
           if (!claimed) {
-            const grad = ctx.createRadialGradient(x + 16, y + 16, 1, x + 16, y + 16, 14);
-            grad.addColorStop(0, col + 'cc');
+            const pulse = 0.55 + 0.45 * Math.abs(Math.sin(animFrame * 0.3));
+            ctx.save();
+            ctx.globalAlpha = pulse;
+            // outer rim
+            ctx.strokeStyle = col;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.arc(sx + 16, sy + 16, 13, 0, Math.PI * 2); ctx.stroke();
+            // inner sigil
+            ctx.strokeStyle = deep;
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(sx + 16, sy + 16, 8, 0, Math.PI * 2); ctx.stroke();
+            // cross-rune
+            ctx.beginPath();
+            ctx.moveTo(sx + 16, sy + 6); ctx.lineTo(sx + 16, sy + 26);
+            ctx.moveTo(sx + 6, sy + 16); ctx.lineTo(sx + 26, sy + 16);
+            ctx.stroke();
+            ctx.restore();
+            // glow center
+            const grad = ctx.createRadialGradient(sx + 16, sy + 16, 1, sx + 16, sy + 16, 14);
+            grad.addColorStop(0, col + 'aa');
             grad.addColorStop(1, col + '00');
             ctx.fillStyle = grad;
-            ctx.fillRect(x - 2, y - 2, TILE + 4, TILE + 4);
+            ctx.fillRect(sx - 2, sy - 2, TILE + 4, TILE + 4);
+          } else {
+            // claimed — dimmed circle
+            ctx.strokeStyle = '#5a4a78';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(sx + 16, sy + 16, 12, 0, Math.PI * 2); ctx.stroke();
           }
           break;
         }
+        case 'E': {
+          ctx.fillStyle = '#c9a96a'; ctx.fillRect(sx, sy, TILE, TILE);
+          ctx.fillStyle = '#7a5a20';
+          ctx.fillRect(sx + 12, sy + 8, 8, 4);
+          ctx.fillRect(sx + 12, sy + 20, 8, 4);
+          break;
+        }
+        case 'd': {
+          ctx.fillStyle = '#b59a7a'; ctx.fillRect(sx, sy, TILE, TILE);
+          ctx.fillStyle = '#3a2414'; ctx.fillRect(sx + 8, sy + 6, 16, 22);
+          ctx.fillStyle = '#d4b060'; ctx.fillRect(sx + 20, sy + 16, 2, 3);
+          break;
+        }
+        case 's': {
+          // ground under the shrine pedestal — polished stone
+          ctx.fillStyle = '#4a5a48'; ctx.fillRect(sx, sy, TILE, TILE);
+          ctx.fillStyle = '#3a4a38';
+          ctx.fillRect(sx + 4, sy + 4, 1, 1);
+          ctx.fillRect(sx + 26, sy + 6, 1, 1);
+          ctx.fillRect(sx + 8, sy + 26, 1, 1);
+          break;
+        }
+        case 't':
+        case 'k':
+        case 'r':
+        case 'w':
+        case 'B': {
+          // these get their full visual in pass 2 — paint zone-appropriate floor here
+          let groundColor = '#4a7a3a';
+          if (currentMap === 'ashen') groundColor = '#5a4e48';
+          else if (currentMap === 'sanctum') groundColor = '#3a6a90';
+          else if (currentMap === 'umbral') groundColor = '#2a3a26';
+          else if (currentMap === 'plains') groundColor = '#d8cca0';
+          else if (SHRINE_TO_ZONE[currentMap]) groundColor = '#3a3242';
+          ctx.fillStyle = groundColor; ctx.fillRect(sx, sy, TILE, TILE);
+          break;
+        }
         default:
-          ctx.fillStyle = '#222'; ctx.fillRect(x, y, TILE, TILE);
+          ctx.fillStyle = '#222'; ctx.fillRect(sx, sy, TILE, TILE);
       }
     };
 
-    // draw tiles
+    // ---- elevated objects (drawn after ground in row order; can extend UP into row above) ----
+    const drawObject = (t, gx, gy) => {
+      const sx = (gx - camX) * TILE;
+      const sy = (gy - camY) * TILE;
+      const cx = sx + TILE / 2;       // tile center X
+      const baseY = sy + TILE;        // tile bottom Y (where the object is anchored)
+      switch (t) {
+        case 't': { // tree — trunk at base, foliage extending upward into row above
+          // shadow on the tile
+          ctx.fillStyle = 'rgba(0,0,0,0.32)';
+          ctx.beginPath(); ctx.ellipse(cx, baseY - 4, 11, 4, 0, 0, Math.PI * 2); ctx.fill();
+          // trunk (visible front face)
+          ctx.fillStyle = '#3a2410';
+          ctx.fillRect(cx - 4, baseY - 16, 8, 12);
+          ctx.fillStyle = '#5a3a18';
+          ctx.fillRect(cx - 4, baseY - 16, 5, 12);
+          ctx.fillStyle = '#6a4a24';
+          ctx.fillRect(cx - 4, baseY - 16, 1, 12);
+          // foliage (extends UP above the tile)
+          ctx.fillStyle = '#1f4a1a';
+          ctx.beginPath(); ctx.ellipse(cx, baseY - 22, 16, 14, 0, 0, Math.PI * 2); ctx.fill();
+          // foliage highlight
+          ctx.fillStyle = '#2b6024';
+          ctx.beginPath(); ctx.ellipse(cx - 3, baseY - 26, 10, 8, 0, 0, Math.PI * 2); ctx.fill();
+          // tiny top sparkle
+          ctx.fillStyle = '#3a7a30';
+          ctx.fillRect(cx - 5, baseY - 30, 2, 2);
+          break;
+        }
+        case 'k': { // rock — chunky 3D-shaded boulder
+          ctx.fillStyle = 'rgba(0,0,0,0.32)';
+          ctx.beginPath(); ctx.ellipse(cx, baseY - 4, 11, 4, 0, 0, Math.PI * 2); ctx.fill();
+          // body
+          ctx.fillStyle = '#5a504c';
+          ctx.beginPath();
+          ctx.moveTo(cx - 12, baseY - 4);
+          ctx.lineTo(cx - 10, baseY - 18);
+          ctx.lineTo(cx - 2, baseY - 22);
+          ctx.lineTo(cx + 8, baseY - 20);
+          ctx.lineTo(cx + 12, baseY - 12);
+          ctx.lineTo(cx + 10, baseY - 4);
+          ctx.closePath();
+          ctx.fill();
+          // mid tone
+          ctx.fillStyle = '#7a706a';
+          ctx.beginPath();
+          ctx.moveTo(cx - 10, baseY - 8);
+          ctx.lineTo(cx - 8, baseY - 17);
+          ctx.lineTo(cx, baseY - 20);
+          ctx.lineTo(cx + 8, baseY - 16);
+          ctx.lineTo(cx + 8, baseY - 8);
+          ctx.closePath();
+          ctx.fill();
+          // highlight
+          ctx.fillStyle = '#9a908a';
+          ctx.beginPath();
+          ctx.moveTo(cx - 6, baseY - 14);
+          ctx.lineTo(cx - 4, baseY - 18);
+          ctx.lineTo(cx + 2, baseY - 18);
+          ctx.lineTo(cx + 4, baseY - 14);
+          ctx.closePath();
+          ctx.fill();
+          break;
+        }
+        case 'r': { // red rock wall — taller, more imposing
+          ctx.fillStyle = 'rgba(0,0,0,0.4)';
+          ctx.beginPath(); ctx.ellipse(cx, baseY - 2, 14, 4, 0, 0, Math.PI * 2); ctx.fill();
+          // body (visible front face + slight top wedge)
+          ctx.fillStyle = '#4a1810';
+          ctx.fillRect(sx + 1, baseY - 28, TILE - 2, 26);
+          ctx.fillStyle = '#6a2818';
+          ctx.fillRect(sx + 1, baseY - 28, TILE - 2, 22);
+          ctx.fillStyle = '#8a3a2a';
+          ctx.fillRect(sx + 1, baseY - 28, TILE - 2, 4); // lighter top edge
+          // texture lines
+          ctx.strokeStyle = '#3a1410'; ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(sx + 4, baseY - 18); ctx.lineTo(sx + 28, baseY - 18);
+          ctx.moveTo(sx + 4, baseY - 8); ctx.lineTo(sx + 28, baseY - 8);
+          ctx.moveTo(sx + 14, baseY - 28); ctx.lineTo(sx + 14, baseY - 18);
+          ctx.moveTo(sx + 18, baseY - 18); ctx.lineTo(sx + 18, baseY - 8);
+          ctx.stroke();
+          break;
+        }
+        case 'w': { // generic stone wall
+          ctx.fillStyle = 'rgba(0,0,0,0.32)';
+          ctx.beginPath(); ctx.ellipse(cx, baseY - 2, 14, 4, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#7a6040';
+          ctx.fillRect(sx + 1, baseY - 28, TILE - 2, 26);
+          ctx.fillStyle = '#9a8060';
+          ctx.fillRect(sx + 1, baseY - 28, TILE - 2, 22);
+          ctx.fillStyle = '#b59a7a';
+          ctx.fillRect(sx + 1, baseY - 28, TILE - 2, 4);
+          ctx.strokeStyle = '#7a6040'; ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(sx + 4, baseY - 16); ctx.lineTo(sx + 28, baseY - 16);
+          ctx.moveTo(sx + 4, baseY - 8); ctx.lineTo(sx + 28, baseY - 8);
+          ctx.moveTo(sx + 14, baseY - 28); ctx.lineTo(sx + 14, baseY - 16);
+          ctx.moveTo(sx + 18, baseY - 16); ctx.lineTo(sx + 18, baseY - 8);
+          ctx.stroke();
+          break;
+        }
+        case 'B': { // building entrance — themed per zone, drawn extending UP from the tile
+          ctx.fillStyle = 'rgba(0,0,0,0.4)';
+          ctx.beginPath(); ctx.ellipse(cx, baseY - 2, 16, 5, 0, 0, Math.PI * 2); ctx.fill();
+          if (currentMap === 'wilds') {
+            // Burrow — earthen mound with dark hole
+            ctx.fillStyle = '#2a1408';
+            ctx.beginPath(); ctx.ellipse(cx, baseY - 8, 16, 14, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#3a1e10';
+            ctx.beginPath(); ctx.ellipse(cx - 2, baseY - 10, 12, 10, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#5a3a18';
+            ctx.beginPath(); ctx.ellipse(cx - 4, baseY - 14, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
+            // dark hole entrance
+            ctx.fillStyle = '#0a0608';
+            ctx.beginPath(); ctx.ellipse(cx, baseY - 6, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
+            // grass tufts on top
+            ctx.fillStyle = '#1f4a1a';
+            ctx.fillRect(cx - 10, baseY - 22, 2, 3);
+            ctx.fillRect(cx + 6, baseY - 23, 2, 4);
+            ctx.fillRect(cx - 1, baseY - 24, 2, 3);
+          } else if (currentMap === 'ashen') {
+            // Cave mouth — jagged opening in cliff
+            ctx.fillStyle = '#1a1410';
+            ctx.fillRect(sx + 2, baseY - 30, TILE - 4, 28);
+            ctx.fillStyle = '#2a2018';
+            ctx.fillRect(sx + 2, baseY - 30, TILE - 4, 22);
+            ctx.fillStyle = '#3a3028';
+            ctx.fillRect(sx + 2, baseY - 30, TILE - 4, 4);
+            // jagged dark opening
+            ctx.fillStyle = '#0a0608';
+            ctx.beginPath();
+            ctx.moveTo(cx - 10, baseY - 2);
+            ctx.lineTo(cx - 8, baseY - 18);
+            ctx.lineTo(cx - 4, baseY - 22);
+            ctx.lineTo(cx + 4, baseY - 22);
+            ctx.lineTo(cx + 8, baseY - 18);
+            ctx.lineTo(cx + 10, baseY - 2);
+            ctx.closePath(); ctx.fill();
+            // glowing embers inside
+            const emberPulse = 0.7 + 0.3 * Math.sin(animFrame * 0.4);
+            ctx.fillStyle = `rgba(224, 96, 32, ${emberPulse})`;
+            ctx.fillRect(cx - 4, baseY - 8, 2, 2);
+            ctx.fillRect(cx + 2, baseY - 6, 2, 2);
+          } else if (currentMap === 'sanctum') {
+            // Reed hut on a small island
+            // islet
+            ctx.fillStyle = '#5a8aa8';
+            ctx.beginPath(); ctx.ellipse(cx, baseY - 2, 16, 5, 0, 0, Math.PI * 2); ctx.fill();
+            // walls
+            ctx.fillStyle = '#705840';
+            ctx.fillRect(cx - 11, baseY - 18, 22, 14);
+            ctx.fillStyle = '#8a7048';
+            ctx.fillRect(cx - 11, baseY - 18, 18, 14);
+            // door
+            ctx.fillStyle = '#3a2010';
+            ctx.fillRect(cx - 3, baseY - 12, 6, 8);
+            ctx.fillStyle = '#d4b060';
+            ctx.fillRect(cx + 1, baseY - 8, 1, 1);
+            // thatched roof
+            ctx.fillStyle = '#a88040';
+            ctx.beginPath();
+            ctx.moveTo(cx - 14, baseY - 18);
+            ctx.lineTo(cx, baseY - 30);
+            ctx.lineTo(cx + 14, baseY - 18);
+            ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = '#705028'; ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cx - 12, baseY - 20); ctx.lineTo(cx + 12, baseY - 20);
+            ctx.moveTo(cx - 8, baseY - 24); ctx.lineTo(cx + 8, baseY - 24);
+            ctx.stroke();
+          } else if (currentMap === 'umbral') {
+            // Withered shack — leaning planks
+            ctx.fillStyle = '#1a0e08';
+            ctx.fillRect(sx + 2, baseY - 28, TILE - 4, 26);
+            ctx.fillStyle = '#2a1810';
+            ctx.fillRect(sx + 2, baseY - 28, TILE - 4, 22);
+            ctx.fillStyle = '#3a2818';
+            ctx.fillRect(sx + 2, baseY - 28, TILE - 4, 4);
+            // crooked roof
+            ctx.fillStyle = '#1a0a08';
+            ctx.beginPath();
+            ctx.moveTo(cx - 16, baseY - 28);
+            ctx.lineTo(cx - 2, baseY - 36);
+            ctx.lineTo(cx + 16, baseY - 28);
+            ctx.closePath(); ctx.fill();
+            // plank lines
+            ctx.strokeStyle = '#1a0e08'; ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cx - 8, baseY - 24); ctx.lineTo(cx - 8, baseY - 4);
+            ctx.moveTo(cx, baseY - 26); ctx.lineTo(cx, baseY - 4);
+            ctx.moveTo(cx + 8, baseY - 24); ctx.lineTo(cx + 8, baseY - 4);
+            ctx.stroke();
+            // dark doorway
+            ctx.fillStyle = '#0a0608';
+            ctx.fillRect(cx - 4, baseY - 14, 8, 12);
+          } else if (currentMap === 'plains') {
+            // Heavenly gates — pearl pillars with golden trim and arch
+            // pillars
+            ctx.fillStyle = '#bfb09a';
+            ctx.fillRect(cx - 13, baseY - 28, 6, 26);
+            ctx.fillRect(cx + 7, baseY - 28, 6, 26);
+            ctx.fillStyle = '#fff5e0';
+            ctx.fillRect(cx - 13, baseY - 28, 4, 26);
+            ctx.fillRect(cx + 7, baseY - 28, 4, 26);
+            // golden capitals
+            ctx.fillStyle = '#e8c860';
+            ctx.fillRect(cx - 14, baseY - 30, 8, 3);
+            ctx.fillRect(cx + 6, baseY - 30, 8, 3);
+            // arch
+            ctx.strokeStyle = '#e8c860'; ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(cx, baseY - 28, 11, Math.PI, 0);
+            ctx.stroke();
+            // light pouring through
+            const lpulse = 0.35 + 0.2 * Math.sin(animFrame * 0.18);
+            ctx.fillStyle = `rgba(255, 240, 180, ${lpulse})`;
+            ctx.fillRect(cx - 6, baseY - 28, 12, 26);
+          }
+          break;
+        }
+        case 's': { // shrine pedestal — tiered altar with glowing orb
+          ctx.fillStyle = 'rgba(0,0,0,0.4)';
+          ctx.beginPath(); ctx.ellipse(cx, baseY - 2, 14, 4, 0, 0, Math.PI * 2); ctx.fill();
+          // base tier
+          ctx.fillStyle = '#7a6438';
+          ctx.fillRect(cx - 14, baseY - 10, 28, 8);
+          ctx.fillStyle = '#967e50';
+          ctx.fillRect(cx - 14, baseY - 10, 28, 6);
+          ctx.fillStyle = '#b8a070';
+          ctx.fillRect(cx - 14, baseY - 10, 28, 2);
+          // upper tier
+          ctx.fillStyle = '#866c40';
+          ctx.fillRect(cx - 10, baseY - 22, 20, 12);
+          ctx.fillStyle = '#a08858';
+          ctx.fillRect(cx - 10, baseY - 22, 20, 9);
+          ctx.fillStyle = '#c8b078';
+          ctx.fillRect(cx - 10, baseY - 22, 20, 2);
+          // orb (glowing, pulsing)
+          const op = 0.7 + 0.3 * Math.sin(animFrame * 0.2);
+          ctx.fillStyle = `rgba(255, 240, 180, ${op * 0.5})`;
+          ctx.beginPath(); ctx.arc(cx, baseY - 26, 9, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#fff5c0';
+          ctx.beginPath(); ctx.arc(cx, baseY - 26, 4, 0, Math.PI * 2); ctx.fill();
+          break;
+        }
+      }
+    };
+
+    // ---- character sprite (2.5D-styled, with idle bob) ----
+    const drawCharacter = (gx, gy, bodyColor, face, faded, isPlayer, npcId) => {
+      const sx = (gx - camX) * TILE;
+      const sy = (gy - camY) * TILE;
+      const cx = sx + TILE / 2;
+      const baseY = sy + TILE - 2;       // anchor near the bottom of the tile
+      if (faded) ctx.globalAlpha = 0.45;
+      // soft shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.beginPath(); ctx.ellipse(cx, baseY, 9, 3, 0, 0, Math.PI * 2); ctx.fill();
+      // idle bob — slight lift on alternating frames
+      const bob = (Math.floor(animFrame / 3) % 2 === 0) ? 0 : -1;
+      const by = baseY + bob;
+
+      // Branch to special character renderers (Yugi / Ash) if this is one of them.
+      if (npcId === 'yugi') {
+        drawYugi(cx, by, face, faded);
+        return;
+      }
+      if (npcId === 'ash') {
+        drawAsh(cx, by, face, faded);
+        return;
+      }
+      if (npcId === 'vaultkeeper') {
+        drawKeeper(cx, by, face, faded);
+        return;
+      }
+
+      // body — three vertical bands for shading depth
+      ctx.fillStyle = shade(bodyColor, 0.7);   // dark right side
+      ctx.fillRect(cx - 6, by - 14, 12, 12);
+      ctx.fillStyle = bodyColor;                // mid
+      ctx.fillRect(cx - 6, by - 14, 8, 12);
+      ctx.fillStyle = shade(bodyColor, 1.2);    // highlight left edge
+      ctx.fillRect(cx - 6, by - 14, 2, 12);
+      // legs
+      ctx.fillStyle = '#2a1810';
+      ctx.fillRect(cx - 5, by - 2, 4, 4);
+      ctx.fillRect(cx + 1, by - 2, 4, 4);
+      // head
+      ctx.fillStyle = '#e6c9a2';
+      ctx.fillRect(cx - 5, by - 24, 10, 10);
+      // face shadow on right
+      ctx.fillStyle = '#c9a684';
+      ctx.fillRect(cx + 2, by - 24, 3, 10);
+      // hair/hat
+      ctx.fillStyle = isPlayer ? '#1a2a3a' : '#2a1a1a';
+      ctx.fillRect(cx - 6, by - 25, 12, 4);
+      ctx.fillRect(cx - 5, by - 27, 10, 3);
+      // hat highlight
+      ctx.fillStyle = isPlayer ? '#2a4060' : '#3a2820';
+      ctx.fillRect(cx - 5, by - 27, 3, 1);
+      // eyes per facing
+      ctx.fillStyle = '#1a1a1a';
+      if (face === 'down') {
+        ctx.fillRect(cx - 3, by - 18, 2, 2);
+        ctx.fillRect(cx + 1, by - 18, 2, 2);
+      } else if (face === 'left') {
+        ctx.fillRect(cx - 4, by - 18, 2, 2);
+      } else if (face === 'right') {
+        ctx.fillRect(cx + 2, by - 18, 2, 2);
+      }
+      // (face === 'up' shows back of head — no eyes)
+      if (faded) ctx.globalAlpha = 1;
+    };
+
+    // ---- Yugi sprite ----
+    // Spiky blonde hair with magenta-tip accents and the Millennium Puzzle.
+    // The whole hair shape reads as a single yellow spiked silhouette with the
+    // iconic lightning fringe falling between the eyes.
+    const drawYugi = (cx, by, face, faded) => {
+      // Blue blazer body
+      ctx.fillStyle = '#1a2858'; ctx.fillRect(cx - 6, by - 14, 12, 12);
+      ctx.fillStyle = '#2a3a78'; ctx.fillRect(cx - 6, by - 14, 8, 12);
+      ctx.fillStyle = '#3f5098'; ctx.fillRect(cx - 6, by - 14, 2, 12);
+      // White shirt collar peeking out
+      ctx.fillStyle = '#e8e0d0';
+      ctx.fillRect(cx - 2, by - 14, 4, 2);
+      ctx.fillRect(cx - 1, by - 12, 2, 1);
+      // Millennium Puzzle — gold inverted pyramid + chain
+      ctx.fillStyle = '#2a2218';
+      ctx.fillRect(cx - 1, by - 11, 2, 1);   // chain link
+      ctx.fillStyle = '#e8c860';
+      ctx.fillRect(cx - 2, by - 10, 4, 3);   // puzzle body
+      ctx.fillStyle = '#c8a440';
+      ctx.fillRect(cx + 1, by - 10, 1, 3);   // shadow side
+      ctx.fillStyle = '#2a2218';
+      ctx.fillRect(cx - 1, by - 9, 2, 1);    // dark "eye" engraving
+      // Pants/legs (dark blue trousers)
+      ctx.fillStyle = '#0a1430';
+      ctx.fillRect(cx - 5, by - 2, 4, 4);
+      ctx.fillRect(cx + 1, by - 2, 4, 4);
+      // Head
+      ctx.fillStyle = '#e6c9a2'; ctx.fillRect(cx - 5, by - 24, 10, 10);
+      ctx.fillStyle = '#c9a684'; ctx.fillRect(cx + 2, by - 24, 3, 10);
+
+      // ---- Spiky blonde hair (single coherent shape) ----
+      const hairBright = '#f4d850';   // dominant blonde
+      const hairShade  = '#c8a830';   // shadow side of the spikes
+      const tipColor   = '#b8307a';   // magenta accents at the very tips
+
+      // Hair mass that sits ON the head (just covering forehead & sides of skull)
+      ctx.fillStyle = hairBright;
+      ctx.fillRect(cx - 5, by - 25, 10, 3);   // wide band on top of the head
+      ctx.fillRect(cx - 6, by - 24, 1, 4);    // left sideburn
+      ctx.fillRect(cx + 5, by - 24, 1, 4);    // right sideburn
+
+      // Five upward spikes, fanning outward from center
+      // Spike 1: far left
+      ctx.fillRect(cx - 6, by - 28, 2, 3);
+      // Spike 2: left-mid (taller)
+      ctx.fillRect(cx - 3, by - 30, 2, 5);
+      // Spike 3: center (tallest)
+      ctx.fillRect(cx,     by - 31, 2, 6);
+      // Spike 4: right-mid (taller)
+      ctx.fillRect(cx + 3, by - 30, 2, 5);
+      // Spike 5: far right
+      ctx.fillRect(cx + 5, by - 28, 2, 3);
+
+      // Shading on right side of each spike (1px column of darker yellow)
+      ctx.fillStyle = hairShade;
+      ctx.fillRect(cx - 4, by - 28, 1, 3);    // shadow on spike 1
+      ctx.fillRect(cx - 1, by - 30, 1, 5);    // spike 2
+      ctx.fillRect(cx + 2, by - 31, 1, 6);    // spike 3 (longest shadow)
+      ctx.fillRect(cx + 4, by - 30, 1, 5);    // spike 4
+      ctx.fillRect(cx + 6, by - 28, 1, 3);    // spike 5
+      ctx.fillRect(cx + 3, by - 25, 2, 3);    // shadow on the right of the hair mass
+
+      // Magenta accent tips on the three tallest spikes
+      ctx.fillStyle = tipColor;
+      ctx.fillRect(cx - 3, by - 30, 2, 1);    // spike 2 tip
+      ctx.fillRect(cx,     by - 31, 2, 1);    // spike 3 tip
+      ctx.fillRect(cx + 3, by - 30, 2, 1);    // spike 4 tip
+
+      // Subtle black accent just under each red tip (the iconic Yugi "under-shadow")
+      ctx.fillStyle = '#1a0a14';
+      ctx.fillRect(cx - 3, by - 29, 2, 1);    // under spike 2 tip
+      ctx.fillRect(cx,     by - 30, 2, 1);    // under spike 3 tip
+      ctx.fillRect(cx + 3, by - 29, 2, 1);    // under spike 4 tip
+
+      // Lightning-bolt fringe falling between the eyes (single thicker blade)
+      ctx.fillStyle = hairBright;
+      ctx.fillRect(cx - 1, by - 22, 2, 4);    // central blade, ends just above eyes
+      ctx.fillStyle = hairShade;
+      ctx.fillRect(cx,     by - 22, 1, 4);    // 1px shadow stripe down the right of fringe
+
+      // Eyes — narrowed determined look
+      ctx.fillStyle = '#3a1a3a';
+      if (face === 'down') {
+        ctx.fillRect(cx - 3, by - 18, 2, 1);
+        ctx.fillRect(cx + 1, by - 18, 2, 1);
+      } else if (face === 'left') {
+        ctx.fillRect(cx - 4, by - 18, 2, 1);
+      } else if (face === 'right') {
+        ctx.fillRect(cx + 2, by - 18, 2, 1);
+      }
+      if (faded) ctx.globalAlpha = 1;
+    };
+
+    // ---- Ash sprite ----
+    // Red baseball cap clearly perched ABOVE the head with white band, green
+    // half-circle emblem, blue jacket, white sleeves, yellow trim.
+    const drawAsh = (cx, by, face, faded) => {
+      // Blue jacket body
+      ctx.fillStyle = '#1a3878'; ctx.fillRect(cx - 6, by - 14, 12, 12);
+      ctx.fillStyle = '#2a4a98'; ctx.fillRect(cx - 6, by - 14, 8, 12);
+      ctx.fillStyle = '#3f5fb0'; ctx.fillRect(cx - 6, by - 14, 2, 12);
+      // White sleeves at the body sides
+      ctx.fillStyle = '#e8e0d0';
+      ctx.fillRect(cx - 6, by - 10, 2, 6);
+      ctx.fillRect(cx + 4, by - 10, 2, 6);
+      // Yellow chest trim (V across the shirt opening)
+      ctx.fillStyle = '#f4d850';
+      ctx.fillRect(cx - 4, by - 13, 8, 1);
+      ctx.fillRect(cx - 2, by - 12, 4, 1);
+      // White undershirt visible at the neck
+      ctx.fillStyle = '#e8e0d0';
+      ctx.fillRect(cx - 2, by - 14, 4, 1);
+      // Green pants
+      ctx.fillStyle = '#1a3a1a';
+      ctx.fillRect(cx - 5, by - 2, 4, 4);
+      ctx.fillRect(cx + 1, by - 2, 4, 4);
+      // Head
+      ctx.fillStyle = '#e6c9a2'; ctx.fillRect(cx - 5, by - 24, 10, 10);
+      ctx.fillStyle = '#c9a684'; ctx.fillRect(cx + 2, by - 24, 3, 10);
+
+      // Dark hair tufts at sides BELOW the cap (clearly under it)
+      ctx.fillStyle = '#241410';
+      ctx.fillRect(cx - 5, by - 24, 1, 3);   // left tuft (top 3 px of left side)
+      ctx.fillRect(cx + 4, by - 24, 1, 3);   // right tuft
+
+      // ---- Cap (big, bold, clearly above the head) ----
+      const capRed     = '#e02828';
+      const capRedDark = '#9a1818';
+      const capRedLite = '#f04848';
+      const capWhite   = '#f4ecd8';
+
+      // Cap dome — 5 rows tall, narrowing toward the top for a rounded shape
+      ctx.fillStyle = capRed;
+      ctx.fillRect(cx - 1, by - 30, 3, 1);   // tip (3 wide)
+      ctx.fillRect(cx - 2, by - 29, 5, 1);   // 5 wide
+      ctx.fillRect(cx - 3, by - 28, 7, 1);   // 7 wide
+      ctx.fillRect(cx - 4, by - 27, 9, 1);   // 9 wide
+      ctx.fillRect(cx - 5, by - 26, 10, 1);  // 10 wide (full bottom of dome)
+
+      // Highlight along the top-left of the dome (light source upper-left)
+      ctx.fillStyle = capRedLite;
+      ctx.fillRect(cx - 1, by - 30, 1, 1);
+      ctx.fillRect(cx - 2, by - 29, 1, 1);
+      ctx.fillRect(cx - 3, by - 28, 1, 1);
+
+      // Shadow along the right side of the dome (depth)
+      ctx.fillStyle = capRedDark;
+      ctx.fillRect(cx + 1, by - 30, 1, 1);
+      ctx.fillRect(cx + 2, by - 29, 1, 1);
+      ctx.fillRect(cx + 3, by - 28, 1, 1);
+      ctx.fillRect(cx + 4, by - 27, 1, 1);
+      ctx.fillRect(cx + 4, by - 26, 1, 1);
+
+      // White band — thick (1 px) row clearly separating dome from brim
+      ctx.fillStyle = capWhite;
+      ctx.fillRect(cx - 5, by - 25, 10, 1);
+
+      // Green half-circle emblem on the front (only when facing camera)
+      if (face === 'down') {
+        ctx.fillStyle = '#3a8038';
+        ctx.fillRect(cx - 1, by - 27, 2, 1);   // top of half-circle
+        ctx.fillRect(cx - 2, by - 26, 4, 1);   // base of half-circle
+      }
+
+      // Brim — clearly visible, 2 px tall, direction follows facing
+      // Draw brim AFTER everything else so it sits on top
+      ctx.fillStyle = capRed;
+      if (face === 'right') {
+        // Brim sticks right, beyond the head
+        ctx.fillRect(cx + 5, by - 25, 4, 2);
+        ctx.fillStyle = capRedDark;
+        ctx.fillRect(cx + 5, by - 24, 4, 1); // dark underside
+      } else if (face === 'left') {
+        // Brim sticks left, beyond the head
+        ctx.fillRect(cx - 8, by - 25, 4, 2);
+        ctx.fillStyle = capRedDark;
+        ctx.fillRect(cx - 8, by - 24, 4, 1); // dark underside
+      } else if (face === 'down') {
+        // Front-facing — brim across the forehead, 2 px tall, narrower than head
+        ctx.fillRect(cx - 4, by - 24, 8, 2);
+        // Dark shadow line along the bottom of the brim (where it casts onto the forehead)
+        ctx.fillStyle = capRedDark;
+        ctx.fillRect(cx - 4, by - 23, 8, 1);
+      }
+      // (face === 'up' shows back of cap — no brim visible)
+
+      // Eyes — drawn last so they sit on top of everything
+      ctx.fillStyle = '#241410';
+      if (face === 'down') {
+        ctx.fillRect(cx - 3, by - 19, 2, 2);
+        ctx.fillRect(cx + 1, by - 19, 2, 2);
+        // tiny zigzag-ish cheek marks (1px hint)
+        ctx.fillStyle = '#c98864';
+        ctx.fillRect(cx - 4, by - 16, 1, 1);
+        ctx.fillRect(cx + 3, by - 16, 1, 1);
+      } else if (face === 'left') {
+        ctx.fillRect(cx - 4, by - 19, 2, 2);
+        ctx.fillStyle = '#c98864';
+        ctx.fillRect(cx - 4, by - 16, 1, 1);
+      } else if (face === 'right') {
+        ctx.fillRect(cx + 2, by - 19, 2, 2);
+        ctx.fillStyle = '#c98864';
+        ctx.fillRect(cx + 3, by - 16, 1, 1);
+      }
+      if (faded) ctx.globalAlpha = 1;
+    };
+
+    // ---- Keeper Solenne sprite ----
+    // The Hollow Vault's keeper. A taller, hooded figure in slate-blue robes with
+    // a rune-iron staff in her right hand and small spirit-runes circling above
+    // her hood. Visually distinct from townspeople: longer silhouette, no hair,
+    // glowing pale eyes, animated rune ring that signals "magic person, talk to me."
+    const drawKeeper = (cx, by, face, faded) => {
+      // Long robe — wider at the bottom than other NPCs to read as "trailing"
+      const robeMid = '#3a4a68';
+      const robeDark = '#1a2238';
+      const robeHi   = '#5a6e90';
+      // Robe trail (slightly flared bottom)
+      ctx.fillStyle = robeDark;
+      ctx.beginPath();
+      ctx.moveTo(cx - 7, by - 2);
+      ctx.lineTo(cx - 8, by);
+      ctx.lineTo(cx + 8, by);
+      ctx.lineTo(cx + 7, by - 2);
+      ctx.closePath();
+      ctx.fill();
+      // Body (taller than standard 12px)
+      ctx.fillStyle = robeDark;
+      ctx.fillRect(cx - 6, by - 16, 12, 14);
+      ctx.fillStyle = robeMid;
+      ctx.fillRect(cx - 6, by - 16, 8, 14);
+      ctx.fillStyle = robeHi;
+      ctx.fillRect(cx - 6, by - 16, 2, 14);
+      // Sash — diagonal silver belt across the chest
+      ctx.fillStyle = '#c0c8d8';
+      ctx.fillRect(cx - 5, by - 10, 10, 1);
+      ctx.fillStyle = '#8090a8';
+      ctx.fillRect(cx - 5, by - 9, 10, 1);
+      // Hood — wraps the head, peaked top
+      ctx.fillStyle = robeDark;
+      ctx.fillRect(cx - 6, by - 26, 12, 8);   // hood body
+      ctx.fillStyle = robeMid;
+      ctx.fillRect(cx - 6, by - 26, 8, 8);
+      ctx.fillStyle = robeHi;
+      ctx.fillRect(cx - 6, by - 26, 2, 8);
+      // Hood peak (taller silhouette than townspeople)
+      ctx.fillStyle = robeDark;
+      ctx.fillRect(cx - 4, by - 28, 8, 2);
+      ctx.fillStyle = robeMid;
+      ctx.fillRect(cx - 4, by - 28, 5, 2);
+      // Face shadow inside the hood (deep, atmospheric)
+      ctx.fillStyle = '#1a1424';
+      ctx.fillRect(cx - 4, by - 22, 8, 5);
+      // Glowing pale eyes — visible from front and sides, not from behind
+      const glow = 0.8 + 0.2 * Math.abs(Math.sin(animFrame * 0.18));
+      ctx.fillStyle = `rgba(180, 220, 255, ${glow})`;
+      if (face === 'down') {
+        ctx.fillRect(cx - 3, by - 20, 2, 2);
+        ctx.fillRect(cx + 1, by - 20, 2, 2);
+      } else if (face === 'left') {
+        ctx.fillRect(cx - 4, by - 20, 2, 2);
+      } else if (face === 'right') {
+        ctx.fillRect(cx + 2, by - 20, 2, 2);
+      }
+      // Rune-iron staff — held in right hand, taller than the keeper
+      // (drawn behind the body for 'left' face, in front for others)
+      const drawStaff = () => {
+        const staffX = cx + 7;
+        // shaft
+        ctx.fillStyle = '#3a3a4a';
+        ctx.fillRect(staffX, by - 28, 2, 28);
+        ctx.fillStyle = '#6a6a80';
+        ctx.fillRect(staffX, by - 28, 1, 28);  // highlight on left edge
+        // crook / orb at top — pulsing rune-glow
+        const orbPulse = 0.65 + 0.35 * Math.abs(Math.sin(animFrame * 0.22));
+        ctx.fillStyle = `rgba(140, 200, 240, ${orbPulse * 0.6})`;
+        ctx.fillRect(staffX - 2, by - 32, 6, 4);
+        ctx.fillStyle = `rgba(220, 240, 255, ${orbPulse})`;
+        ctx.fillRect(staffX - 1, by - 31, 4, 2);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(staffX, by - 30, 2, 1);
+      };
+      if (face === 'left') {
+        // staff is behind her — already drawn above body before face details? No,
+        // body is already laid down. Draw the staff but slightly faded so it reads as "behind".
+        ctx.globalAlpha = (faded ? 0.45 : 1) * 0.55;
+        drawStaff();
+        ctx.globalAlpha = faded ? 0.45 : 1;
+      } else {
+        drawStaff();
+      }
+      // Floating spirit-runes circling above the hood (3 small runes orbiting)
+      // Each rune offset by 120° around the orbit; orbit radius pulses subtly.
+      const orbitR = 7;
+      for (let i = 0; i < 3; i++) {
+        const a = animFrame * 0.07 + (i * Math.PI * 2) / 3;
+        const rx = cx + Math.cos(a) * orbitR;
+        const ry = (by - 32) + Math.sin(a) * 2;  // shallow elliptical bob
+        ctx.fillStyle = `rgba(180, 210, 255, ${0.45 + 0.4 * Math.abs(Math.sin(a + animFrame * 0.1))})`;
+        ctx.fillRect(rx - 1, ry - 1, 2, 2);
+        // tiny spark center
+        ctx.fillStyle = 'rgba(240, 250, 255, 0.9)';
+        ctx.fillRect(rx, ry, 1, 1);
+      }
+      if (faded) ctx.globalAlpha = 1;
+    };
+
+    // ---- PASS 1: ground tiles (top-down grid) ----
     for (let py = 0; py < VH; py++) {
       for (let px = 0; px < VW; px++) {
-        const mx = camX + px, my = camY + py;
-        const t = map[my]?.[mx] ?? 't';
-        drawTile(t, px, py);
+        const gx = camX + px, gy = camY + py;
+        const t = map[gy]?.[gx] ?? 't';
+        drawGround(t, gx, gy);
       }
     }
 
-    // draw NPCs
+    // ---- PASS 2: elevated objects + characters, sorted by Y row ----
+    const ELEVATED = new Set(['t', 'k', 'r', 'w', 'B', 's']);
+    const drawList = [];
+    for (let py = 0; py < VH; py++) {
+      for (let px = 0; px < VW; px++) {
+        const gx = camX + px, gy = camY + py;
+        const t = map[gy]?.[gx] ?? 't';
+        if (!ELEVATED.has(t)) continue;
+        drawList.push({ y: gy, draw: () => drawObject(t, gx, gy) });
+      }
+    }
     const npcs = currentMap === 'town' ? NPCS_TOWN : (NPCS_ZONE[currentMap] || []);
     for (const n of npcs) {
-      const px = n.x - camX, py = n.y - camY;
-      if (px < 0 || px >= VW || py < 0 || py >= VH) continue;
-      drawCharacter(ctx, px * TILE, py * TILE, n.color, n.face, defeated.includes(n.id));
-      if (n.isShop) {
-        // little "♦" mark above the head
-        ctx.fillStyle = '#ffd870';
-        ctx.font = 'bold 14px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('◆', px * TILE + TILE/2, py * TILE - 2);
-        ctx.textAlign = 'left';
+      // Read the wandered live position so the sprite draws where the NPC
+      // actually is, not their authored home.
+      const off = npcMoveState[n.id];
+      const lx = n.x + (off ? off.dx : 0);
+      const ly = n.y + (off ? off.dy : 0);
+      const lf = off ? off.face : n.face;
+      if (lx < camX || lx >= camX + VW || ly < camY || ly >= camY + VH) continue;
+      drawList.push({
+        y: ly + 0.4,
+        draw: () => {
+          drawCharacter(lx, ly, n.color, lf, defeated.includes(n.id), false, n.id);
+          if (n.isShop) {
+            const sx = (lx - camX) * TILE;
+            const sy = (ly - camY) * TILE;
+            ctx.fillStyle = '#ffd870';
+            ctx.font = 'bold 14px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('◆', sx + TILE / 2, sy - 2);
+            ctx.textAlign = 'left';
+          }
+        },
+      });
+    }
+    drawList.push({
+      y: player.y + 0.4,
+      draw: () => drawCharacter(player.x, player.y, '#3a6ea5', player.face, false, true),
+    });
+    drawList.sort((a, b) => a.y - b.y);
+    for (const item of drawList) item.draw();
+
+    // ---- ambient zone particles (very light, non-blocking) ----
+    if (currentMap === 'ashen') {
+      for (let i = 0; i < 4; i++) {
+        const ex = (animFrame * 2 + i * 91) % CW;
+        const ey = (CH - ((animFrame * 1.3 + i * 53) % CH));
+        ctx.fillStyle = 'rgba(255, 140, 60, 0.55)';
+        ctx.fillRect(ex, ey, 1, 1);
+      }
+    } else if (currentMap === 'plains') {
+      for (let i = 0; i < 5; i++) {
+        const ex = (animFrame * 1.5 + i * 71) % CW;
+        const ey = (animFrame * 0.8 + i * 47) % CH;
+        ctx.fillStyle = 'rgba(255, 245, 200, 0.5)';
+        ctx.fillRect(ex, ey, 1, 1);
+      }
+    } else if (currentMap === 'umbral') {
+      for (let i = 0; i < 3; i++) {
+        const ex = (animFrame + i * 89) % CW;
+        const ey = (animFrame * 0.7 + i * 61) % CH;
+        ctx.fillStyle = 'rgba(180, 120, 220, 0.4)';
+        ctx.fillRect(ex, ey, 1, 1);
+      }
+    } else if (SHRINE_TO_ZONE[currentMap]) {
+      const zoneId = SHRINE_TO_ZONE[currentMap];
+      const sd = zoneId && SHRINE_DATA[zoneId];
+      const col = sd ? COLOR_HEX[sd.color] : '#fff';
+      for (let i = 0; i < 4; i++) {
+        const ex = (animFrame * 1.2 + i * 79) % CW;
+        const ey = (animFrame * 0.6 + i * 53) % CH;
+        ctx.fillStyle = col + '80';
+        ctx.fillRect(ex, ey, 1, 1);
       }
     }
 
-    // draw player
-    const ppx = (player.x - camX) * TILE;
-    const ppy = (player.y - camY) * TILE;
-    drawCharacter(ctx, ppx, ppy, '#3a6ea5', player.face, false, true);
-
-    // subtle vignette
-    const vg = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 80, canvas.width/2, canvas.height/2, canvas.width/1.2);
+    // edge vignette
+    const vg = ctx.createRadialGradient(CW / 2, CH / 2, 80, CW / 2, CH / 2, CW / 1.2);
     vg.addColorStop(0, 'rgba(0,0,0,0)');
-    vg.addColorStop(1, 'rgba(0,0,0,0.35)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.4)');
     ctx.fillStyle = vg;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }, [player, currentMap, scene, defeated, medallions]);
+    ctx.fillRect(0, 0, CW, CH);
 
-  // ----- small render helper for a person sprite -----
-  function drawCharacter(ctx, x, y, bodyColor, face, faded = false, isPlayer = false) {
-    const TILE = 32;
-    if (faded) ctx.globalAlpha = 0.45;
-    // shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    ctx.beginPath(); ctx.ellipse(x + 16, y + 28, 9, 3, 0, 0, Math.PI * 2); ctx.fill();
-    // body
-    ctx.fillStyle = bodyColor;
-    ctx.fillRect(x + 9, y + 14, 14, 14);
-    // head
-    ctx.fillStyle = '#e6c9a2';
-    ctx.fillRect(x + 11, y + 6, 10, 10);
-    // hat/hair
-    ctx.fillStyle = isPlayer ? '#1a2a3a' : '#2a1a1a';
-    ctx.fillRect(x + 10, y + 4, 12, 4);
-    // eyes based on face direction
-    ctx.fillStyle = '#1a1a1a';
-    if (face === 'down') {
-      ctx.fillRect(x + 13, y + 10, 2, 2); ctx.fillRect(x + 17, y + 10, 2, 2);
-    } else if (face === 'up') {
-      // back of head, no eyes
-    } else if (face === 'left') {
-      ctx.fillRect(x + 12, y + 10, 2, 2);
-    } else {
-      ctx.fillRect(x + 18, y + 10, 2, 2);
+    // ---- Day/night tint overlay ----
+    // Indoor/shrine-interior maps don't get tinted — those are always lit.
+    if (!SHRINE_TO_ZONE[currentMap]) {
+      // Smooth interpolation across the day. We pick keyframe colors at
+      // dawn(6), noon(12), dusk(18), midnight(0) and lerp between them.
+      const dayPhase = hourOfDay; // 0..23
+      let tint = null;
+      if (dayPhase >= 6 && dayPhase < 12) {
+        // dawn -> noon: warm orange fading to clear
+        const k = (dayPhase - 6) / 6;
+        tint = `rgba(255, 180, 110, ${0.20 - 0.20 * k})`;
+      } else if (dayPhase >= 12 && dayPhase < 18) {
+        // noon -> dusk: clear fading to amber
+        const k = (dayPhase - 12) / 6;
+        tint = `rgba(255, 140, 80, ${0.20 * k})`;
+      } else if (dayPhase >= 18 && dayPhase < 21) {
+        // dusk -> early night: amber fading to deep blue
+        const k = (dayPhase - 18) / 3;
+        tint = `rgba(${Math.round(255 - 215*k)}, ${Math.round(140 - 100*k)}, ${Math.round(80 + 60*k)}, ${0.22 + 0.18*k})`;
+      } else {
+        // night/predawn: deep blue
+        // 21..23 and 0..5 — strongest tint at midnight (0/24)
+        const dist = dayPhase >= 21 ? (dayPhase - 21) : dayPhase + 3;  // 0..8
+        // Strongest at dist=3 (midnight = 24 mod), weakest at edges
+        const intensity = 0.30 + 0.10 * (1 - Math.abs(dist - 3) / 3);
+        tint = `rgba(40, 50, 110, ${intensity})`;
+      }
+      if (tint) {
+        ctx.fillStyle = tint;
+        ctx.fillRect(0, 0, CW, CH);
+      }
     }
-    if (faded) ctx.globalAlpha = 1;
-  }
+  }, [player, currentMap, scene, defeated, medallions, animFrame, npcMoveState, hourOfDay]);
 
   // ==========================================================================
   // RENDER
@@ -2967,6 +4869,193 @@ export default function GatheringTheMagic() {
           80%  { transform: translateX(0)       skewX(0deg);   opacity: 1; }
           100% { transform: translateX(0)       skewX(0deg);   opacity: 1; }
         }
+        /* ---- Battle scene 2.5D animations ---- */
+        @keyframes gtmBreathe {
+          0%, 100% { transform: scale(1)      translateY(0); }
+          50%      { transform: scale(1.025)  translateY(-1px); }
+        }
+        @keyframes gtmHitShake {
+          0%   { transform: translateX(0)  rotate(0); filter: brightness(1.6) saturate(1.2); }
+          15%  { transform: translateX(-5px) rotate(-3deg); filter: brightness(1.8); }
+          30%  { transform: translateX(5px)  rotate(3deg);  filter: brightness(1.8); }
+          45%  { transform: translateX(-4px) rotate(-2deg); filter: brightness(1.4); }
+          60%  { transform: translateX(4px)  rotate(2deg);  filter: brightness(1.2); }
+          80%  { transform: translateX(-2px) rotate(0);     filter: brightness(1.05); }
+          100% { transform: translateX(0)    rotate(0);     filter: brightness(1); }
+        }
+        @keyframes gtmCastLeft {
+          0%   { transform: translateX(0)    scale(1); }
+          25%  { transform: translateX(-6px) scale(0.94); }
+          55%  { transform: translateX(14px) scale(1.08); }
+          80%  { transform: translateX(2px)  scale(1.02); }
+          100% { transform: translateX(0)    scale(1); }
+        }
+        @keyframes gtmCastRight {
+          0%   { transform: translateX(0)     scale(1); }
+          25%  { transform: translateX(6px)   scale(0.94); }
+          55%  { transform: translateX(-14px) scale(1.08); }
+          80%  { transform: translateX(-2px)  scale(1.02); }
+          100% { transform: translateX(0)     scale(1); }
+        }
+        @keyframes gtmProjectilePtoE {
+          /* player on the left -> enemy on the right; arcs up then down */
+          0%   { left: 22%; bottom: 24%; transform: scale(0.4); opacity: 0; }
+          15%  { opacity: 1; }
+          50%  { left: 50%; bottom: 60%; transform: scale(1.0); opacity: 1; }
+          90%  { left: 76%; bottom: 30%; transform: scale(1.1); opacity: 1; }
+          100% { left: 76%; bottom: 30%; transform: scale(0.6); opacity: 0; }
+        }
+        @keyframes gtmProjectileEtoP {
+          /* enemy on the right -> player on the left; arcs up then down */
+          0%   { left: 76%; bottom: 24%; transform: scale(0.4); opacity: 0; }
+          15%  { opacity: 1; }
+          50%  { left: 50%; bottom: 60%; transform: scale(1.0); opacity: 1; }
+          90%  { left: 22%; bottom: 30%; transform: scale(1.1); opacity: 1; }
+          100% { left: 22%; bottom: 30%; transform: scale(0.6); opacity: 0; }
+        }
+        @keyframes gtmImpact {
+          0%   { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+          25%  { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+          70%  { transform: translate(-50%, -50%) scale(2.2); opacity: 0.5; }
+          100% { transform: translate(-50%, -50%) scale(2.8); opacity: 0; }
+        }
+        @keyframes gtmSpark {
+          0%   { transform: translate(0,0) scale(1); opacity: 1; }
+          100% { transform: translate(var(--gtm-dx, 0), var(--gtm-dy, 0)) scale(0.2); opacity: 0; }
+        }
+        @keyframes gtmDriftSlow {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-40px); }
+        }
+        @keyframes gtmDriftFast {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-90px); }
+        }
+        @keyframes gtmHealGlow {
+          0%   { transform: scale(0.6); opacity: 0; }
+          25%  { transform: scale(1.0); opacity: 1; }
+          100% { transform: scale(1.8); opacity: 0; }
+        }
+        /* ---- Batch 1: scene transitions, damage numbers, catch wobble, crit shake ---- */
+        /* Iris-close: shrinking circular cutout reveals black. Used when entering battle. */
+        @keyframes gtmIrisClose {
+          0%   { clip-path: circle(150% at 50% 50%); opacity: 1; }
+          100% { clip-path: circle(0% at 50% 50%); opacity: 1; }
+        }
+        /* Iris-open: opens from a tight circle outward. Used on battle exit. */
+        @keyframes gtmIrisOpen {
+          0%   { clip-path: circle(0% at 50% 50%); opacity: 1; }
+          100% { clip-path: circle(150% at 50% 50%); opacity: 1; }
+        }
+        /* Plain fade for map / building transitions */
+        @keyframes gtmFadeBlack {
+          0%   { opacity: 0; }
+          50%  { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        /* Damage number floats up and fades over ~900ms */
+        @keyframes gtmDmgFloat {
+          0%   { transform: translate(-50%, 0)    scale(0.6); opacity: 0; }
+          15%  { transform: translate(-50%, -8px) scale(1.25); opacity: 1; }
+          30%  { transform: translate(-50%, -14px) scale(1.0); opacity: 1; }
+          80%  { transform: translate(-50%, -36px) scale(1.0); opacity: 0.85; }
+          100% { transform: translate(-50%, -48px) scale(0.9); opacity: 0; }
+        }
+        /* Catch card 3-wobble-with-pauses sequence (total ~1.4s) */
+        @keyframes gtmCatchWobble {
+          0%, 100%  { transform: rotate(0); }
+          /* wobble 1 */
+          5%        { transform: rotate(-12deg); }
+          10%       { transform: rotate(10deg); }
+          15%, 28%  { transform: rotate(0); }            /* pause */
+          /* wobble 2 */
+          33%       { transform: rotate(-12deg); }
+          38%       { transform: rotate(10deg); }
+          43%, 58%  { transform: rotate(0); }            /* pause */
+          /* wobble 3 (final, slightly bigger) */
+          63%       { transform: rotate(-14deg); }
+          68%       { transform: rotate(12deg); }
+          73%, 100% { transform: rotate(0); }
+        }
+        /* Critical hit: full battle scene shakes briefly (camera shake) */
+        @keyframes gtmCamShake {
+          0%, 100% { transform: translate(0, 0); }
+          15%      { transform: translate(-3px, 2px); }
+          30%      { transform: translate(3px, -2px); }
+          45%      { transform: translate(-2px, -2px); }
+          60%      { transform: translate(2px, 2px); }
+          75%      { transform: translate(-1px, 1px); }
+          90%      { transform: translate(1px, 0); }
+        }
+        /* ---- Batch 2: menu slide-in, dialog slide-up, sprint indicator pulse ---- */
+        @keyframes gtmMenuSlideIn {
+          0%   { transform: translateY(20px); opacity: 0; }
+          100% { transform: translateY(0);    opacity: 1; }
+        }
+        @keyframes gtmDialogSlideUp {
+          0%   { transform: translateY(40px); opacity: 0; }
+          100% { transform: translateY(0);    opacity: 1; }
+        }
+        @keyframes gtmSprintPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(255, 200, 80, 0.6); }
+          50%      { box-shadow: 0 0 0 6px rgba(255, 200, 80, 0); }
+        }
+        /* ---- Batch 3: XP shimmer, level-up glow, mini-map fade ---- */
+        @keyframes gtmXpShimmer {
+          0%   { background-position: -120% 0; }
+          100% { background-position: 220% 0; }
+        }
+        @keyframes gtmLevelGlow {
+          0%   { box-shadow: 0 0 0 0   rgba(255, 220, 120, 0); }
+          25%  { box-shadow: 0 0 14px 3px rgba(255, 220, 120, 0.85); }
+          100% { box-shadow: 0 0 0 0   rgba(255, 220, 120, 0); }
+        }
+        @keyframes gtmFadeIn {
+          0%   { opacity: 0; transform: scale(0.96); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        /* ---- Weather animations ---- */
+        @keyframes gtmRainFall {
+          0%   { transform: rotate(15deg) translate(0, -10px); opacity: 0; }
+          15%  { opacity: 0.65; }
+          85%  { opacity: 0.65; }
+          100% { transform: rotate(15deg) translate(20px, 160px); opacity: 0; }
+        }
+        @keyframes gtmSandDrift {
+          0%   { transform: translateX(0); opacity: 0; }
+          15%  { opacity: 0.55; }
+          85%  { opacity: 0.55; }
+          100% { transform: translateX(540px); opacity: 0; }
+        }
+        @keyframes gtmPetalDrift {
+          0%   { transform: translate(0, -10px) rotate(0deg); opacity: 0; }
+          12%  { opacity: 0.7; }
+          85%  { opacity: 0.7; }
+          100% { transform: translate(40px, 160px) rotate(360deg); opacity: 0; }
+        }
+        @keyframes gtmSunPulse {
+          0%, 100% { opacity: 0.65; }
+          50%      { opacity: 0.95; }
+        }
+        @keyframes gtmEclipsePulse {
+          0%, 100% { opacity: 0.85; }
+          50%      { opacity: 1.0; }
+        }
+        @keyframes gtmPlanarRing {
+          0%, 100% { opacity: 0.10; transform: translate(-50%, -50%) scale(0.95); }
+          50%      { opacity: 0.30; transform: translate(-50%, -50%) scale(1.05); }
+        }
+        @keyframes gtmSparkle {
+          0%, 100% { opacity: 0.2; transform: scale(0.7); }
+          50%      { opacity: 1.0; transform: scale(1.2); }
+        }
+        /* Daily-encounter aura — slow pulse behind the rare phantom variant
+           sprite. Pulses scale + opacity together for a "this creature is
+           special" rarity shimmer. */
+        @keyframes gtmDailyAura {
+          0%, 100% { opacity: 0.55; transform: translateX(-50%) scale(0.9); }
+          50%      { opacity: 1.0;  transform: translateX(-50%) scale(1.15); }
+        }
         .pixelFont { font-family: 'Silkscreen', monospace; letter-spacing: 0.5px; }
         .mtgBtn {
           font-family: 'Cinzel', serif; font-weight: 700;
@@ -2980,7 +5069,7 @@ export default function GatheringTheMagic() {
         .mtgBtn:disabled { opacity: 0.4; cursor: not-allowed; }
         .mtgBtn:hover:not(:disabled) { border-color: #9a80c0; background: linear-gradient(180deg, #342850 0%, #1f183a 100%); }
         .dpadBtn {
-          width: 58px; height: 58px; background: #1a1428; border: 2px solid #4a3a68;
+          width: 52px; height: 52px; background: #1a1428; border: 2px solid #4a3a68;
           color: #e8dcc0; font-size: 22px; border-radius: 6px;
           display: flex; align-items: center; justify-content: center;
           user-select: none; -webkit-user-select: none; cursor: pointer;
@@ -3056,7 +5145,7 @@ export default function GatheringTheMagic() {
       {/* ======================= WORLD / HUD ======================= */}
       {scene === 'world' && (
         <>
-          <TopBar mapName={MAPS[currentMap].name} tokens={tokens} gold={gold} team={team} mode={mode} commanderColor={commanderColor} onMenu={() => { audio.sfx.menuOpen(); setScene('menu'); }} />
+          <TopBar mapName={MAPS[currentMap].name} tokens={tokens} gold={gold} team={team} mode={mode} commanderColor={commanderColor} hourOfDay={hourOfDay} onMenu={() => { audio.sfx.menuOpen(); setScene('menu'); }} />
 
           <div style={{ position: 'relative' }}>
             <canvas ref={canvasRef} style={{
@@ -3068,10 +5157,76 @@ export default function GatheringTheMagic() {
               boxShadow: '0 0 40px rgba(120,80,180,0.25), inset 0 0 0 1px #1a1428',
               background: '#000',
             }} />
+            {/* Auto-save indicator — flashes briefly after a successful save.
+                Top-LEFT of canvas so it doesn't fight the map button on the right. */}
+            {savingFlash && (
+              <div style={{
+                position: 'absolute', top: 4, left: 4, zIndex: 10,
+                padding: '3px 8px',
+                background: 'rgba(20, 12, 36, 0.85)',
+                border: '1px solid #6a5a88',
+                borderRadius: 4,
+                fontSize: 10, color: '#c8b8e0',
+                letterSpacing: 1,
+                animation: 'gtmFadeIn 0.2s ease-out',
+                fontFamily: "'Cinzel', serif",
+                pointerEvents: 'none',
+              }}>
+                <span style={{
+                  display: 'inline-block', width: 6, height: 6,
+                  background: '#9a80c0', borderRadius: '50%',
+                  marginRight: 5, verticalAlign: 'middle',
+                  animation: 'pulse 0.7s ease-in-out infinite',
+                }} />
+                SAVED
+              </div>
+            )}
+            {/* Mini-map toggle button — top-right corner of the canvas */}
+            <button
+              onClick={() => setMiniMapOpen(v => !v)}
+              title={miniMapOpen ? 'Close map (M)' : 'Open map (M)'}
+              style={{
+                position: 'absolute', top: 4, right: 4, zIndex: 10,
+                width: 28, height: 28, border: '1px solid #6a5a88',
+                borderRadius: 4, background: 'rgba(20, 12, 36, 0.85)',
+                color: '#e8dcc0', fontSize: 14, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                lineHeight: 1, padding: 0,
+              }}
+            >
+              {miniMapOpen ? '✕' : '🗺'}
+            </button>
+            {/* Mini-map overlay — full-canvas rendering of the current map at
+                low resolution with player/NPC dots. Tap anywhere to dismiss. */}
+            {miniMapOpen && (
+              <MiniMap
+                map={MAPS[currentMap]}
+                player={player}
+                npcs={currentMap === 'town' ? NPCS_TOWN : (NPCS_ZONE[currentMap] || [])}
+                npcMoveState={npcMoveState}
+                defeated={defeated}
+                onClose={() => setMiniMapOpen(false)}
+              />
+            )}
+            {/* Scoped iris overlay — covers only the canvas viewport,
+                so TopBar / dpad stay visible during the transition. */}
+            {transitionFx && (
+              <div key={transitionFx.key} style={{
+                position: 'absolute', inset: 0, zIndex: 50,
+                background: '#000',
+                borderRadius: 6,
+                pointerEvents: 'none',
+                animation:
+                  transitionFx.kind === 'irisIn'  ? 'gtmIrisClose 0.34s ease-in forwards' :
+                  transitionFx.kind === 'irisOut' ? 'gtmIrisOpen 0.36s ease-out forwards' :
+                  transitionFx.kind === 'fade'    ? 'gtmFadeBlack 0.4s ease-in-out forwards' :
+                  undefined,
+              }} />
+            )}
             {/* toast moved to global overlay so it shows on any scene */}
           </div>
 
-          <Controls onMove={move} onA={interact} onB={() => { audio.sfx.menuOpen(); setScene('menu'); }} />
+          <Controls onMove={move} onA={interact} onB={() => { audio.sfx.menuOpen(); setScene('menu'); }} sprinting={sprinting} onToggleSprint={() => setSprinting(v => !v)} />
         </>
       )}
 
@@ -3084,6 +5239,7 @@ export default function GatheringTheMagic() {
           items={items}
           mode={mode}
           commanderColor={commanderColor}
+          transitionFx={transitionFx}
           onMove={doPlayerMove}
           onCatch={tryCatch}
           onFlee={tryFlee}
@@ -3110,6 +5266,29 @@ export default function GatheringTheMagic() {
           trainerCycles={trainerCycles}
           medallions={medallions}
           planeswalkerDefeated={planeswalkerDefeated}
+          vaultCount={vaultCreatures.length}
+          lastDailyEncounters={lastDailyEncounters}
+          hourOfDay={hourOfDay}
+          currentMap={currentMap}
+          onOpenVault={() => {
+            // Opening from the menu sets vaultOrigin so the vault's close button
+            // returns to the menu instead of the world.
+            audio.sfx.menuOpen();
+            setVaultOrigin('menu');
+            setScene('vault');
+          }}
+          onRename={(uid) => setRenameUid(uid)}
+          onSwapMoves={(uid, fromIdx, toIdx) => {
+            setTeam(tt => tt.map(c => {
+              if (c.uid !== uid) return c;
+              const moves = [...c.moves];
+              const tmp = moves[fromIdx];
+              moves[fromIdx] = moves[toIdx];
+              moves[toIdx] = tmp;
+              return { ...c, moves };
+            }));
+            audio.sfx.blip();
+          }}
           onUseItem={useItemOn}
           onClose={() => { audio.sfx.menuClose(); setScene('world'); }}
           onRelease={(idx) => {
@@ -3170,7 +5349,7 @@ export default function GatheringTheMagic() {
           }}
           onReset={async () => {
             await clearSave();
-            setTeam([]); setCodex({}); setDefeated([]); setTokens(5); setGold(0); setItems({ potion: 2 });
+            setTeam([]); setVaultCreatures([]); setCodex({}); setLastDailyEncounters({}); setDefeated([]); setTokens(5); setGold(0); setItems({ potion: 2 });
             setMode('classic'); setCommanderColor(""); setTrainerCycles(0);
             setMedallions([]); setPlaneswalkerDefeated(false); setChampionLearnPending(false);
             setHasSave(false); setScene('title');
@@ -3188,17 +5367,146 @@ export default function GatheringTheMagic() {
         />
       )}
 
-      {/* ======================= DIALOG ======================= */}
-      {dialog && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,6,20,0.7)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 50 }}>
-          <div style={{ width: 'min(92vw, 460px)', margin: 20, background: 'linear-gradient(180deg, #2a2038, #141020)', border: '2px solid #6a5a88', borderRadius: 6, padding: 16, boxShadow: '0 8px 30px rgba(0,0,0,0.6)' }}>
-            {dialog.lines.map((l, i) => <div key={i} style={{ fontSize: 15, lineHeight: 1.5, marginBottom: 8 }}>{l}</div>)}
-            <div style={{ textAlign: 'right', marginTop: 10 }}>
-              <button className="mtgBtn" onClick={dialog.onDone} style={{ fontSize: 13, padding: '6px 14px' }}>▸ Continue</button>
-            </div>
-          </div>
-        </div>
+      {scene === 'vault' && (
+        <VaultScene
+          team={team}
+          vault={vaultCreatures}
+          mode={mode}
+          onDeposit={(uid) => {
+            // Move from team → vault. Disallow last team member and (in commander
+            // mode) the commander. Restores HP slightly while in storage so
+            // returning fighters aren't perpetually wounded.
+            if (mode === 'commander') {
+              const idx = team.findIndex(c => c.uid === uid);
+              if (idx === 0) { showToast('The commander cannot be stored.'); return; }
+            }
+            if (team.length <= 1) { showToast('At least one creature must stay with you.'); return; }
+            const c = team.find(t => t.uid === uid);
+            if (!c) return;
+            setTeam(tt => tt.filter(t => t.uid !== uid));
+            setVaultCreatures(v => [...v, c]);
+            audio.sfx.confirm();
+            showToast(`${displayName(c)} entered the Vault.`);
+          }}
+          onWithdraw={(uid) => {
+            // Move from vault → team if there's room. If the team is full, the
+            // VaultScene swap UI handles the picker — this path only fires when
+            // there's open space.
+            if (team.length >= 6) { showToast('Team is full — choose someone to swap.'); return; }
+            const c = vaultCreatures.find(v => v.uid === uid);
+            if (!c) return;
+            setVaultCreatures(v => v.filter(t => t.uid !== uid));
+            setTeam(tt => [...tt, c]);
+            audio.sfx.confirm();
+            showToast(`${displayName(c)} rejoined your party.`);
+          }}
+          onSwap={(teamUid, vaultUid) => {
+            // Two-way swap: a team creature moves to the vault, a vault creature
+            // moves into that team slot (preserving slot order).
+            if (mode === 'commander') {
+              const idx = team.findIndex(c => c.uid === teamUid);
+              if (idx === 0) { showToast('The commander cannot be stored.'); return; }
+            }
+            const tIdx = team.findIndex(c => c.uid === teamUid);
+            const v = vaultCreatures.find(v => v.uid === vaultUid);
+            if (tIdx < 0 || !v) return;
+            const departing = team[tIdx];
+            setTeam(tt => tt.map((c, i) => i === tIdx ? v : c));
+            setVaultCreatures(vv => [...vv.filter(x => x.uid !== vaultUid), departing]);
+            audio.sfx.confirm();
+            showToast(`${displayName(v)} ↔ ${displayName(departing)}`);
+          }}
+          onRename={(uid) => setRenameUid(uid)}
+          onRelease={(uid, fromVault) => {
+            const list = fromVault ? vaultCreatures : team;
+            const c = list.find(x => x.uid === uid);
+            if (!c) return;
+            // Block release of commander and last team member (vault releases are always fine).
+            if (!fromVault) {
+              if (mode === 'commander') {
+                const idx = team.findIndex(x => x.uid === uid);
+                if (idx === 0) { showToast('The commander cannot be released.'); return; }
+              }
+              if (team.length <= 1) { showToast('At least one creature must stay with you.'); return; }
+            }
+            if (fromVault) setVaultCreatures(v => v.filter(x => x.uid !== uid));
+            else setTeam(tt => tt.filter(x => x.uid !== uid));
+            audio.sfx.confirm();
+            showToast(`${displayName(c)} returned to the wild.`);
+          }}
+          onClose={() => {
+            audio.sfx.menuClose();
+            // Return to wherever the vault was opened from — talking to the keeper
+            // sends us back to the world; the in-menu sigil shortcut sends us back
+            // to the menu so the player can keep browsing items/team afterwards.
+            setScene(vaultOrigin === 'menu' ? 'menu' : 'world');
+          }}
+        />
       )}
+
+      {/* ======================= DIALOG (typewriter reveal) ======================= */}
+      {dialog && <DialogPanel key={dialog.lines.join('|')} dialog={dialog} />}
+
+      {/* ======================= NICKNAME / RENAME =======================
+          Looks the uid up in both the team and the vault, so a creature caught
+          while the team was full can still be nicknamed at catch time even if
+          the player chose to leave it in storage. */}
+      {renameUid && (() => {
+        const inTeam = team.find(c => c.uid === renameUid);
+        const inVault = !inTeam && vaultCreatures.find(c => c.uid === renameUid);
+        const c = inTeam || inVault;
+        if (!c) return null;
+        return (
+          <RenamePrompt
+            creature={c}
+            onConfirm={(nick) => {
+              if (inTeam) {
+                setTeam(tt => tt.map(t => t.uid === renameUid ? { ...t, nick: nick || undefined } : t));
+              } else {
+                setVaultCreatures(vv => vv.map(v => v.uid === renameUid ? { ...v, nick: nick || undefined } : v));
+              }
+              setRenameUid(null);
+              audio.sfx.confirm();
+            }}
+            onCancel={() => setRenameUid(null)}
+          />
+        );
+      })()}
+
+      {/* ======================= POST-CATCH VAULT SWAP PROMPT =======================
+          Fires after a successful catch when the team was full. The new creature
+          is already in the vault by this point — this prompt offers to bring it
+          out (and send a team member to the vault in its place), or leave it
+          there to deal with later via the Vault Keeper. */}
+      {vaultSwapUid && (() => {
+        const newcomer = vaultCreatures.find(c => c.uid === vaultSwapUid);
+        if (!newcomer) { setVaultSwapUid(null); return null; }
+        return (
+          <VaultSwapPrompt
+            newcomer={newcomer}
+            team={team}
+            mode={mode}
+            onSwap={(teamUid) => {
+              const tIdx = team.findIndex(c => c.uid === teamUid);
+              if (tIdx < 0) return;
+              const departing = team[tIdx];
+              setTeam(tt => tt.map((c, i) => i === tIdx ? newcomer : c));
+              setVaultCreatures(vv => [...vv.filter(x => x.uid !== vaultSwapUid), departing]);
+              setVaultSwapUid(null);
+              setRenameUid(newcomer.uid);  // chain into nickname prompt for the newcomer
+              audio.sfx.confirm();
+              showToast(`${displayName(departing)} → Vault. ${displayName(newcomer)} → Team.`);
+            }}
+            onKeep={() => {
+              // Even when leaving the newcomer in the vault, give the player the
+              // chance to nickname it now (the rename modal handles vault uids).
+              setVaultSwapUid(null);
+              setRenameUid(newcomer.uid);
+              audio.sfx.menuClose();
+            }}
+          />
+        );
+      })()}
 
       {/* ======================= CHAMPION LEARN MODAL (post-Planeswalker reward) ======================= */}
       {championLearnPending && team[0] && (
@@ -3409,14 +5717,127 @@ function StarterScene({ mode, onPick }) {
 }
 
 // =========================================================================
+// MINI-MAP — full-map overview at low resolution, toggleable
+// =========================================================================
+// Renders each tile as a 1-2 pixel square colored by tile type. The player is
+// a bright pulsing dot, NPCs are dim circles (gray for defeated). Tapping
+// anywhere dismisses the overlay. The viewport sits inside the canvas so it
+// doesn't cover the dpad/topbar.
+function MiniMap({ map, player, npcs, npcMoveState, defeated, onClose }) {
+  const tiles = map.tiles;
+  const H = tiles.length;
+  const W = tiles[0].length;
+  // Scale to fit a 280x280 box (the canvas is up to 320px); leave padding.
+  const SIZE = 280;
+  const cell = Math.max(1, Math.floor(Math.min(SIZE / W, SIZE / H)));
+  const mapW = cell * W;
+  const mapH = cell * H;
+
+  // Color per tile type — kept simple and high-contrast for the bird's-eye view.
+  const COLOR = {
+    '.': '#4a7a3a', g: '#2e5a22', p: '#c9a96a', a: '#5a4e48',
+    l: '#c84020', u: '#3a6a90', o: '#1a3a60',
+    m: '#2a3a26', v: '#1a2814', c: '#d8cca0', f: '#bcd088',
+    F: '#3a3242', L: '#a82c8a',
+    E: '#7a5a20', d: '#b59a7a', s: '#b8a070',
+    t: '#1a3a14', k: '#5a504c', r: '#6a2818', w: '#9a8060', B: '#3a2418',
+  };
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'absolute', inset: 0, zIndex: 40,
+        background: 'rgba(8, 4, 16, 0.92)',
+        borderRadius: 6,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        animation: 'gtmFadeIn 0.18s ease-out',
+        cursor: 'pointer',
+      }}
+    >
+      <div style={{
+        fontSize: 11, color: '#e8dcc0', letterSpacing: 1.5,
+        marginBottom: 6, fontFamily: "'Cinzel', serif",
+      }}>
+        {map.name.toUpperCase()}
+      </div>
+      <div style={{
+        position: 'relative',
+        width: mapW, height: mapH,
+        border: '1px solid #6a5a88',
+        background: '#0a0614',
+      }}>
+        {/* Render each tile row */}
+        {tiles.map((row, ty) => (
+          <div key={ty} style={{ display: 'flex', height: cell }}>
+            {row.map((ch, tx) => (
+              <div key={tx} style={{
+                width: cell, height: cell,
+                background: COLOR[ch] || '#222',
+              }} />
+            ))}
+          </div>
+        ))}
+        {/* NPCs as dim circles */}
+        {npcs.map(n => {
+          const off = npcMoveState && npcMoveState[n.id];
+          const lx = n.x + (off ? off.dx : 0);
+          const ly = n.y + (off ? off.dy : 0);
+          const isDefeated = defeated.includes(n.id);
+          return (
+            <div key={n.id} style={{
+              position: 'absolute',
+              left: lx * cell - 1, top: ly * cell - 1,
+              width: cell + 2, height: cell + 2,
+              borderRadius: '50%',
+              background: isDefeated ? '#605870' : '#e8dcc0',
+              opacity: isDefeated ? 0.5 : 0.95,
+              border: '1px solid #1a0e28',
+              boxSizing: 'border-box',
+            }} />
+          );
+        })}
+        {/* Player marker — bright pulsing dot */}
+        <div style={{
+          position: 'absolute',
+          left: player.x * cell - 1, top: player.y * cell - 1,
+          width: cell + 2, height: cell + 2,
+          borderRadius: '50%',
+          background: '#ffd870',
+          border: '1px solid #1a0e28',
+          boxSizing: 'border-box',
+          animation: 'pulse 1.2s ease-in-out infinite',
+          boxShadow: '0 0 6px rgba(255, 216, 112, 0.9)',
+        }} />
+      </div>
+      <div style={{
+        fontSize: 9, color: '#9888b0', marginTop: 8, letterSpacing: 1,
+      }}>
+        TAP TO CLOSE · M
+      </div>
+    </div>
+  );
+}
+
+// =========================================================================
 // TOP BAR
 // =========================================================================
-function TopBar({ mapName, tokens, gold, team, mode, commanderColor, onMenu }) {
+function TopBar({ mapName, tokens, gold, team, mode, commanderColor, hourOfDay, onMenu }) {
   return (
     <div style={{ width: 'min(96vw, 480px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, fontSize: 12 }}>
       <div>
         <div style={{ fontSize: 14, letterSpacing: 1, color: '#e8dcc0', display: 'flex', alignItems: 'center', gap: 6 }}>
           {mapName}
+          {/* Time-of-day icon: ☀ day, 🌅 dawn/dusk, 🌙 night. Title shows the hour. */}
+          {hourOfDay !== undefined && (
+            <span title={`${String(hourOfDay).padStart(2,'0')}:00`} style={{ fontSize: 12, opacity: 0.85 }}>
+              {hourOfDay >= 6 && hourOfDay < 8   ? '🌅'
+              : hourOfDay >= 8 && hourOfDay < 18 ? '☀️'
+              : hourOfDay >= 18 && hourOfDay < 20 ? '🌇'
+              : '🌙'}
+            </span>
+          )}
           {mode === 'commander' && commanderColor && (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '1px 5px', background: '#2a1c40', border: '1px solid #9a80c0', borderRadius: 3, fontSize: 9 }}>
               <span style={{ color: '#c8b8e0' }}>CMDR</span>
@@ -3457,7 +5878,7 @@ function TopBar({ mapName, tokens, gold, team, mode, commanderColor, onMenu }) {
 // =========================================================================
 // TOUCH CONTROLS
 // =========================================================================
-function Controls({ onMove, onA, onB }) {
+function Controls({ onMove, onA, onB, sprinting, onToggleSprint }) {
   const press = (fn) => (e) => { e.preventDefault(); fn(); };
   return (
     <div style={{ width: 'min(96vw, 480px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', marginBottom: 'auto', padding: '0 24px 0 4px' }}>
@@ -3466,7 +5887,38 @@ function Controls({ onMove, onA, onB }) {
         <button className="dpadBtn" onTouchStart={press(() => onMove('up'))} onMouseDown={press(() => onMove('up'))}>▲</button>
         <div></div>
         <button className="dpadBtn" onTouchStart={press(() => onMove('left'))} onMouseDown={press(() => onMove('left'))}>◀</button>
-        <div></div>
+        {/* Center cell — sprint toggle.
+            We use onClick (not onTouchStart/onMouseDown like the d-pad arrows)
+            because a toggle should fire once per tap, not on every touch event.
+            onTouchStart fires *both* a touch event AND a synthetic mouse event
+            on most mobile browsers, which toggled the state twice and netted to
+            no change unless the user dragged off mid-press. onClick fires once
+            and only on a clean tap. */}
+        <button
+          className="dpadBtn"
+          onClick={(e) => { e.preventDefault(); onToggleSprint(); }}
+          style={{
+            fontSize: 18,
+            // Strong, obvious contrast between the two states:
+            //   inactive: muted gray with dimmed border
+            //   active:   bright gold with darker border + glow
+            background: sprinting
+              ? 'linear-gradient(180deg, #ffd040 0%, #c08020 100%)'
+              : 'linear-gradient(180deg, #2a2438 0%, #161020 100%)',
+            color: sprinting ? '#1a0e08' : '#7a6a90',
+            fontWeight: sprinting ? 800 : 500,
+            borderColor: sprinting ? '#fff080' : '#3a3050',
+            borderWidth: 2,
+            boxShadow: sprinting
+              ? '0 0 12px rgba(255,200,80,0.65), inset 0 0 4px rgba(255,255,200,0.4)'
+              : 'inset 0 0 6px rgba(0,0,0,0.4)',
+            animation: sprinting ? 'gtmSprintPulse 1.4s ease-in-out infinite' : undefined,
+            transition: 'background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s',
+          }}
+          title={sprinting ? 'Sprinting — tap to walk' : 'Walking — tap to sprint'}
+        >
+          {sprinting ? '⚡' : 'R'}
+        </button>
         <button className="dpadBtn" onTouchStart={press(() => onMove('right'))} onMouseDown={press(() => onMove('right'))}>▶</button>
         <div></div>
         <button className="dpadBtn" onTouchStart={press(() => onMove('down'))} onMouseDown={press(() => onMove('down'))}>▼</button>
@@ -3481,9 +5933,510 @@ function Controls({ onMove, onA, onB }) {
 }
 
 // =========================================================================
+// WEATHER OVERLAY — particle effects for active battle weather
+// Pure CSS; no canvas. Each weather generates a small set of absolute-positioned
+// elements with a looping animation (gtmRainFall / gtmSandDrift / etc.) that's
+// declared in the global stylesheet. Rain streaks fall, sand drifts horizontally,
+// petals spin, sun rays radiate, eclipse darkens. Designed to read as "weather
+// is active" at a glance without obscuring the fighters.
+// =========================================================================
+function WeatherOverlay({ weatherKey }) {
+  if (!weatherKey) return null;
+  // Use a stable seed so the particle layout doesn't reshuffle each frame.
+  // Each weather seeds its own count.
+  if (weatherKey === 'rain') {
+    // 18 thin diagonal streaks of varying speeds.
+    return (
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        {Array.from({ length: 18 }).map((_, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            left: `${(i * 173) % 100}%`,
+            top: -10,
+            width: 1, height: 14,
+            background: 'linear-gradient(180deg, transparent, rgba(180,220,255,0.65))',
+            transform: 'rotate(15deg)',
+            animation: `gtmRainFall ${0.5 + (i % 5) * 0.1}s linear ${i * 0.07}s infinite`,
+          }} />
+        ))}
+        {/* Bluish atmospheric tint over the scene */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(180deg, rgba(80,130,200,0.10), rgba(40,80,140,0.18))',
+        }} />
+      </div>
+    );
+  }
+  if (weatherKey === 'sun') {
+    // Soft golden glow + 8 thin radial rays from the upper-left.
+    return (
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        <div style={{
+          position: 'absolute', left: '15%', top: '8%',
+          width: 60, height: 60,
+          background: 'radial-gradient(circle, rgba(255,240,180,0.50) 0%, rgba(255,240,180,0) 70%)',
+          animation: 'gtmSunPulse 4s ease-in-out infinite',
+        }} />
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            left: '25%', top: '20%',
+            width: 80, height: 1.2,
+            background: 'linear-gradient(90deg, rgba(255,240,180,0.4), rgba(255,240,180,0))',
+            transformOrigin: 'left center',
+            transform: `rotate(${i * 18 - 5}deg)`,
+            animation: `gtmSunPulse 4s ease-in-out ${i * 0.12}s infinite`,
+          }} />
+        ))}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(255, 230, 140, 0.06)',
+        }} />
+      </div>
+    );
+  }
+  if (weatherKey === 'sandstorm') {
+    // Ten horizontal sand streaks blowing left-to-right with parallax.
+    return (
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        {Array.from({ length: 10 }).map((_, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            left: -20,
+            top: `${10 + (i * 87) % 80}%`,
+            width: 30, height: 1.5,
+            background: `rgba(216, 160, 64, ${0.25 + (i % 3) * 0.15})`,
+            animation: `gtmSandDrift ${0.7 + (i % 5) * 0.15}s linear ${i * 0.13}s infinite`,
+          }} />
+        ))}
+        {/* Hazy orange tint */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(216, 140, 60, 0.10)',
+        }} />
+      </div>
+    );
+  }
+  if (weatherKey === 'bloom') {
+    // Drifting petals — slow, rotating, varied tints of green/pink/yellow.
+    const petalColors = ['#a8d090', '#d8a0c8', '#f3e3a8', '#a8d090', '#90c068'];
+    return (
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            left: `${(i * 211) % 100}%`,
+            top: -6,
+            width: 3, height: 3,
+            borderRadius: '50% 50% 50% 0',
+            background: petalColors[i % petalColors.length],
+            opacity: 0.7,
+            animation: `gtmPetalDrift ${3 + (i % 4) * 0.5}s linear ${i * 0.3}s infinite`,
+          }} />
+        ))}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(140, 200, 120, 0.04)',
+        }} />
+      </div>
+    );
+  }
+  if (weatherKey === 'eclipse') {
+    // Vignette darkening + a pulsing dark halo.
+    return (
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse at center, rgba(0,0,0,0) 30%, rgba(0,0,0,0.55) 100%)',
+          animation: 'gtmEclipsePulse 5s ease-in-out infinite',
+        }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(60, 30, 100, 0.12)',
+          mixBlendMode: 'multiply',
+        }} />
+      </div>
+    );
+  }
+  if (weatherKey === 'planar') {
+    // Five-color shimmer — concentric rings of W/U/B/R/G that pulse.
+    const colors = ['#f3e3a8', '#6cb8e0', '#8a7a92', '#e06d5a', '#6fb06f'];
+    return (
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        {colors.map((col, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            left: '50%', top: '50%',
+            width: `${20 + i * 30}%`, height: `${20 + i * 30}%`,
+            transform: 'translate(-50%, -50%)',
+            border: `1px solid ${col}`,
+            borderRadius: '50%',
+            opacity: 0.18,
+            animation: `gtmPlanarRing 3.6s ease-in-out ${i * 0.2}s infinite`,
+          }} />
+        ))}
+        {/* Sparkles */}
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={`sp-${i}`} style={{
+            position: 'absolute',
+            left: `${(i * 137) % 100}%`,
+            top: `${(i * 89) % 100}%`,
+            width: 2, height: 2,
+            background: colors[i % colors.length],
+            borderRadius: '50%',
+            boxShadow: `0 0 4px ${colors[i % colors.length]}`,
+            animation: `gtmSparkle 2s ease-in-out ${i * 0.25}s infinite`,
+          }} />
+        ))}
+      </div>
+    );
+  }
+  return null;
+}
+
+// =========================================================================
+// BATTLE SCENE — 2.5D parallax backdrop + spell FX overlay
+// =========================================================================
+// Renders a layered scene (sky / mid / floor / fog) themed to the active zone,
+// keeps the creatures upright (billboarded) with a continuous breathing idle,
+// and overlays cast lunge + projectile arc + impact burst when battle.fx fires.
+// All visuals are CSS / inline SVG — no canvas, no asset files.
+function BattleScene({ battle, me, enemy }) {
+  const fx = battle.fx;
+  const zone = battle.bgZone || 'town';
+
+  // Per-zone color palette for the parallax layers
+  const ZONE_BG = {
+    town:    { sky1: '#3a2850', sky2: '#140820', far: '#2a1f3a', mid: '#1a1228', floor: '#3a2848', fog: 'rgba(120,80,180,0.18)' },
+    wilds:   { sky1: '#1f3826', sky2: '#080d10', far: '#1a2a1c', mid: '#0e1a14', floor: '#1a3024', fog: 'rgba(80,160,100,0.18)' },
+    ashen:   { sky1: '#4a1a14', sky2: '#1a0808', far: '#2a1410', mid: '#180806', floor: '#3a1810', fog: 'rgba(255,100,40,0.20)' },
+    sanctum: { sky1: '#1a3858', sky2: '#06101e', far: '#102648', mid: '#08182a', floor: '#1a4068', fog: 'rgba(100,180,240,0.20)' },
+    umbral:  { sky1: '#241a38', sky2: '#0a0612', far: '#181028', mid: '#0c0818', floor: '#221838', fog: 'rgba(160,100,200,0.18)' },
+    plains:  { sky1: '#3a3858', sky2: '#181830', far: '#2a2848', mid: '#1a1a30', floor: '#3a3a5a', fog: 'rgba(255,240,180,0.16)' },
+  };
+  // Per-tile-type palette overlay. Wild encounters on different tile types
+  // (tall grass, lava, deep water, etc) get a flavor tint over the zone palette.
+  const TILE_BG = {
+    g: { fog: 'rgba(80, 200, 100, 0.22)', floor: '#1a4020' },  // tall grass — saturated green
+    l: { fog: 'rgba(255, 100, 40, 0.30)', floor: '#5a2010' },  // lava — molten red
+    o: { fog: 'rgba(80, 160, 240, 0.28)', floor: '#1a3868' },  // deep water — cool blue
+    v: { fog: 'rgba(160, 100, 200, 0.24)', floor: '#2a1a38' }, // thorny vines — purple
+    f: { fog: 'rgba(255, 240, 180, 0.22)', floor: '#5a5a40' }, // flower field — pale gold
+  };
+  // Shrine interiors fall back to the zone they map to (if known) or town
+  const basePal = ZONE_BG[zone] || ZONE_BG.town;
+  const tilePal = battle.bgTile ? TILE_BG[battle.bgTile] : null;
+  // Merge: tile palette overrides fog and floor when present.
+  const pal = tilePal ? { ...basePal, fog: tilePal.fog, floor: tilePal.floor } : basePal;
+
+  // Mountains/silhouettes per zone (drawn as simple SVG polygons)
+  const farSilhouettes = {
+    wilds:   [[0,80],[15,55],[28,70],[42,40],[56,62],[68,48],[80,68],[100,55],[100,100],[0,100]],
+    ashen:   [[0,80],[10,50],[22,68],[35,35],[48,58],[62,30],[78,52],[92,40],[100,60],[100,100],[0,100]],
+    sanctum: [[0,75],[18,60],[30,72],[45,55],[60,68],[75,50],[88,65],[100,58],[100,100],[0,100]],
+    umbral:  [[0,82],[12,60],[24,75],[38,50],[52,68],[68,42],[82,62],[100,55],[100,100],[0,100]],
+    plains:  [[0,82],[20,72],[35,80],[50,68],[65,78],[80,70],[100,75],[100,100],[0,100]],
+    town:    [[0,80],[16,68],[32,76],[48,62],[64,72],[80,64],[100,72],[100,100],[0,100]],
+  };
+  const silhouette = farSilhouettes[zone] || farSilhouettes.town;
+  const silhouettePts = silhouette.map(([x, y]) => `${x},${y}`).join(' ');
+
+  // Color for spell FX comes from the move's mana color
+  const fxColor = fx ? COLOR_HEX[fx.color] || '#fff' : '#fff';
+  const fxDeep  = fx ? COLOR_DEEP[fx.color] || '#444' : '#444';
+
+  // Determine cast direction & impact target
+  // side === 'player' means PLAYER cast at ENEMY (left -> right)
+  // side === 'enemy'  means ENEMY cast at PLAYER (right -> left)
+  const playerCast = fx && fx.side === 'player';
+  const enemyCast  = fx && fx.side === 'enemy';
+  const projectileAnim = playerCast ? 'gtmProjectilePtoE' : 'gtmProjectileEtoP';
+
+  // The cast lunge happens on the attacker; hit-shake on the target
+  const playerLunge = playerCast ? `gtmCastLeft 0.6s ease-out` : '';
+  const enemyLunge  = enemyCast  ? `gtmCastRight 0.6s ease-out` : '';
+  // Hit-shake fires only when the move actually connected (not on miss/heal)
+  const targetIsEnemy  = playerCast && fx && fx.kind !== 'miss' && fx.kind !== 'heal';
+  const targetIsPlayer = enemyCast  && fx && fx.kind !== 'miss' && fx.kind !== 'heal';
+  const enemyShake  = targetIsEnemy  ? `gtmHitShake 0.55s ease-out 0.42s` : '';
+  const playerShake = targetIsPlayer ? `gtmHitShake 0.55s ease-out 0.42s` : '';
+
+  // Layer animations are keyed by fx.key so they retrigger on every cast
+  const fxKey = fx ? fx.key : 'idle';
+
+  // Camera shake on critical hits — keyed by fx.key so each crit retriggers it
+  const camShake = fx && fx.kind === 'crit' ? `gtmCamShake 0.45s ease-out` : undefined;
+  return (
+    <div key={`scene-${fx && fx.kind === 'crit' ? fx.key : 'idle'}`} style={{
+      height: 140,
+      background: `linear-gradient(180deg, ${pal.sky1} 0%, ${pal.sky2} 100%)`,
+      border: '2px solid #4a3a68', borderRadius: 6,
+      position: 'relative', overflow: 'hidden',
+      marginBottom: 8,
+      animation: camShake,
+    }}>
+      {/* Parallax layer 1: distant silhouettes (mountains/towers) */}
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{
+        position: 'absolute', inset: 0, width: '120%', height: '100%',
+        animation: 'gtmDriftSlow 30s linear infinite alternate',
+        opacity: 0.7,
+      }}>
+        <polygon points={silhouettePts} fill={pal.far} />
+      </svg>
+      {/* Parallax layer 2: mid-ground silhouettes */}
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{
+        position: 'absolute', inset: 0, width: '115%', height: '100%',
+        animation: 'gtmDriftFast 18s linear infinite alternate',
+        opacity: 0.85,
+      }}>
+        <polygon
+          points="0,90 10,75 22,88 35,72 50,84 62,70 75,82 88,72 100,86 100,100 0,100"
+          fill={pal.mid}
+        />
+      </svg>
+      {/* Floor — perspective trapezoid (drawn behind creatures via z-index ordering) */}
+      <div style={{
+        position: 'absolute', left: '-10%', right: '-10%', bottom: 0,
+        height: '38%',
+        background: `linear-gradient(180deg, ${pal.floor} 0%, ${pal.sky2} 100%)`,
+        clipPath: 'polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%)',
+        opacity: 0.85,
+      }} />
+      {/* Floor grid lines for depth cue */}
+      <svg viewBox="0 0 100 40" preserveAspectRatio="none" style={{
+        position: 'absolute', left: 0, right: 0, bottom: 0,
+        width: '100%', height: '40%', opacity: 0.18, pointerEvents: 'none',
+      }}>
+        {/* receding lines toward vanishing point at top-center */}
+        <line x1="0"   y1="40" x2="42" y2="0" stroke="#fff" strokeWidth="0.4" />
+        <line x1="20"  y1="40" x2="46" y2="0" stroke="#fff" strokeWidth="0.4" />
+        <line x1="40"  y1="40" x2="49" y2="0" stroke="#fff" strokeWidth="0.4" />
+        <line x1="60"  y1="40" x2="51" y2="0" stroke="#fff" strokeWidth="0.4" />
+        <line x1="80"  y1="40" x2="54" y2="0" stroke="#fff" strokeWidth="0.4" />
+        <line x1="100" y1="40" x2="58" y2="0" stroke="#fff" strokeWidth="0.4" />
+        {/* horizontal bands */}
+        <line x1="0" y1="10" x2="100" y2="10" stroke="#fff" strokeWidth="0.2" />
+        <line x1="0" y1="22" x2="100" y2="22" stroke="#fff" strokeWidth="0.3" />
+      </svg>
+      {/* Atmospheric fog tint */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: pal.fog,
+        pointerEvents: 'none',
+        mixBlendMode: 'screen',
+      }} />
+
+      {/* Weather overlay — rendered above fog but below creatures. With stacked
+          weather (rare), both particle systems render layered together — they're
+          all transparent CSS so they composite cleanly (e.g. rain streaks over
+          eclipse vignette = stormy darkness, sun rays + petals = lush summer). */}
+      {weathersForBattle(battle).map((wKey, i) => (
+        <WeatherOverlay key={`${wKey}-${i}`} weatherKey={wKey} />
+      ))}
+
+      {/* Player creature — left side, on floor */}
+      <div style={{
+        position: 'absolute', left: '12%', bottom: 12,
+        animation: playerLunge || enemyShake_ph(playerShake) || 'gtmBreathe 3.4s ease-in-out infinite',
+        transformOrigin: 'bottom center',
+      }} key={`me-${fxKey}-${playerCast ? 'cast' : (targetIsPlayer ? 'hit' : 'idle')}`}>
+        {/* Drop shadow under the sprite */}
+        <div style={{
+          position: 'absolute', left: '50%', bottom: -4,
+          width: 60, height: 8,
+          transform: 'translateX(-50%)',
+          background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 70%)',
+          pointerEvents: 'none',
+        }} />
+        <div style={{
+          animation: battle.throwing ? 'gtmCatchWobble 1.4s ease-in-out 0.55s' : undefined,
+        }}>
+          <CreatureSprite creature={me} facing="right" />
+        </div>
+      </div>
+
+      {/* Enemy creature — right side, on floor */}
+      <div style={{
+        position: 'absolute', right: '12%', bottom: 12,
+        animation: enemyLunge || enemyShake_ph(enemyShake) || 'gtmBreathe 3.1s ease-in-out infinite',
+        transformOrigin: 'bottom center',
+        opacity: battle.result === 'catch' ? 0 : 1,
+        transition: 'opacity 0.5s ease-out',
+      }} key={`en-${fxKey}-${enemyCast ? 'cast' : (targetIsEnemy ? 'hit' : 'idle')}`}>
+        <div style={{
+          position: 'absolute', left: '50%', bottom: -4,
+          width: 60, height: 8,
+          transform: 'translateX(-50%)',
+          background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 70%)',
+          pointerEvents: 'none',
+        }} />
+        {/* Daily-encounter aura — pulsing radial glow behind the enemy sprite.
+            Only renders for the rare phantom variants (enemy.isDaily). The color
+            comes from the daily entry's `glow` field; the keyframe animation
+            creates the breathing rarity-shimmer effect. */}
+        {enemy.isDaily && (
+          <div style={{
+            position: 'absolute',
+            left: '50%', bottom: 8,
+            width: 80, height: 80,
+            transform: 'translateX(-50%)',
+            background: `radial-gradient(circle, ${enemy.dailyGlow}66 0%, ${enemy.dailyGlow}22 40%, transparent 70%)`,
+            animation: 'gtmDailyAura 2.2s ease-in-out infinite',
+            pointerEvents: 'none',
+          }} />
+        )}
+        <div style={{
+          animation: battle.throwing ? 'gtmCatchWobble 1.4s ease-in-out 0.62s' : undefined,
+          transform: battle.result === 'catch' ? 'scale(0.3) translateY(-10px)' : 'scale(1)',
+          transition: 'transform 0.5s ease-out',
+          filter: enemy.isDaily ? `drop-shadow(0 0 6px ${enemy.dailyGlow})` : undefined,
+        }}>
+          <CreatureSprite creature={enemy} facing="left" />
+        </div>
+      </div>
+
+      {/* SPELL FX OVERLAY — projectile + impact + sparks. Gated on fx existing. */}
+      {fx && fx.kind !== 'heal' && fx.kind !== 'miss' && (
+        <div key={`fx-${fxKey}`} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+          {/* Projectile orb arcing from caster to target */}
+          <div style={{
+            position: 'absolute',
+            width: 20, height: 20,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, #fff 0%, ${fxColor} 35%, ${fxDeep} 75%, transparent 100%)`,
+            boxShadow: `0 0 16px ${fxColor}, 0 0 32px ${fxColor}80`,
+            animation: `${projectileAnim} 0.55s ease-out forwards`,
+          }} />
+          {/* Impact burst — appears at target side */}
+          <div style={{
+            position: 'absolute',
+            left: playerCast ? '76%' : '22%',
+            bottom: '38%',
+            width: 50, height: 50,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${fxColor} 0%, ${fxDeep} 50%, transparent 80%)`,
+            opacity: 0,
+            animation: `gtmImpact 0.5s ease-out 0.45s forwards`,
+            transform: 'translate(-50%, -50%)',
+          }} />
+          {/* Sparks radiating outward */}
+          {fx.kind !== 'weak' && [0, 1, 2, 3, 4, 5].map(i => {
+            const angle = (i / 6) * Math.PI * 2;
+            const dist = fx.kind === 'crit' || fx.kind === 'super' ? 36 : 22;
+            const dx = Math.cos(angle) * dist;
+            const dy = Math.sin(angle) * dist;
+            return (
+              <div key={i} style={{
+                position: 'absolute',
+                left: playerCast ? '76%' : '22%',
+                bottom: '38%',
+                width: 4, height: 4,
+                borderRadius: '50%',
+                background: fxColor,
+                boxShadow: `0 0 6px ${fxColor}`,
+                opacity: 0,
+                ['--gtm-dx']: `${dx}px`,
+                ['--gtm-dy']: `${dy}px`,
+                animation: `gtmSpark 0.55s ease-out 0.5s forwards`,
+              }} />
+            );
+          })}
+          {/* Critical/super-effective screen flash */}
+          {(fx.kind === 'crit' || fx.kind === 'super') && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: fx.kind === 'crit' ? 'rgba(255,240,160,0.4)' : `${fxColor}55`,
+              animation: 'gtmFlashFade 0.4s ease-out 0.42s forwards',
+              opacity: 0,
+              pointerEvents: 'none',
+            }} />
+          )}
+        </div>
+      )}
+
+      {/* Heal effect — green/white glow on the target (caster heals self) */}
+      {fx && fx.kind === 'heal' && (
+        <div key={`fx-${fxKey}`} style={{
+          position: 'absolute',
+          left: fx.side === 'player' ? '20%' : '72%',
+          bottom: 18,
+          width: 60, height: 60,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, rgba(255,250,200,0.9) 0%, ${fxColor}aa 50%, transparent 80%)`,
+          opacity: 0,
+          animation: 'gtmHealGlow 0.8s ease-out forwards',
+          pointerEvents: 'none',
+        }} />
+      )}
+
+      {/* Floating damage number — pops up from the target on hit/crit/super/weak.
+          Color-coded: gold for crit, color-tinted for super-effective, dim white
+          for not-very-effective, plain white otherwise. */}
+      {fx && fx.dmg > 0 && (fx.kind === 'hit' || fx.kind === 'crit' || fx.kind === 'super' || fx.kind === 'weak') && (
+        <div key={`dmg-${fxKey}`} style={{
+          position: 'absolute',
+          left: playerCast ? '76%' : '22%',
+          bottom: 60,
+          fontFamily: "'Cinzel', Georgia, serif",
+          fontSize: fx.kind === 'crit' ? 26 : (fx.kind === 'super' ? 22 : 19),
+          fontWeight: 800,
+          color: fx.kind === 'crit'  ? '#ffd870'
+               : fx.kind === 'super' ? fxColor
+               : fx.kind === 'weak'  ? '#9098a0'
+               : '#f4ecd8',
+          textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7), -1px -1px 0 #000, 1px 1px 0 #000',
+          pointerEvents: 'none',
+          animation: 'gtmDmgFloat 0.9s ease-out forwards',
+          transform: 'translate(-50%, 0)',
+          letterSpacing: '0.5px',
+        }}>
+          {fx.kind === 'crit' && <span style={{ fontSize: 12, marginRight: 3, verticalAlign: 'middle' }}>★</span>}
+          -{fx.dmg}
+        </div>
+      )}
+
+      {/* Card-throw catch animation (preserved) */}
+      {battle.throwing && (
+        <div style={{
+          position: 'absolute', pointerEvents: 'none',
+          left: '10%', bottom: '10px',
+          animation: 'gtmCardThrow 0.72s ease-out forwards',
+        }}>
+          <CardBack size="small" />
+        </div>
+      )}
+
+      {/* Intro banner */}
+      {battle.intro && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(10, 6, 20, 0.55)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          pointerEvents: 'none',
+          animation: 'gtmFlashFade 1s ease-out forwards',
+        }}>
+          <div style={{
+            fontSize: 22, fontWeight: 700, letterSpacing: 4,
+            color: '#f4e5a8', textShadow: '0 2px 8px rgba(0,0,0,0.8), 0 0 24px rgba(244,229,168,0.6)',
+            animation: 'gtmIntroSlide 0.9s ease-out',
+            fontFamily: "'Cinzel', serif",
+            borderTop: '2px solid #c9a664', borderBottom: '2px solid #c9a664',
+            padding: '8px 24px', background: 'rgba(20, 8, 32, 0.65)',
+          }}>
+            {battle.kind === 'trainer' ? 'CHALLENGE!' : 'BATTLE!'}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+// Helper: prefer non-empty animation strings (lunge > shake > breathe)
+function enemyShake_ph(s) { return s || ''; }
+
+// =========================================================================
 // BATTLE SCREEN
 // =========================================================================
-function BattleScreen({ battle, team, tokens, items, mode, commanderColor, onMove, onCatch, onFlee, onSwitch, onEnd, onResolveLearn, onResolveGraft, onUseBattleItem }) {
+function BattleScreen({ battle, team, tokens, items, mode, commanderColor, transitionFx, onMove, onCatch, onFlee, onSwitch, onEnd, onResolveLearn, onResolveGraft, onUseBattleItem }) {
   const [panel, setPanel] = useState('main'); // main | moves | team
   useEffect(() => { setPanel('main'); }, [battle.myIdx, battle.enemyIdx]);
 
@@ -3503,56 +6456,59 @@ function BattleScreen({ battle, team, tokens, items, mode, commanderColor, onMov
         <CombatCard creature={enemy} enemy />
       </div>
 
-      {/* scene */}
-      <div style={{
-        height: 120, background: 'radial-gradient(ellipse at center, #3a2850 0%, #140820 100%)',
-        border: '2px solid #4a3a68', borderRadius: 6, display: 'flex', alignItems: 'flex-end',
-        justifyContent: 'space-between', padding: '10px 20px', marginBottom: 8,
-        position: 'relative', overflow: 'hidden',
-      }}>
-        <div style={{
-          transformOrigin: 'center',
-          animation: battle.throwing ? 'gtmCardShake 0.35s ease-in-out 0.55s 2' : undefined,
-        }}>
-          <CreatureSprite creature={me} facing="right" />
-        </div>
-        <div style={{
-          transformOrigin: 'center',
-          animation: battle.throwing ? 'gtmCardShake 0.3s ease-in-out 0.62s 2' : undefined,
-          opacity: battle.result === 'catch' ? 0 : 1,
-          transform: battle.result === 'catch' ? 'scale(0.3) translateY(-10px)' : 'scale(1)',
-          transition: 'opacity 0.5s ease-out, transform 0.5s ease-out',
-        }}>
-          <CreatureSprite creature={enemy} facing="left" />
-        </div>
-        {battle.throwing && (
-          <div style={{
-            position: 'absolute', pointerEvents: 'none',
-            left: '10%', bottom: '10px',
-            animation: 'gtmCardThrow 0.72s ease-out forwards',
-          }}>
-            <CardBack size="small" />
-          </div>
-        )}
-        {battle.intro && (
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'rgba(10, 6, 20, 0.55)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            pointerEvents: 'none',
-            animation: 'gtmFlashFade 1s ease-out forwards',
-          }}>
+      {/* ===== 2.5D Battle Scene with parallax backdrop, breathing creatures, and spell FX ===== */}
+      <div style={{ position: 'relative' }}>
+        <BattleScene battle={battle} me={me} enemy={enemy} />
+        {/* Weather badges — top-right, one per active weather. Stacked weathers
+            (rare) render two badges side-by-side so the player can read each one's
+            color, icon, and effect independently. */}
+        {(() => {
+          const wKeys = weathersForBattle(battle);
+          if (wKeys.length === 0) return null;
+          return (
             <div style={{
-              fontSize: 22, fontWeight: 700, letterSpacing: 4,
-              color: '#f4e5a8', textShadow: '0 2px 8px rgba(0,0,0,0.8), 0 0 24px rgba(244,229,168,0.6)',
-              animation: 'gtmIntroSlide 0.9s ease-out',
-              fontFamily: "'Cinzel', serif",
-              borderTop: '2px solid #c9a664', borderBottom: '2px solid #c9a664',
-              padding: '8px 24px', background: 'rgba(20, 8, 32, 0.65)',
+              position: 'absolute', top: 6, right: 6, zIndex: 5,
+              display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end',
+              maxWidth: '60%',
             }}>
-              {battle.kind === 'trainer' ? 'CHALLENGE!' : 'BATTLE!'}
+              {wKeys.map(wKey => {
+                const w = WEATHER[wKey];
+                return (
+                  <div key={wKey} title={w.desc}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 4,
+                      padding: '3px 7px',
+                      background: 'rgba(10, 6, 20, 0.78)',
+                      border: `1.5px solid ${w.color}`,
+                      borderRadius: 12,
+                      fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
+                      color: w.color,
+                      boxShadow: `0 0 8px ${w.color}55`,
+                      fontFamily: "'Cinzel', serif",
+                      pointerEvents: 'auto',
+                      animation: 'gtmFlashFade 0.6s ease-out',
+                    }}>
+                    <span style={{ fontSize: 13 }}>{w.icon}</span>
+                    <span>{w.name.toUpperCase()}</span>
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          );
+        })()}
+        {/* Scoped iris overlay for battle entry/exit — covers only the battle scene */}
+        {transitionFx && (
+          <div key={transitionFx.key} style={{
+            position: 'absolute', inset: 0, zIndex: 50,
+            background: '#000',
+            borderRadius: 6,
+            pointerEvents: 'none',
+            animation:
+              transitionFx.kind === 'irisIn'  ? 'gtmIrisClose 0.34s ease-in forwards' :
+              transitionFx.kind === 'irisOut' ? 'gtmIrisOpen 0.36s ease-out forwards' :
+              transitionFx.kind === 'fade'    ? 'gtmFadeBlack 0.4s ease-in-out forwards' :
+              undefined,
+          }} />
         )}
       </div>
 
@@ -3691,7 +6647,7 @@ function CombatCard({ creature, enemy }) {
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 4, alignItems: 'center', minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{creature.name}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName(creature)}</div>
           {status && (
             <span title={status.desc} style={{
               fontSize: 11, padding: '1px 5px', borderRadius: 3,
@@ -4574,16 +7530,247 @@ function ChampionLearnPanel({ creature, onLearn, onSkip }) {
 }
 
 // =========================================================================
+// RENAME PROMPT — set or clear a creature's nickname
+// =========================================================================
+// Modal with a text input. Empty submission clears the nickname (revert to
+// species name). Cap at 16 chars to prevent UI overflow.
+function RenamePrompt({ creature, onConfirm, onCancel }) {
+  const [val, setVal] = useState(creature.nick || '');
+  const submit = () => onConfirm(val.trim().slice(0, 16));
+  return (
+    <div
+      onClick={onCancel}
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(10,6,20,0.85)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 60, padding: 16,
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: 'linear-gradient(180deg, #2a2038, #141020)',
+          border: '2px solid #6a5a88', borderRadius: 6,
+          padding: 18, width: 'min(90vw, 340px)',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.7)',
+          animation: 'gtmDialogSlideUp 0.25s ease-out',
+        }}
+      >
+        <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, color: '#e8dcc0' }}>
+          Name your {creature.name}?
+        </div>
+        <div style={{ fontSize: 11, color: '#9888b0', marginBottom: 10 }}>
+          Leave blank to keep the species name.
+        </div>
+        <input
+          type="text"
+          autoFocus
+          value={val}
+          maxLength={16}
+          onChange={e => setVal(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') submit(); else if (e.key === 'Escape') onCancel(); }}
+          placeholder={creature.name}
+          style={{
+            width: '100%', boxSizing: 'border-box',
+            padding: '8px 10px', fontSize: 14,
+            background: '#0a0614', border: '1px solid #6a5a88',
+            borderRadius: 4, color: '#f4ecd8',
+            fontFamily: "'Cinzel', serif", letterSpacing: 0.5,
+          }}
+        />
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
+          <button className="mtgBtn" onClick={onCancel} style={{ padding: '6px 12px', fontSize: 12 }}>
+            Cancel
+          </button>
+          <button className="mtgBtn" onClick={submit} style={{ padding: '6px 14px', fontSize: 12, borderColor: '#9ad080', color: '#d8f0c8' }}>
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =========================================================================
+// DIALOG PANEL — typewriter text reveal with skip-to-end on first interaction
+// =========================================================================
+// Lines are revealed one character at a time. A small "tick" sound fires every
+// few characters for that classic JRPG feel. Pressing Continue (or A/Enter) the
+// first time skips the typewriter to the end of the current set; pressing again
+// dismisses the dialog.
+function DialogPanel({ dialog }) {
+  const fullText = dialog.lines.join('\n');
+  const [revealed, setRevealed] = useState(0);
+  const isComplete = revealed >= fullText.length;
+  useEffect(() => {
+    if (isComplete) return;
+    const id = setInterval(() => {
+      setRevealed(r => {
+        const next = Math.min(r + 1, fullText.length);
+        // Tick sound every 3 characters, but never on whitespace (avoids spam)
+        if (next > r && next % 3 === 0 && fullText[next - 1] && /\S/.test(fullText[next - 1])) {
+          // sfx.blip is a quiet "click" at ~720Hz — perfect for typewriter ticks
+          try { audio.sfx.blip(); } catch (_) {}
+        }
+        return next;
+      });
+    }, 25);
+    return () => clearInterval(id);
+  }, [fullText, isComplete]);
+  // First press = skip to end. Second press = onDone (dismiss).
+  const advance = () => {
+    if (isComplete) {
+      dialog.onDone?.();
+    } else {
+      setRevealed(fullText.length);
+    }
+  };
+  // Render the revealed substring back as the original line array
+  const shown = fullText.slice(0, revealed);
+  const lines = shown.split('\n');
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(10,6,20,0.7)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 50 }}
+      onClick={advance}
+    >
+      <div style={{
+        width: 'min(92vw, 460px)', margin: 20,
+        background: 'linear-gradient(180deg, #2a2038, #141020)',
+        border: '2px solid #6a5a88', borderRadius: 6, padding: 16,
+        boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
+        animation: 'gtmDialogSlideUp 0.3s ease-out',
+      }}>
+        {/* Show all lines that have at least started revealing.
+            The last visible line gets a blinking cursor while still typing. */}
+        {lines.map((l, i) => (
+          <div key={i} style={{ fontSize: 15, lineHeight: 1.5, marginBottom: 8, minHeight: '1.5em' }}>
+            {l}
+            {!isComplete && i === lines.length - 1 && (
+              <span style={{
+                display: 'inline-block', width: 6, height: 14,
+                background: '#c8b888', marginLeft: 2,
+                animation: 'pulse 0.8s ease-in-out infinite',
+                verticalAlign: 'baseline',
+              }} />
+            )}
+          </div>
+        ))}
+        {/* Render any not-yet-started lines as empty placeholders so the box
+            doesn't visibly grow as text reveals. */}
+        {dialog.lines.length > lines.length && Array.from({ length: dialog.lines.length - lines.length }).map((_, i) => (
+          <div key={`ph-${i}`} style={{ fontSize: 15, lineHeight: 1.5, marginBottom: 8, minHeight: '1.5em' }}>&nbsp;</div>
+        ))}
+        <div style={{ textAlign: 'right', marginTop: 10 }}>
+          <button className="mtgBtn" onClick={(e) => { e.stopPropagation(); advance(); }} style={{ fontSize: 13, padding: '6px 14px' }}>
+            {isComplete ? '▸ Continue' : '» Skip'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =========================================================================
+// MOVE-SET EDITOR — drag/swap-by-tap UI for reordering a creature's 4 moves
+// =========================================================================
+// Shows all 4 move slots (or fewer, padded with empty placeholders). Tap a move
+// to "select" it; tap a second move to swap their positions. Move 1 is the
+// default move shown in battle when no one explicitly chooses.
+function MoveSetEditor({ creature, onSwap }) {
+  const [selectedIdx, setSelectedIdx] = useState(null);
+  const moves = creature.moves || [];
+  const handleTap = (idx) => {
+    if (selectedIdx === null) {
+      setSelectedIdx(idx);
+    } else if (selectedIdx === idx) {
+      setSelectedIdx(null);  // deselect
+    } else {
+      onSwap(selectedIdx, idx);
+      setSelectedIdx(null);
+    }
+  };
+  return (
+    <div style={{
+      width: '100%', maxWidth: 200,
+      marginTop: 4,
+      padding: 8,
+      background: 'rgba(20, 12, 36, 0.6)',
+      border: '1px solid #4a3a68',
+      borderRadius: 4,
+      animation: 'gtmDialogSlideUp 0.2s ease-out',
+    }}>
+      <div style={{ fontSize: 9, color: '#9888b0', marginBottom: 5, textAlign: 'center', letterSpacing: 1 }}>
+        TAP TO SWAP · slot 1 = default
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {[0, 1, 2, 3].map(idx => {
+          const moveKey = moves[idx];
+          const move = moveKey ? MOVES[moveKey] : null;
+          const isSelected = selectedIdx === idx;
+          const isEmpty = !move;
+          return (
+            <button
+              key={idx}
+              onClick={() => !isEmpty && handleTap(idx)}
+              disabled={isEmpty}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '4px 7px', fontSize: 11,
+                background: isSelected
+                  ? 'linear-gradient(180deg, #c8a448, #6a5418)'
+                  : isEmpty
+                    ? 'rgba(20, 12, 36, 0.4)'
+                    : 'linear-gradient(180deg, #2a2038, #141020)',
+                color: isSelected ? '#1a0e08' : (isEmpty ? '#5a5070' : '#e8dcc0'),
+                border: `1px solid ${isSelected ? '#f0d860' : (isEmpty ? '#3a3050' : '#6a5a88')}`,
+                borderRadius: 3,
+                cursor: isEmpty ? 'default' : 'pointer',
+                opacity: isEmpty ? 0.55 : 1,
+                fontFamily: "'Cinzel', serif",
+                textAlign: 'left',
+                transition: 'background 0.12s, border-color 0.12s',
+              }}
+            >
+              <span style={{ fontSize: 9, opacity: 0.7, minWidth: 12 }}>{idx + 1}.</span>
+              {!isEmpty && move.c && (
+                <span style={{
+                  display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
+                  background: COLOR_HEX[move.c] || '#888',
+                  border: '1px solid #1a0e28',
+                  flexShrink: 0,
+                }} />
+              )}
+              <span style={{ flex: 1, fontWeight: isSelected ? 700 : 500 }}>
+                {isEmpty ? '— empty —' : move.name}
+              </span>
+              {!isEmpty && move.p > 0 && (
+                <span style={{ fontSize: 9, opacity: 0.7 }}>P{move.p}</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// =========================================================================
 // MENU SCREEN
 // =========================================================================
-function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, storageBroken, defeated, trainerCycles, medallions, planeswalkerDefeated, onUseItem, onClose, onReset, onSaveQuit, onRelease, onCheckStorage }) {
+function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, storageBroken, defeated, trainerCycles, medallions, planeswalkerDefeated, vaultCount, lastDailyEncounters, hourOfDay, currentMap, onUseItem, onRename, onSwapMoves, onOpenVault, onClose, onReset, onSaveQuit, onRelease, onCheckStorage }) {
   const [tab, setTab] = useState('team');
   const [pickingFor, setPickingFor] = useState(null); // item key to use, waiting for team pick
   const [releaseConfirm, setReleaseConfirm] = useState(null); // index of creature awaiting release confirmation
+  // Tracks which creature's move-set is open for editing in the team tab.
+  // null = none selected; toggles closed when the same creature's button is clicked again.
+  const [movesUid, setMovesUid] = useState(null);
   // Audio mute toggle — read once on mount; persists via the audio engine itself.
   const [muted, setMuted] = useState(audio.isMuted());
   return (
-    <div style={{ width: 'min(94vw, 440px)', margin: 'auto' }}>
+    <div style={{
+      width: 'min(94vw, 440px)', margin: 'auto',
+      animation: 'gtmMenuSlideIn 0.25s ease-out',
+    }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <div style={{ fontSize: 20, fontWeight: 700 }}>Spellbook</div>
         <div style={{ display: 'flex', gap: 6 }}>
@@ -4612,6 +7799,35 @@ function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, st
       </div>
       {tab === 'team' && (
         <>
+          {/* Vault count badge — gives an at-a-glance reminder that more creatures
+              are stored. Tappable when the player owns the Vault Sigil; otherwise
+              just informational (with a hint where to find their stored creatures). */}
+          {vaultCount > 0 && (
+            <button
+              onClick={items.vault_sigil ? onOpenVault : undefined}
+              disabled={!items.vault_sigil}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                width: '100%', padding: '6px 10px', marginBottom: 8,
+                background: items.vault_sigil
+                  ? 'linear-gradient(180deg, #1a2438 0%, #1a1028 100%)'
+                  : '#1a1428',
+                border: items.vault_sigil ? '1.5px solid #c9a664' : '1.5px solid #5a7088',
+                borderRadius: 4,
+                color: '#a8c0e0', fontSize: 11,
+                cursor: items.vault_sigil ? 'pointer' : 'default',
+                fontFamily: "'Cinzel', serif",
+                textAlign: 'left',
+              }}>
+              <span style={{ fontSize: 14 }}>✦</span>
+              <span style={{ flex: 1 }}>
+                <b>{vaultCount}</b> stored in the Hollow Vault
+              </span>
+              <span style={{ fontSize: 10, color: items.vault_sigil ? '#f4e5a8' : '#7a6898', fontStyle: 'italic' }}>
+                {items.vault_sigil ? 'Tap to open' : 'Visit Keeper Solenne'}
+              </span>
+            </button>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10, justifyItems: 'center' }}>
             {team.length === 0 && <div style={{ color: '#9080b0' }}>No creatures yet.</div>}
             {team.map((c, i) => {
@@ -4641,15 +7857,41 @@ function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, st
                       }} title="Defeated The Planeswalker">★ CHAMPION</div>
                     )}
                   </div>
-                  {canRelease ? (
-                    <button className="mtgBtn" onClick={() => setReleaseConfirm(i)}
-                      style={{ fontSize: 10, padding: '3px 8px', opacity: 0.75 }}>
-                      ✕ Release
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <button
+                      className="mtgBtn"
+                      onClick={() => onRename && onRename(c.uid)}
+                      style={{ fontSize: 10, padding: '3px 8px' }}
+                      title="Set or clear nickname"
+                    >
+                      ✎ Rename
                     </button>
-                  ) : (
-                    <div style={{ fontSize: 9, color: '#7a6a90', fontStyle: 'italic', height: 18 }}>
-                      {isCommander ? 'Commander — bound for life' : 'Last creature — cannot release'}
-                    </div>
+                    <button
+                      className="mtgBtn"
+                      onClick={() => setMovesUid(c.uid === movesUid ? null : c.uid)}
+                      style={{ fontSize: 10, padding: '3px 8px',
+                               background: c.uid === movesUid ? 'linear-gradient(180deg, #6a5a88, #3a2a58)' : undefined }}
+                      title="Reorder moves"
+                    >
+                      ⚔ Moves
+                    </button>
+                    {canRelease ? (
+                      <button className="mtgBtn" onClick={() => setReleaseConfirm(i)}
+                        style={{ fontSize: 10, padding: '3px 8px', opacity: 0.75 }}>
+                        ✕ Release
+                      </button>
+                    ) : (
+                      <div style={{ fontSize: 8, color: '#7a6a90', fontStyle: 'italic', alignSelf: 'center' }}>
+                        {isCommander ? 'CMDR — bound' : 'Last — locked'}
+                      </div>
+                    )}
+                  </div>
+                  {/* Move-set editor — appears below the card when this creature is selected */}
+                  {c.uid === movesUid && (
+                    <MoveSetEditor
+                      creature={c}
+                      onSwap={(fromIdx, toIdx) => onSwapMoves && onSwapMoves(c.uid, fromIdx, toIdx)}
+                    />
                   )}
                 </div>
               );
@@ -4687,6 +7929,61 @@ function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, st
       )}
       {tab === 'codex' && (
         <div>
+          {/* Daily Encounters panel — surfaces the rare time-windowed creatures
+              so the player knows where/when to look. Shows current availability
+              status: live now (green), already-seen-today (gold), or pending
+              (dim). The window times are real game-clock hours (24-min day). */}
+          <div style={{
+            marginBottom: 12, padding: 8,
+            border: '1.5px solid #4a3a68', borderRadius: 4,
+            background: 'linear-gradient(180deg, #1a1028 0%, #100820 100%)',
+          }}>
+            <div style={{ fontSize: 11, color: '#c8b8e0', letterSpacing: 1.2, marginBottom: 6, fontFamily: "'Cinzel', serif" }}>
+              ✦ DAILY APPARITIONS
+            </div>
+            <div style={{ display: 'grid', gap: 4 }}>
+              {DAILY_ENCOUNTERS.map(entry => {
+                const today = realDayNumber();
+                const seenToday = lastDailyEncounters?.[entry.key] === today;
+                const eligibleNow = !seenToday && (typeof hourOfDay === 'number') && hourInWindow(hourOfDay, entry.hours) && currentMap === entry.zone;
+                const status = seenToday ? 'seen' : eligibleNow ? 'live' : 'pending';
+                const statusColor = status === 'live' ? '#a8e0a8' : status === 'seen' ? '#f4e5a8' : '#6a5a88';
+                const statusText = status === 'live' ? 'NEAR — NOW' : status === 'seen' ? 'SEEN TODAY' : 'WAITING';
+                const dexName = DEX[entry.id]?.name || entry.id;
+                const zoneName = MAPS[entry.zone]?.name || entry.zone;
+                const [h0, h1] = entry.hours;
+                const hoursLabel = h0 <= h1 ? `${h0}:00–${h1}:00` : `${h0}:00–${h1}:00 (overnight)`;
+                return (
+                  <div key={entry.key} style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '4px 6px',
+                    background: '#1a1428',
+                    border: `1px solid ${entry.glow}`,
+                    borderRadius: 3,
+                    opacity: status === 'pending' ? 0.55 : 1,
+                  }}>
+                    <span style={{
+                      width: 10, height: 10, borderRadius: '50%',
+                      background: entry.glow,
+                      boxShadow: status === 'live' ? `0 0 6px ${entry.glow}` : 'none',
+                      flexShrink: 0,
+                    }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#e8dcc0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {entry.prefix} {dexName}
+                      </div>
+                      <div className="pixelFont" style={{ fontSize: 8, color: '#9080b0' }}>
+                        {zoneName} · {hoursLabel}
+                      </div>
+                    </div>
+                    <span className="pixelFont" style={{ fontSize: 8, fontWeight: 700, color: statusColor, letterSpacing: 0.5, flexShrink: 0 }}>
+                      {statusText}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
           <div style={{ fontSize: 12, color: '#9080b0', marginBottom: 8 }}>
             Seen: {Object.keys(codex).length} / {Object.keys(DEX).length}
           </div>
@@ -4865,11 +8162,21 @@ function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, st
                     <div style={{ fontSize: 10, color: '#9888b0' }}>{it.desc}</div>
                   </div>
                   <span style={{ fontSize: 13, fontWeight: 700, color: '#c8b088' }}>× {count}</span>
-                  <button className="mtgBtn" onClick={() => setPickingFor(key)}
-                    disabled={it.kind === 'card'}
-                    style={{ padding: '4px 10px', fontSize: 11 }}>
-                    Use
-                  </button>
+                  {/* Buttons:
+                       - 'card' and 'key' kinds aren't usable as items.
+                       - The Vault Sigil is a special key — its button opens the vault directly. */}
+                  {key === 'vault_sigil' ? (
+                    <button className="mtgBtn" onClick={onOpenVault}
+                      style={{ padding: '4px 10px', fontSize: 11, color: '#f4e5a8' }}>
+                      Open
+                    </button>
+                  ) : (
+                    <button className="mtgBtn" onClick={() => setPickingFor(key)}
+                      disabled={it.kind === 'card' || it.kind === 'key'}
+                      style={{ padding: '4px 10px', fontSize: 11 }}>
+                      Use
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -4998,7 +8305,7 @@ function CreatureCard({ c, small }) {
         {/* Title bar: name + mana cost */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
           <span style={{ fontWeight: 700, fontSize: nameSize, letterSpacing: 0.2, lineHeight: 1.1, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {c.name}
+            {displayName(c)}
           </span>
           <ManaBadge identity={c.c} size={small ? 14 : 16} label={colorsOf(c.c).length === 1} />
         </div>
@@ -5094,10 +8401,18 @@ function CreatureCard({ c, small }) {
             <span style={{ opacity: 0.55, fontSize: textSize - 1 }}>XP {c.xp}/{xpToNext(c.level)}</span>
           )}
         </div>
-        {/* XP sliver (only when applicable) */}
+        {/* XP sliver — smooth fill animation + shimmer effect when nearly full */}
         {xpPct !== null && (
-          <div style={{ height: 3, background: '#0a0614', borderRadius: 1, overflow: 'hidden' }}>
-            <div style={{ width: `${xpPct}%`, height: '100%', background: '#9a80c0' }} />
+          <div style={{ height: 4, background: '#0a0614', borderRadius: 2, overflow: 'hidden', position: 'relative' }}>
+            <div style={{
+              width: `${xpPct}%`, height: '100%',
+              background: xpPct > 80
+                ? 'linear-gradient(90deg, #9a80c0 0%, #b8a0e0 50%, #9a80c0 100%)'
+                : '#9a80c0',
+              backgroundSize: '200% 100%',
+              animation: xpPct > 80 ? 'gtmXpShimmer 1.4s linear infinite' : undefined,
+              transition: 'width 0.6s ease-out',
+            }} />
           </div>
         )}
       </div>
@@ -5156,3 +8471,376 @@ function ShopScene({ gold, items, tokens, onBuy, onClose }) {
   );
 }
 
+// =========================================================================
+// VAULT SCENE — The Hollow Vault
+// Creature storage management. Two stacked sections (Team + Vault). Tapping
+// a creature selects it; tapping a creature in the OPPOSITE section while one
+// is already selected swaps the two. Tapping an empty team slot while a vault
+// creature is selected withdraws it. The action bar at the bottom shows what
+// you can do with the current selection (move/rename/release/cancel).
+// =========================================================================
+function VaultChip({ c, selected, dim, onClick }) {
+  // Compact creature card used in both team and vault grids. Shows color,
+  // name, level, and an HP bar. Selected state pulses with a gold border.
+  const primary = primaryColor(c.c);
+  const pct = Math.max(0, Math.min(100, (c.hp / c.maxHp) * 100));
+  const hpColor = pct > 50 ? '#6fb06f' : pct > 25 ? '#d8a040' : '#d84040';
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        position: 'relative',
+        display: 'flex', alignItems: 'center', gap: 6,
+        width: '100%', padding: '6px 8px',
+        background: selected
+          ? `linear-gradient(180deg, ${COLOR_HEX[primary]}33 0%, #1a1428 100%)`
+          : '#1a1428',
+        border: selected ? '2px solid #f4e5a8' : `1.5px solid ${COLOR_DEEP[primary]}`,
+        borderRadius: 4,
+        cursor: 'pointer',
+        opacity: dim ? 0.55 : 1,
+        boxShadow: selected ? `0 0 10px ${COLOR_HEX[primary]}88, inset 0 0 0 1px #1a0e28` : 'inset 0 1px 0 rgba(255,255,255,0.04)',
+        textAlign: 'left',
+        fontFamily: "'Cinzel', serif",
+        color: '#e8dcc0',
+        transition: 'border-color 120ms ease, box-shadow 120ms ease',
+      }}>
+      <ManaBadge identity={c.c} size={14} label={colorsOf(c.c).length === 1} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+          <span style={{
+            fontSize: 11, fontWeight: 700, letterSpacing: 0.2,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            flex: 1,
+          }}>{displayName(c)}</span>
+          <span className="pixelFont" style={{ fontSize: 8, color: '#9888b0' }}>Lv.{c.level}</span>
+        </div>
+        <div style={{ height: 4, background: '#0a0614', borderRadius: 1, marginTop: 3, overflow: 'hidden' }}>
+          <div style={{ width: `${pct}%`, height: '100%', background: hpColor }} />
+        </div>
+      </div>
+      {c.championBadge && (
+        <span title="Champion" style={{
+          position: 'absolute', top: -5, right: -4,
+          fontSize: 10, padding: '0 3px',
+          background: 'linear-gradient(135deg, #f3e3a8, #c9a664)',
+          color: '#1a0e28',
+          border: '1px solid #1a0e28', borderRadius: 3,
+        }}>★</span>
+      )}
+    </button>
+  );
+}
+
+function EmptyTeamSlot({ selected, onClick, label = 'Empty' }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: '100%', padding: '6px 8px', minHeight: 36,
+        background: 'transparent',
+        border: selected ? '2px dashed #f4e5a8' : '1.5px dashed #4a3a68',
+        borderRadius: 4,
+        color: '#6a5a88', fontSize: 11, fontStyle: 'italic',
+        fontFamily: "'Cinzel', serif",
+        cursor: selected ? 'pointer' : 'default',
+        textAlign: 'center',
+      }}>{label}</button>
+  );
+}
+
+function VaultScene({ team, vault, mode, onDeposit, onWithdraw, onSwap, onRename, onRelease, onClose }) {
+  // selection: { side: 'team'|'vault', uid } | null
+  const [selection, setSelection] = useState(null);
+  const [confirmRelease, setConfirmRelease] = useState(null); // uid pending release
+  // After any structural change (swap, deposit, withdraw, release) the previously
+  // selected creature may no longer be in its expected list. Drop the selection
+  // if it no longer corresponds to a real creature in the named side.
+  useEffect(() => {
+    if (!selection) return;
+    const list = selection.side === 'team' ? team : vault;
+    if (!list.find(c => c.uid === selection.uid)) setSelection(null);
+  }, [team, vault, selection]);
+
+  const selected = selection ? (selection.side === 'team' ? team : vault).find(c => c.uid === selection.uid) : null;
+
+  // Click handler for an occupied creature chip. Branches:
+  //  - no selection → select this one
+  //  - tapped same uid → deselect
+  //  - tapped same side, different uid → change selection
+  //  - tapped opposite side with a selection → SWAP
+  const onChipClick = (side, uid) => {
+    if (!selection) { setSelection({ side, uid }); return; }
+    if (selection.uid === uid) { setSelection(null); return; }
+    if (selection.side === side) { setSelection({ side, uid }); return; }
+    // Cross-side click → swap. The caller-supplied onSwap takes (teamUid, vaultUid).
+    if (selection.side === 'team') onSwap(selection.uid, uid);
+    else                            onSwap(uid, selection.uid);
+    setSelection(null);
+  };
+  // Click handler for an empty team slot. Withdraws the currently-selected
+  // vault creature into the open slot. No-op otherwise.
+  const onEmptySlotClick = () => {
+    if (!selection || selection.side !== 'vault') return;
+    onWithdraw(selection.uid);
+    setSelection(null);
+  };
+
+  // Pad out the team grid to 6 entries so empty slots render in a stable layout.
+  const teamSlots = [...team];
+  while (teamSlots.length < 6) teamSlots.push(null);
+
+  return (
+    <div style={{ width: 'min(94vw, 460px)', margin: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: 1, color: '#e8dcc0' }}>The Hollow Vault</div>
+          <div style={{ fontSize: 11, color: '#9080b0', fontStyle: 'italic' }}>"Spirits, kept in rune-iron until you call."</div>
+        </div>
+        <button className="mtgBtn" onClick={onClose} style={{ padding: '4px 10px' }}>✕ Leave</button>
+      </div>
+
+      {/* Counts row */}
+      <div style={{
+        display: 'flex', gap: 8,
+        padding: 8, border: '1.5px solid #5a7088', borderRadius: 4,
+        background: 'linear-gradient(180deg, #1a2438 0%, #1a1028 100%)',
+      }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: '#a8c0e0', flex: 1 }}>◇ Team {team.length}/6</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: '#a890c0', flex: 1, textAlign: 'right' }}>✦ Vault {vault.length} stored</span>
+      </div>
+
+      {/* TEAM section */}
+      <div>
+        <div style={{ fontSize: 11, color: '#9888b0', letterSpacing: 1.5, marginBottom: 4, fontFamily: "'Cinzel', serif" }}>YOUR PARTY</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
+          {teamSlots.map((c, i) => {
+            if (!c) {
+              const slotSelected = selection?.side === 'vault';
+              return <EmptyTeamSlot key={`empty-${i}`} selected={slotSelected} onClick={onEmptySlotClick} />;
+            }
+            const isCmdr = mode === 'commander' && i === 0;
+            const isSelected = selection?.side === 'team' && selection.uid === c.uid;
+            return (
+              <div key={c.uid} style={{ position: 'relative' }}>
+                <VaultChip c={c} selected={isSelected} onClick={() => onChipClick('team', c.uid)} />
+                {isCmdr && (
+                  <span title="Commander" style={{
+                    position: 'absolute', top: -5, left: -3,
+                    fontSize: 9, padding: '0 4px', fontWeight: 700,
+                    background: '#9a80c0', color: '#1a0e28',
+                    border: '1px solid #1a0e28', borderRadius: 3,
+                    fontFamily: "'Cinzel', serif", letterSpacing: 0.4,
+                  }}>CMDR</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* VAULT section (scrollable) */}
+      <div>
+        <div style={{ fontSize: 11, color: '#9888b0', letterSpacing: 1.5, marginBottom: 4, fontFamily: "'Cinzel', serif" }}>STORAGE</div>
+        <div className="scroll" style={{
+          maxHeight: 260, overflowY: 'auto',
+          padding: 6, border: '1.5px solid #4a3a68', borderRadius: 4,
+          background: '#100820',
+        }}>
+          {vault.length === 0 ? (
+            <div style={{ padding: 14, textAlign: 'center', color: '#6a5a88', fontSize: 11, fontStyle: 'italic' }}>
+              The cages are empty. Catch beyond your team's six and they'll rest here between adventures.
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
+              {vault.map(c => {
+                const isSelected = selection?.side === 'vault' && selection.uid === c.uid;
+                return <VaultChip key={c.uid} c={c} selected={isSelected} onClick={() => onChipClick('vault', c.uid)} />;
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ACTION BAR — appears when a creature is selected */}
+      {selected && (
+        <div style={{
+          padding: 10, border: '1.5px solid #c9a664', borderRadius: 4,
+          background: 'linear-gradient(180deg, #2a1c40 0%, #1a1028 100%)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <ManaBadge identity={selected.c} size={16} label={colorsOf(selected.c).length === 1} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#f4e5a8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {displayName(selected)}
+              </div>
+              <div className="pixelFont" style={{ fontSize: 9, color: '#9888b0' }}>
+                Lv.{selected.level} · HP {selected.hp}/{selected.maxHp} · {selection.side === 'team' ? 'In Party' : 'In Vault'}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
+            {selection.side === 'team' ? (
+              <button className="mtgBtn"
+                onClick={() => { onDeposit(selected.uid); setSelection(null); }}
+                style={{ padding: '6px 8px', fontSize: 11 }}>
+                ✦ Send to Vault
+              </button>
+            ) : (
+              <button className="mtgBtn"
+                onClick={() => {
+                  if (team.length < 6) { onWithdraw(selected.uid); setSelection(null); }
+                }}
+                disabled={team.length >= 6}
+                title={team.length >= 6 ? 'Tap a team member above to swap' : 'Bring this creature to your party'}
+                style={{ padding: '6px 8px', fontSize: 11 }}>
+                ◇ Bring to Team
+              </button>
+            )}
+            <button className="mtgBtn"
+              onClick={() => onRename(selected.uid)}
+              style={{ padding: '6px 8px', fontSize: 11 }}>
+              ✎ Rename
+            </button>
+            <button className="mtgBtn"
+              onClick={() => setConfirmRelease(selected.uid)}
+              style={{ padding: '6px 8px', fontSize: 11, color: '#e0a0a0' }}>
+              ✕ Release
+            </button>
+            <button className="mtgBtn"
+              onClick={() => setSelection(null)}
+              style={{ padding: '6px 8px', fontSize: 11, opacity: 0.7 }}>
+              Cancel
+            </button>
+          </div>
+          {selection.side === 'vault' && team.length >= 6 && (
+            <div style={{ marginTop: 6, fontSize: 10, color: '#9888b0', fontStyle: 'italic', textAlign: 'center' }}>
+              Team is full — tap a party member above to swap them.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Helpful prompt when nothing is selected */}
+      {!selected && (
+        <div style={{
+          padding: 8, fontSize: 11, color: '#9080b0', fontStyle: 'italic', textAlign: 'center',
+          border: '1px dashed #3a2850', borderRadius: 4,
+        }}>
+          Tap a creature to act on it. Tap one in the other section to swap.
+        </div>
+      )}
+
+      {/* Release confirmation overlay */}
+      {confirmRelease && (() => {
+        const c = (selection?.side === 'team' ? team : vault).find(x => x.uid === confirmRelease);
+        if (!c) { setConfirmRelease(null); return null; }
+        return (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,6,20,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 70, padding: 16 }}>
+            <div style={{
+              width: 'min(94vw, 380px)',
+              padding: 16,
+              background: 'linear-gradient(180deg, #2a1428 0%, #14081a 100%)',
+              border: '2px solid #6a3a4a', borderRadius: 6,
+              fontFamily: "'Cinzel', serif", color: '#f0d8c8',
+            }}>
+              <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Release {displayName(c)}?</div>
+              <div style={{ fontSize: 12, color: '#c8a890', fontStyle: 'italic', marginBottom: 14 }}>
+                They'll return to the wilds. This cannot be undone.
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                <button className="mtgBtn"
+                  onClick={() => {
+                    onRelease(confirmRelease, selection?.side === 'vault');
+                    setConfirmRelease(null);
+                    setSelection(null);
+                  }}
+                  style={{ padding: 8, fontSize: 12, color: '#e0a0a0' }}>
+                  Yes — Release
+                </button>
+                <button className="mtgBtn"
+                  onClick={() => setConfirmRelease(null)}
+                  style={{ padding: 8, fontSize: 12 }}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+    </div>
+  );
+}
+
+// =========================================================================
+// VAULT SWAP PROMPT — post-catch overflow
+// Shown after a successful catch when the team was already at 6 creatures.
+// The newcomer was auto-deposited in the vault; this prompt offers to swap
+// them in for a current team member, or leave them in the vault for later.
+// =========================================================================
+function VaultSwapPrompt({ newcomer, team, mode, onSwap, onKeep }) {
+  const primary = primaryColor(newcomer.c);
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,6,20,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 65, padding: 16 }}>
+      <div style={{
+        width: 'min(94vw, 420px)',
+        padding: 14,
+        background: 'linear-gradient(180deg, #1a2438 0%, #14081a 100%)',
+        border: '2px solid #c9a664', borderRadius: 6,
+        boxShadow: `0 4px 20px ${COLOR_HEX[primary]}55, 0 8px 40px rgba(0,0,0,0.7)`,
+        fontFamily: "'Cinzel', serif", color: '#f4e5a8',
+      }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <ManaBadge identity={newcomer.c} size={20} label={colorsOf(newcomer.c).length === 1} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 16, fontWeight: 700 }}>Caught {displayName(newcomer)}!</div>
+            <div className="pixelFont" style={{ fontSize: 9, color: '#9888b0' }}>Lv.{newcomer.level} · {newcomer.t}</div>
+          </div>
+        </div>
+        <div style={{ fontSize: 12, color: '#c8b890', fontStyle: 'italic', lineHeight: 1.45, marginBottom: 12 }}>
+          Your team is full — they're resting in the Hollow Vault. Swap one of your party for them now, or leave them with Keeper Solenne for later.
+        </div>
+
+        {/* Team list — pick someone to send to the vault */}
+        <div style={{ fontSize: 10, color: '#9080b0', letterSpacing: 1.4, marginBottom: 4 }}>SWAP WITH…</div>
+        <div style={{ display: 'grid', gap: 5, marginBottom: 10 }}>
+          {team.map((c, i) => {
+            const isCmdr = mode === 'commander' && i === 0;
+            return (
+              <button key={c.uid} className="mtgBtn"
+                disabled={isCmdr}
+                onClick={() => !isCmdr && onSwap(c.uid)}
+                title={isCmdr ? 'The commander cannot be sent to the vault.' : `Send ${displayName(c)} to the vault and bring ${displayName(newcomer)} into the team`}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '6px 8px', textAlign: 'left',
+                  borderColor: COLOR_DEEP[primaryColor(c.c)],
+                  opacity: isCmdr ? 0.5 : 1,
+                }}>
+                <ManaBadge identity={c.c} size={14} label={colorsOf(c.c).length === 1} />
+                <span style={{ flex: 1, fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#e8dcc0' }}>
+                  {displayName(c)}
+                </span>
+                <span className="pixelFont" style={{ fontSize: 9, color: '#9888b0' }}>Lv.{c.level}</span>
+                {isCmdr && (
+                  <span style={{
+                    fontSize: 8, padding: '0 4px', fontWeight: 700,
+                    background: '#9a80c0', color: '#1a0e28',
+                    border: '1px solid #1a0e28', borderRadius: 2,
+                    letterSpacing: 0.3,
+                  }}>CMDR</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <button className="mtgBtn" onClick={onKeep} style={{ width: '100%', padding: 8, fontSize: 12 }}>
+          ✦ Leave in Vault
+        </button>
+      </div>
+    </div>
+  );
+}
