@@ -1253,6 +1253,24 @@ function isWalkable(tile) {
   return ['.', 'g', 'p', 'd', 'E',      'a', 'l', 'u', 'o', 'm', 'v', 'c', 'f', 'B', 'F', 'L'].includes(tile);
 }
 function hasEncounter(tile) {
+  // Tiles that can roll a wild encounter on step.
+  //   Feature tiles (the visually distinct ones — see isFeatureTile below):
+  //     g  tall grass (Wilds)        l  lava vent (Ashen)
+  //     o  deep pool  (Sanctum)      v  vine thicket (Umbral)
+  //     f  flower field (Plains)
+  //   Ambient zone tiles (the background fill of each zone, excluding paths).
+  //   Including these makes the W/U/B/R zones feel as huntable as the Wilds —
+  //   creatures aren't restricted to small clusters of feature tiles, only the
+  //   carved 'p'/'.' paths are truly safe.
+  //     a  ash-ground (Ashen)         u  shallow water (Sanctum)
+  //     m  moss-ground (Umbral)       c  cobble (Plains)
+  return ['g', 'l', 'o', 'v', 'f', 'a', 'u', 'm', 'c'].includes(tile);
+}
+// "Feature" encounter tiles — the dramatic, visually-distinct ones. NPCs avoid
+// stepping onto these so we don't have a trainer comfortably wading in lava or
+// floating on a deep pool. Ambient zone tiles (a/u/m/c) are fair game for NPC
+// wandering even though they can also roll encounters for the player.
+function isFeatureTile(tile) {
   return ['g', 'l', 'o', 'v', 'f'].includes(tile);
 }
 
@@ -2449,9 +2467,11 @@ export default function GatheringTheMagic() {
             next[n.id] = { dx: cur.dx, dy: cur.dy, face: dir.face };
             continue;
           }
-          // Don't step onto an encounter tile (high grass/fire/etc) so NPCs don't
-          // accidentally start spawning encounters under themselves.
-          if (hasEncounter(t)) {
+          // Don't step onto a *feature* encounter tile (lava/pool/vines/grass/flowers)
+          // so NPCs don't end up cosmetically wading in lava or floating on water.
+          // Ambient zone tiles (ash-ground, moss, cobble, shallow water) are fine —
+          // those are just terrain and look natural to walk on.
+          if (isFeatureTile(t)) {
             next[n.id] = { dx: cur.dx, dy: cur.dy, face: dir.face };
             continue;
           }
