@@ -5882,7 +5882,8 @@ function Controls({ onMove, onA, onB, sprinting, onToggleSprint }) {
   const press = (fn) => (e) => { e.preventDefault(); fn(); };
   return (
     <div style={{ width: 'min(96vw, 480px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', marginBottom: 'auto', padding: '0 24px 0 4px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 70px)', gridTemplateRows: 'repeat(3, 70px)', gap: 4, marginTop: -10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', marginBottom: 30 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 70px)', gridTemplateRows: 'repeat(3, 70px)', gap: 4 }}>
         <button className="dpadBtn" onTouchStart={press(() => onMove('up'))} onMouseDown={press(() => onMove('up'))}>▲</button>
         <div></div>
         <button className="dpadBtn" onTouchStart={press(() => onMove('left'))} onMouseDown={press(() => onMove('left'))}>◀</button>
@@ -5922,6 +5923,7 @@ function Controls({ onMove, onA, onB, sprinting, onToggleSprint }) {
         <div></div>
         <button className="dpadBtn" onTouchStart={press(() => onMove('down'))} onMouseDown={press(() => onMove('down'))}>▼</button>
         <div></div>
+      </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-end' }}>
         <button className="mtgBtn" onTouchStart={press(onA)} onMouseDown={press(onA)} style={{ width: 80, height: 80, borderRadius: '50%', fontSize: 24,  marginRight: 12, background: 'linear-gradient(180deg, #8a3a2a, #4a1e14)', borderColor: '#d87362' }}>A</button>
