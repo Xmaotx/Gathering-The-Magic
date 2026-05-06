@@ -383,9 +383,39 @@ const ITEMS = {
     name: 'Vault Sigil', kind: 'key', amount: 0, price: 0,
     desc: 'Calls the Hollow Vault from any menu. A gift from the Planeswalker.', icon: '✦',
   },
+  // Granted when the player defeats all three town duellists (Bran, Ria, Dax).
+  // Owning it surfaces a "Phone" tab in the Spellbook, listing every defeated
+  // trainer for a scaled-up rematch — no walking required.
+  runic_phone: {
+    name: 'Runic Phone', kind: 'key', amount: 0, price: 0,
+    desc: 'Pooled gift from Bran, Ria & Dax. Adds a Phone tab to the Spellbook menu — call any defeated trainer for a scaled-up rematch.', icon: '☎',
+  },
+
+  // ── Held items (equippable to a creature; one slot per creature) ──────────
+  // kind: 'held' — these are NOT consumed from inventory on use; they are
+  // equipped onto a creature from the Team tab and live on the creature object.
+  // subkind drives the mechanical effect:
+  //   'once_heal'  — triggers once per battle when HP < threshold
+  //   'regen'      — restores `amount` fraction of maxHp at end of each turn
+  //   'atk_boost'  — passive flat multiplier on attack output
+  potion_vial: {
+    name: 'Potion Vial', kind: 'held', subkind: 'once_heal',
+    amount: 0.20, threshold: 0.25, price: 60,
+    desc: 'Once per battle: auto-heals 20% HP when HP drops below 25%.', icon: '⚗',
+  },
+  lifeweb_moss: {
+    name: 'Lifeweb Moss', kind: 'held', subkind: 'regen',
+    amount: 0.06, price: 80,
+    desc: 'Restores 6% max HP at the end of each turn.', icon: '🌿',
+  },
+  mana_stone: {
+    name: 'Mana Stone', kind: 'held', subkind: 'atk_boost',
+    amount: 0.15, price: 100,
+    desc: 'Passively boosts this creature\'s Attack by 15%.', icon: '💎',
+  },
 };
 // Shop keeps a fixed stock order (display only)
-const SHOP_STOCK = ['potion', 'elixir', 'fullheal', 'revive', 'card'];
+const SHOP_STOCK = ['potion', 'elixir', 'fullheal', 'revive', 'card', 'potion_vial', 'lifeweb_moss', 'mana_stone'];
 
 // ---------- Weather / Terrain ----------
 // Each zone has an associated weather that's set on battle entry (via bgZone).
@@ -558,6 +588,10 @@ function createCreature(id, level) {
     hp: maxHp, maxHp,
     baseAtk: d.atk,
     moves: d.m.slice(),
+    // Held item slot — null when empty, string key from ITEMS when equipped.
+    // heldItemCharged tracks whether a once-per-battle item has already triggered.
+    heldItem: null,
+    heldItemCharged: false,
   };
 }
 // Build a daily-encounter variant from a DAILY_ENCOUNTERS entry. Wraps the base
@@ -752,7 +786,9 @@ function calcDamage(attacker, defender, move, weatherKeys = []) {
   }
   const crit = Math.random() < 0.08;
   const variance = 0.85 + Math.random() * 0.3;
-  let dmg = Math.floor((move.p + atkOf(attacker) * 0.6) * mult * variance * (crit ? 1.7 : 1));
+  // Mana Stone held item: passive +15% attack output on every move.
+  const manaStoneBoost = attacker.heldItem === 'mana_stone' ? (1 + ITEMS.mana_stone.amount) : 1;
+  let dmg = Math.floor((move.p + atkOf(attacker) * 0.6) * mult * variance * (crit ? 1.7 : 1) * manaStoneBoost);
   return {
     dmg: Math.max(1, dmg), mult, crit, missed: false,
     boostedBy, weakenedBy,
@@ -1088,7 +1124,32 @@ const NPCS_TOWN = [
     dialog: "Pinned: 'Five challengers patrol the zones — defeat them all and they'll return, hungrier.' / Scrawled below: 'When five medallions hang at the shrine, the Hollow's heart will wake.'" },
 ];
 
-// Per-zone NPCs (mini-boss trainers). Key by map id.
+// ---------- Hidden items (sparkle nodes) ----------
+// Spread across all maps. Each entry re-appears every real-world day (via realDayNumber()).
+// loot: 'potion' | 'elixir' | 'card' | 'gold'   amount: gold quantity (only for 'gold' loot)
+const HIDDEN_ITEMS = [
+  // ── Town ──────────────────────────────────────────────────────────────────
+  { map: 'town',    x: 2,  y: 3,  loot: 'potion' },
+  { map: 'town',    x: 14, y: 11, loot: 'gold',   amount: 30  },
+  // ── Mana Wilds ────────────────────────────────────────────────────────────
+  { map: 'wilds',   x: 2,  y: 2,  loot: 'potion' },
+  { map: 'wilds',   x: 11, y: 4,  loot: 'card'   },
+  { map: 'wilds',   x: 5,  y: 9,  loot: 'gold',   amount: 20  },
+  // ── Ashen Wastes ──────────────────────────────────────────────────────────
+  { map: 'ashen',   x: 3,  y: 9,  loot: 'potion' },
+  { map: 'ashen',   x: 11, y: 3,  loot: 'elixir' },
+  // ── Sunken Sanctum ────────────────────────────────────────────────────────
+  { map: 'sanctum', x: 2,  y: 8,  loot: 'potion' },
+  { map: 'sanctum', x: 10, y: 3,  loot: 'gold',   amount: 25  },
+  // ── Umbral Grove ──────────────────────────────────────────────────────────
+  { map: 'umbral',  x: 3,  y: 3,  loot: 'card'   },
+  { map: 'umbral',  x: 9,  y: 9,  loot: 'potion' },
+  // ── Plains of Light ───────────────────────────────────────────────────────
+  { map: 'plains',  x: 4,  y: 4,  loot: 'elixir' },
+  { map: 'plains',  x: 12, y: 8,  loot: 'gold',   amount: 40  },
+];
+// Quick lookup key for state map
+const hiddenItemKey = (item) => `${item.map}:${item.x}:${item.y}`;
 const NPCS_ZONE = {
   wilds: [
     { id: 'mira', x: 10, y: 11, face: 'up', color: '#4a8030',
@@ -1138,6 +1199,10 @@ const TRAINER_ZONE = {};
 for (const [zoneId, list] of Object.entries(NPCS_ZONE)) {
   for (const n of list) TRAINER_ZONE[n.id] = zoneId;
 }
+// Town trainers — the three duellists in Runesmith Hollow. Defeating all three
+// is what unlocks the Runic Phone (a key item that opens the Phone tab in the
+// Spellbook menu, allowing remote rematches with any defeated trainer).
+const TOWN_TRAINER_IDS = new Set(['bran', 'ria', 'dax']);
 // Generate a fresh 3-creature team for a zone trainer.
 // Levels scale with cycles cleared: each cycle adds 2 levels to the entire team.
 // Picks 3 distinct creatures from the zone's pool, skewed toward higher color counts
@@ -2250,6 +2315,8 @@ export default function GatheringTheMagic() {
   // appear at most once per real-world day. Persisted in saves so quitting and
   // returning the same day doesn't re-roll the chance. Cleared on new game.
   const [lastDailyEncounters, setLastDailyEncounters] = useState({});
+  // Hidden-item found log — { 'mapId:x:y': realDayNumber }. Sparkles reappear the next day.
+  const [hiddenItemsFound, setHiddenItemsFound] = useState({});
   const [defeated, setDefeated] = useState([]); // npc ids
   // How many times the player has cleared all five zone trainers. Each cycle the trainer
   // teams reroll fresh from the zone pool with levels = base + (2 × cycles).
@@ -2466,8 +2533,8 @@ export default function GatheringTheMagic() {
   const currentStateRef = useRef(null);
   // Keep a ref of the latest state so save callbacks always grab fresh values.
   useEffect(() => {
-    currentStateRef.current = { currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated };
-  }, [currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated]);
+    currentStateRef.current = { currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, hiddenItemsFound, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated };
+  }, [currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, hiddenItemsFound, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated]);
 
   const performSave = async () => {
     const snap = currentStateRef.current;
@@ -2547,6 +2614,7 @@ export default function GatheringTheMagic() {
       setCodex(s.codex || {});
       // Older saves won't have this — default to {} so the daily lock starts fresh.
       setLastDailyEncounters(s.lastDailyEncounters || {});
+      setHiddenItemsFound(s.hiddenItemsFound || {});
       setDefeated(s.defeated || []);
       setTokens(s.tokens ?? 5);
       setGold(s.gold ?? 0);
@@ -2725,6 +2793,34 @@ export default function GatheringTheMagic() {
     });
   }, [scene, currentMap, trainerCycles, medallions, npcMoveState]);
 
+  // ---------- Hidden item pickup ----------
+  // Declared before `interact` so the callback is initialized when interact references it.
+  const checkHiddenItem = useCallback((checkX, checkY) => {
+    const today = realDayNumber();
+    const hit = HIDDEN_ITEMS.find(hi =>
+      hi.map === currentMap && hi.x === checkX && hi.y === checkY &&
+      hiddenItemsFound[hiddenItemKey(hi)] !== today
+    );
+    if (!hit) return false;
+    setHiddenItemsFound(prev => ({ ...prev, [hiddenItemKey(hit)]: today }));
+    if (hit.loot === 'gold') {
+      const amt = hit.amount || 20;
+      setGold(g => g + amt);
+      audio.sfx.confirm();
+      showToast(`✦ Found ${amt} gold!`);
+    } else if (hit.loot === 'card') {
+      setTokens(t => t + 1);
+      audio.sfx.confirm();
+      showToast('✦ Found a Creature Card!');
+    } else {
+      setItems(it => ({ ...it, [hit.loot]: (it[hit.loot] || 0) + 1 }));
+      audio.sfx.heal();
+      const itName = ITEMS[hit.loot]?.name || hit.loot;
+      showToast(`✦ Found a ${itName}!`);
+    }
+    return true;
+  }, [currentMap, hiddenItemsFound]);
+
   // ---------- Interact ----------
   const interact = useCallback(() => {
     if (scene !== 'world') return;
@@ -2735,6 +2831,10 @@ export default function GatheringTheMagic() {
     if (p.face === 'left') tx--;
     if (p.face === 'right') tx++;
     const t = tileAt(currentMap, tx, ty);
+
+    // Hidden item check — facing tile first, then standing tile.
+    // Returns true if an item was found so we don't fall through to NPC/shrine logic.
+    if (checkHiddenItem(tx, ty) || checkHiddenItem(p.x, p.y)) return;
 
     // Shrine — heals normally, but if the player has all 5 medallions, becomes the
     // gateway to The Planeswalker (the final boss).
@@ -2806,8 +2906,11 @@ export default function GatheringTheMagic() {
         });
       }
     }
-  }, [scene, player, currentMap, defeated, medallions, planeswalkerDefeated, npcMoveState]);
+  }, [scene, player, currentMap, defeated, medallions, planeswalkerDefeated, npcMoveState, checkHiddenItem]);
 
+  // Hidden item pickup helper — checks both the facing tile and standing tile.
+  // Called from the interact callback above and extracted so it can also run on tile-step
+  // (we don't auto-pick on step; player always presses A intentionally).
   // ---------- Battle refs (always read latest state) ----------
   const battleRef = useRef(null);
   const teamRef = useRef([]);
@@ -2876,6 +2979,9 @@ export default function GatheringTheMagic() {
   const triggerWildEncounter = (encTile = null) => {
     const tm = teamRef.current;
     if (tm.length === 0 || firstAlive(tm) < 0) return;
+    // Reset once-per-battle held items so Potion Vial recharges each fight.
+    const freshTm = tm.map(c => c.heldItemCharged ? { ...c, heldItemCharged: false } : c);
+    if (freshTm !== tm) setTeam(freshTm);
     const pool = ZONE_POOLS[currentMap] || ZONE_POOLS.wilds;
     const pick = weightedPick(pool);
     const lv = pick.lv[0] + Math.floor(Math.random() * (pick.lv[1] - pick.lv[0] + 1));
@@ -2942,6 +3048,9 @@ export default function GatheringTheMagic() {
 
   const startTrainerBattle = (npc) => {
     const tm = teamRef.current;
+    // Reset once-per-battle held items so Potion Vial recharges each fight.
+    const freshTm = tm.map(c => c.heldItemCharged ? { ...c, heldItemCharged: false } : c);
+    if (freshTm !== tm) setTeam(freshTm);
     // Zone trainers get a fresh team each fight (rerolled from zone pool, scaled by cycles).
     // Town trainers (Bran/Ria/Dax) keep their fixed teams as a stable starter benchmark.
     const teamSpec = ZONE_TRAINER_IDS.has(npc.id) ? generateTrainerTeam(npc, trainerCycles) : npc.team;
@@ -2977,6 +3086,59 @@ export default function GatheringTheMagic() {
     setTimeout(() => {
       setBattle(b => b ? { ...b, intro: false } : b);
     }, 1300);
+  };
+
+  // ---------- Phone rematch — like trainer battle but uses trainer's home zone for weather
+  // and scales up by one extra cycle so it's always harder than the current cycle. ----------
+  const startPhoneRematch = (npc) => {
+    const tm = teamRef.current;
+    // Reset once-per-battle held items
+    const freshTm = tm.map(c => c.heldItemCharged ? { ...c, heldItemCharged: false } : c);
+    if (freshTm !== tm) setTeam(freshTm);
+    // Always one cycle ahead of the current progression so the rematch is never trivial
+    const rematchCycles = trainerCycles + 1;
+    let teamSpec;
+    if (ZONE_TRAINER_IDS.has(npc.id)) {
+      // Zone trainers — reroll a fresh 3-creature team from the zone pool, scaled up.
+      teamSpec = generateTrainerTeam(npc, rematchCycles);
+    } else if (TOWN_TRAINER_IDS.has(npc.id)) {
+      // Town trainers — keep their original line-up (it's their identity), but apply
+      // the cycle level boost so the rematch isn't trivial late-game.
+      const levelBoost = rematchCycles * 2;
+      teamSpec = (npc.team || []).map(c => ({ id: c.id, lv: c.lv + levelBoost }));
+    } else {
+      teamSpec = npc.team || [];
+    }
+    const et = teamSpec.map(c => createCreature(c.id, c.lv));
+    et.forEach(e => {
+      setCodex(cx => ({ ...cx, [e.id]: { caught: cx[e.id]?.caught || 0, seen: (cx[e.id]?.seen || 0) + 1 }}));
+    });
+    // Town trainers' "home zone" is the town itself — fall back to its weather pool.
+    const zoneId = TRAINER_ZONE[npc.id] || (TOWN_TRAINER_IDS.has(npc.id) ? 'town' : 'wilds');
+    const ws = rollWeathersForZone(zoneId, 'trainer');
+    const initLog = [];
+    if (ws.length === 2) {
+      initLog.push(`The ${WEATHER[ws[0]].name.toLowerCase()} and ${WEATHER[ws[1]].name.toLowerCase()} converge on the line!`);
+    } else if (ws.length === 1) {
+      initLog.push(`The ${WEATHER[ws[0]].name.toLowerCase()} rolls in from ${MAPS[zoneId]?.name || zoneId}.`);
+    }
+    initLog.push(`${npc.name} answers the call — battle-ready!`);
+    initLog.push(`${npc.name} sends out ${et[0].name}!`);
+    setBattle({
+      kind: 'trainer',
+      npc,
+      enemyTeam: et,
+      enemyIdx: 0,
+      myIdx: Math.max(0, firstAlive(tm)),
+      log: initLog,
+      turn: 'player',
+      intro: true,
+      bgZone: zoneId,
+      weathers: ws,
+    });
+    playSceneTransition('iris', () => setScene('battle'));
+    audio.sfx.battleStart('trainer');
+    setTimeout(() => { setBattle(b => b ? { ...b, intro: false } : b); }, 1300);
   };
 
   // ---------- Legendary boss battle (single mono-color creature, awards a medallion on win) ----------
@@ -3082,6 +3244,17 @@ export default function GatheringTheMagic() {
     const hurt = { ...defender, hp: Math.max(0, defender.hp - res.dmg) };
     if (side === 'player') newEnemyTeam[b.enemyIdx] = hurt;
     else newTeam[b.myIdx] = hurt;
+    // Potion Vial: once-per-battle auto-heal when HP drops below 25% threshold.
+    // Only triggers if the creature is still alive and hasn't used the vial yet.
+    if (hurt.hp > 0 && hurt.heldItem === 'potion_vial' && !hurt.heldItemCharged &&
+        hurt.hp / hurt.maxHp < ITEMS.potion_vial.threshold) {
+      const vialHeal = Math.max(1, Math.floor(hurt.maxHp * ITEMS.potion_vial.amount));
+      const vialHealed = { ...hurt, hp: Math.min(hurt.maxHp, hurt.hp + vialHeal), heldItemCharged: true };
+      if (side === 'player') newEnemyTeam[b.enemyIdx] = vialHealed;
+      else newTeam[b.myIdx] = vialHealed;
+      lines.push(`${hurt.name}'s Potion Vial crackles! Restored ${vialHeal} HP.`);
+      audio.sfx.heal();
+    }
     // Layer the impact stinger; crits and super-effectives get a louder one.
     if (res.crit) audio.sfx.crit();
     else audio.sfx.hit();
@@ -3250,6 +3423,12 @@ export default function GatheringTheMagic() {
         if (wLines.length > 0) lines.push(...wLines);
         updated = w2;
       }
+      // Lifeweb Moss: end-of-turn regen for player side (alive + below max HP)
+      if (updated.hp > 0 && updated.hp < updated.maxHp && updated.heldItem === 'lifeweb_moss') {
+        const regen = Math.max(1, Math.floor(updated.maxHp * ITEMS.lifeweb_moss.amount));
+        updated = { ...updated, hp: Math.min(updated.maxHp, updated.hp + regen) };
+        lines.push(`${updated.name}'s Lifeweb Moss restored ${regen} HP.`);
+      }
       if (updated !== actor) {
         t = [...t]; t[b.myIdx] = updated;
       }
@@ -3263,6 +3442,12 @@ export default function GatheringTheMagic() {
         const { creature: w2, lines: wLines } = applyWeatherTick(updated, wKey);
         if (wLines.length > 0) lines.push(...wLines);
         updated = w2;
+      }
+      // Lifeweb Moss: end-of-turn regen for enemy side
+      if (updated.hp > 0 && updated.hp < updated.maxHp && updated.heldItem === 'lifeweb_moss') {
+        const regen = Math.max(1, Math.floor(updated.maxHp * ITEMS.lifeweb_moss.amount));
+        updated = { ...updated, hp: Math.min(updated.maxHp, updated.hp + regen) };
+        lines.push(`${updated.name}'s Lifeweb Moss restored ${regen} HP.`);
       }
       if (updated !== actor) {
         const newEnemyTeam = [...b.enemyTeam]; newEnemyTeam[b.enemyIdx] = updated;
@@ -3299,6 +3484,26 @@ export default function GatheringTheMagic() {
         lines.push(`You won! +${totalReward} gold.`);
         setGold(g => g + totalReward);
         setTimeout(() => audio.sfx.victory(), 400);
+        // ── Town trainer milestone hints ──────────────────────────────────────
+        // Track the player's progress through the three town duellists. The third
+        // win unlocks the Runic Phone (key item that adds a Phone tab to the menu).
+        // Only fires on first-time defeat — rematches don't re-trigger.
+        const isFirstDefeat = !defeated.includes(b.npc.id);
+        if (isFirstDefeat && TOWN_TRAINER_IDS.has(b.npc.id)) {
+          const townDefeatedCount = [...TOWN_TRAINER_IDS].filter(id => defeated.includes(id)).length + 1;
+          if (townDefeatedCount === 1) {
+            lines.push(`${b.npc.name}: "Sharp instincts. The other two duellists in the Hollow are also worth your time — beat all three of us, and we've pooled together a little something for you."`);
+          } else if (townDefeatedCount === 2) {
+            lines.push(`${b.npc.name}: "Two of us down. One left in the Hollow. Find them and our gift is yours."`);
+          } else if (townDefeatedCount === 3) {
+            lines.push(`${b.npc.name}: "Three of three. We've been waiting to give you this."`);
+            lines.push(`✦ Received: Runic Phone — a Phone tab now lives in your Spellbook.`);
+            lines.push(`Bran, Ria & Dax: "Call us anytime. We'll bring sharper teeth."`);
+            setItems(it => ({ ...it, runic_phone: 1 }));
+            setTimeout(() => audio.sfx.fanfare(), 900);
+            setTimeout(() => showToast('☎ Runic Phone unlocked! Open Spellbook → Phone.'), 1400);
+          }
+        }
         setDefeated(d => {
           // Add this trainer to the defeated list
           const next = d.includes(b.npc.id) ? d : [...d, b.npc.id];
@@ -4738,6 +4943,42 @@ export default function GatheringTheMagic() {
     drawList.sort((a, b) => a.y - b.y);
     for (const item of drawList) item.draw();
 
+    // ---- PASS 3: hidden item sparkles ──────────────────────────────────────
+    // Pulsing gold ✦ floats above any hidden item that hasn't been found today.
+    // The sparkle is drawn AFTER characters so it's always visible on top.
+    const today = realDayNumber();
+    for (const hi of HIDDEN_ITEMS) {
+      if (hi.map !== currentMap) continue;
+      if (hiddenItemsFound[hiddenItemKey(hi)] === today) continue; // already found today
+      // Only draw if the tile is walkable (sparkles don't float on walls/trees)
+      const hiTile = tileAt(currentMap, hi.x, hi.y);
+      if (!isWalkable(hiTile)) continue;
+      if (hi.x < camX || hi.x >= camX + VW || hi.y < camY || hi.y >= camY + VH) continue;
+      const sx = (hi.x - camX) * TILE + TILE / 2;
+      const sy = (hi.y - camY) * TILE;
+      // Multi-layer pulse: outer glow + inner sparkle, breathing at different rates
+      const pulse  = 0.5 + 0.5 * Math.abs(Math.sin(animFrame * 0.18 + hi.x * 1.3 + hi.y * 0.7));
+      const pulse2 = 0.6 + 0.4 * Math.abs(Math.cos(animFrame * 0.28 + hi.x * 0.9));
+      // Outer halo
+      ctx.globalAlpha = 0.30 * pulse;
+      ctx.fillStyle = '#ffe080';
+      ctx.fillRect(sx - 5, sy - 9, 10, 10);
+      // Middle glow pixel ring
+      ctx.globalAlpha = 0.55 * pulse;
+      ctx.fillStyle = '#ffd040';
+      ctx.fillRect(sx - 3, sy - 7, 6, 6);
+      // Bright core dot
+      ctx.globalAlpha = 0.90 * pulse2;
+      ctx.fillStyle = '#fff8c0';
+      ctx.fillRect(sx - 1, sy - 5, 3, 3);
+      // Tiny cross arms (sparkle effect)
+      ctx.fillStyle = '#ffffff';
+      ctx.globalAlpha = 0.70 * pulse2;
+      ctx.fillRect(sx,     sy - 8, 1, 7); // vertical arm
+      ctx.fillRect(sx - 3, sy - 5, 7, 1); // horizontal arm
+      ctx.globalAlpha = 1;
+    }
+
     // ---- ambient zone particles (very light, non-blocking) ----
     if (currentMap === 'ashen') {
       for (let i = 0; i < 4; i++) {
@@ -4811,7 +5052,7 @@ export default function GatheringTheMagic() {
         ctx.fillRect(0, 0, CW, CH);
       }
     }
-  }, [player, currentMap, scene, defeated, medallions, animFrame, npcMoveState, hourOfDay]);
+  }, [player, currentMap, scene, defeated, medallions, animFrame, npcMoveState, hourOfDay, hiddenItemsFound]);
 
   // ==========================================================================
   // RENDER
@@ -5290,6 +5531,24 @@ export default function GatheringTheMagic() {
             audio.sfx.blip();
           }}
           onUseItem={useItemOn}
+          onEquipItem={(uid, itemKey) => {
+            // Move the old held item back to bag, take the new one from bag.
+            setTeam(tm => {
+              const creature = tm.find(c => c.uid === uid);
+              if (!creature) return tm;
+              const oldKey = creature.heldItem;
+              setItems(it => {
+                const next = { ...it };
+                if (oldKey) next[oldKey] = (next[oldKey] || 0) + 1;
+                if (itemKey) next[itemKey] = Math.max(0, (next[itemKey] || 0) - 1);
+                return next;
+              });
+              return tm.map(c => c.uid === uid
+                ? { ...c, heldItem: itemKey || null, heldItemCharged: false }
+                : c);
+            });
+          }}
+          onCall={(npc) => { audio.sfx.menuClose(); setScene('world'); startPhoneRematch(npc); }}
           onClose={() => { audio.sfx.menuClose(); setScene('world'); }}
           onRelease={(idx) => {
             const released = team[idx];
@@ -5349,7 +5608,7 @@ export default function GatheringTheMagic() {
           }}
           onReset={async () => {
             await clearSave();
-            setTeam([]); setVaultCreatures([]); setCodex({}); setLastDailyEncounters({}); setDefeated([]); setTokens(5); setGold(0); setItems({ potion: 2 });
+            setTeam([]); setVaultCreatures([]); setCodex({}); setLastDailyEncounters({}); setHiddenItemsFound({}); setDefeated([]); setTokens(5); setGold(0); setItems({ potion: 2 });
             setMode('classic'); setCommanderColor(""); setTrainerCycles(0);
             setMedallions([]); setPlaneswalkerDefeated(false); setChampionLearnPending(false);
             setHasSave(false); setScene('title');
@@ -6418,14 +6677,34 @@ function BattleScene({ battle, me, enemy }) {
           animation: 'gtmFlashFade 1s ease-out forwards',
         }}>
           <div style={{
-            fontSize: 22, fontWeight: 700, letterSpacing: 4,
-            color: '#f4e5a8', textShadow: '0 2px 8px rgba(0,0,0,0.8), 0 0 24px rgba(244,229,168,0.6)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
             animation: 'gtmIntroSlide 0.9s ease-out',
             fontFamily: "'Cinzel', serif",
             borderTop: '2px solid #c9a664', borderBottom: '2px solid #c9a664',
-            padding: '8px 24px', background: 'rgba(20, 8, 32, 0.65)',
+            padding: '10px 28px', background: 'rgba(20, 8, 32, 0.75)',
+            minWidth: 200, textAlign: 'center',
           }}>
-            {battle.kind === 'trainer' ? 'CHALLENGE!' : 'BATTLE!'}
+            <div style={{
+              fontSize: 22, fontWeight: 700, letterSpacing: 4,
+              color: '#f4e5a8', textShadow: '0 2px 8px rgba(0,0,0,0.8), 0 0 24px rgba(244,229,168,0.6)',
+            }}>
+              {battle.kind === 'trainer' || battle.kind === 'legendary' ? 'CHALLENGE!' : 'BATTLE!'}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, color: '#d8c890' }}>
+              {battle.kind === 'trainer' ? (
+                <>
+                  <span style={{ fontSize: 15 }}>⚔</span>
+                  <span>{battle.npc?.name}</span>
+                </>
+              ) : (
+                <>
+                  <ManaBadge identity={battle.enemyTeam?.[battle.enemyIdx]?.c} size={18} label={false} />
+                  <span style={{ fontWeight: 700, letterSpacing: 1 }}>
+                    {battle.enemyTeam?.[battle.enemyIdx]?.name}
+                  </span>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -7759,20 +8038,130 @@ function MoveSetEditor({ creature, onSwap }) {
 // =========================================================================
 // MENU SCREEN
 // =========================================================================
-function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, storageBroken, defeated, trainerCycles, medallions, planeswalkerDefeated, vaultCount, lastDailyEncounters, hourOfDay, currentMap, onUseItem, onRename, onSwapMoves, onOpenVault, onClose, onReset, onSaveQuit, onRelease, onCheckStorage }) {
+// =========================================================================
+// HELD ITEM PICKER — appears below a creature card in the Team tab when
+// the player taps "⬡ Item". Shows currently equipped item and all held
+// items in inventory; tapping equips (swapping out the old one if any).
+// =========================================================================
+function HeldItemPicker({ creature, items, onEquip, onUnequip }) {
+  const heldEntries = Object.entries(items).filter(([k, n]) => n > 0 && ITEMS[k]?.kind === 'held');
+  const equippedItem = creature.heldItem ? ITEMS[creature.heldItem] : null;
+  return (
+    <div style={{
+      width: '100%', marginTop: 4, padding: '8px 10px',
+      background: 'linear-gradient(180deg, #1a1428 0%, #130e20 100%)',
+      border: '1.5px solid #c9a664', borderRadius: 6,
+      display: 'flex', flexDirection: 'column', gap: 6,
+    }}>
+      <div style={{ fontSize: 10, color: '#c9a664', fontFamily: "'Cinzel', serif", letterSpacing: 1 }}>
+        HELD ITEM
+      </div>
+      {/* Current equipped slot */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '5px 8px', borderRadius: 4,
+        background: equippedItem ? 'rgba(201,166,100,0.12)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${equippedItem ? '#c9a664' : '#3a2a50'}`,
+        minHeight: 32,
+      }}>
+        {equippedItem ? (
+          <>
+            <span style={{ fontSize: 16 }}>{equippedItem.icon}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#f4e5a8' }}>{equippedItem.name}</div>
+              <div style={{ fontSize: 9, color: '#9888b0' }}>{equippedItem.desc}</div>
+            </div>
+            <button className="mtgBtn" onClick={onUnequip}
+              style={{ fontSize: 9, padding: '2px 6px', opacity: 0.75 }}>
+              ✕ Remove
+            </button>
+          </>
+        ) : (
+          <span style={{ fontSize: 11, color: '#5a4a70', fontStyle: 'italic' }}>— No item equipped —</span>
+        )}
+      </div>
+      {/* Available held items */}
+      {heldEntries.length === 0 && !equippedItem && (
+        <div style={{ fontSize: 10, color: '#7a6898', fontStyle: 'italic', textAlign: 'center', padding: '4px 0' }}>
+          No held items in bag. Buy some at Merle's shop.
+        </div>
+      )}
+      {heldEntries.map(([key, count]) => {
+        const it = ITEMS[key];
+        const isEquipped = creature.heldItem === key;
+        return (
+          <button key={key} className="mtgBtn" onClick={() => onEquip(key)} disabled={isEquipped}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '5px 8px', textAlign: 'left',
+              opacity: isEquipped ? 0.5 : 1,
+              background: isEquipped ? 'rgba(201,166,100,0.1)' : undefined,
+            }}>
+            <span style={{ fontSize: 16, width: 20, textAlign: 'center', flexShrink: 0 }}>{it.icon}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700 }}>{it.name}
+                <span style={{ fontWeight: 400, color: '#9888b0', marginLeft: 4 }}>×{count}</span>
+              </div>
+              <div style={{ fontSize: 9, color: '#9888b0' }}>{it.desc}</div>
+            </div>
+            {isEquipped && <span style={{ fontSize: 9, color: '#c9a664' }}>✓ ON</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, storageBroken, defeated, trainerCycles, medallions, planeswalkerDefeated, vaultCount, lastDailyEncounters, hourOfDay, currentMap, onUseItem, onEquipItem, onCall, onRename, onSwapMoves, onOpenVault, onClose, onReset, onSaveQuit, onRelease, onCheckStorage }) {
   const [tab, setTab] = useState('team');
   const [pickingFor, setPickingFor] = useState(null); // item key to use, waiting for team pick
   const [releaseConfirm, setReleaseConfirm] = useState(null); // index of creature awaiting release confirmation
   // Tracks which creature's move-set is open for editing in the team tab.
   // null = none selected; toggles closed when the same creature's button is clicked again.
   const [movesUid, setMovesUid] = useState(null);
+  // Which creature's held-item picker is open in the team tab (null = none).
+  const [equipUid, setEquipUid] = useState(null);
   // Audio mute toggle — read once on mount; persists via the audio engine itself.
   const [muted, setMuted] = useState(audio.isMuted());
+
+  // ── Tab list — Phone tab is gated behind owning the Runic Phone key item.
+  const TABS = items.runic_phone
+    ? ['team', 'codex', 'items', 'phone']
+    : ['team', 'codex', 'items'];
+  const TAB_LABEL = { team: 'Team', codex: 'Codex', items: 'Items', phone: '☎ Phone' };
+
+  // ── Swipe-to-change-tab (mobile) ─────────────────────────────────────────
+  // ≥50 px horizontal delta with <80 px vertical drift advances/retreats the
+  // active tab; smaller motion is treated as a tap or scroll and ignored.
+  const swipeStartX = useRef(null);
+  const swipeStartY = useRef(null);
+  const handleTouchStart = (e) => {
+    swipeStartX.current = e.touches[0].clientX;
+    swipeStartY.current = e.touches[0].clientY;
+  };
+  const handleTouchEnd = (e) => {
+    if (swipeStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - swipeStartX.current;
+    const dy = Math.abs(e.changedTouches[0].clientY - swipeStartY.current);
+    swipeStartX.current = null;
+    swipeStartY.current = null;
+    if (dy > 80 || Math.abs(dx) < 50) return;
+    const cur = TABS.indexOf(tab);
+    if (dx < 0 && cur < TABS.length - 1) {
+      audio.sfx.blip();
+      setTab(TABS[cur + 1]);
+    } else if (dx > 0 && cur > 0) {
+      audio.sfx.blip();
+      setTab(TABS[cur - 1]);
+    }
+  };
+
   return (
-    <div style={{
-      width: 'min(94vw, 440px)', margin: 'auto',
-      animation: 'gtmMenuSlideIn 0.25s ease-out',
-    }}>
+    <div
+      style={{ width: 'min(94vw, 440px)', margin: 'auto', animation: 'gtmMenuSlideIn 0.25s ease-out' }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <div style={{ fontSize: 20, fontWeight: 700 }}>Spellbook</div>
         <div style={{ display: 'flex', gap: 6 }}>
@@ -7792,12 +8181,21 @@ function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, st
           <button className="mtgBtn" onClick={onClose} style={{ padding: '4px 10px' }}>✕ Close</button>
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
-        {['team','codex','items'].map(t => (
-          <button key={t} className="mtgBtn" onClick={() => setTab(t)} style={{ flex: 1, padding: 6, fontSize: 12, opacity: tab === t ? 1 : 0.6 }}>
-            {t === 'team' ? 'Team' : t === 'codex' ? 'Codex' : 'Items'}
+      {/* Tab bar — gold underline marks active tab. Phone tab only shows when
+          the player has unlocked the Runic Phone (defeating all 3 town trainers). */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
+        {TABS.map(t => (
+          <button key={t} className="mtgBtn" onClick={() => setTab(t)}
+            style={{ flex: 1, padding: 6, fontSize: 12, opacity: tab === t ? 1 : 0.6,
+                     borderBottom: tab === t ? '2px solid #c9a664' : '2px solid transparent',
+                     transition: 'opacity 0.15s, border-color 0.15s' }}>
+            {TAB_LABEL[t]}
           </button>
         ))}
+      </div>
+      <div style={{ textAlign: 'center', fontSize: 9, color: '#7a6898', marginBottom: 8,
+                    fontStyle: 'italic', letterSpacing: 0.5 }}>
+        ◀ swipe to switch tabs ▶
       </div>
       {tab === 'team' && (
         <>
@@ -7877,6 +8275,16 @@ function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, st
                     >
                       ⚔ Moves
                     </button>
+                    <button
+                      className="mtgBtn"
+                      onClick={() => { setEquipUid(c.uid === equipUid ? null : c.uid); setMovesUid(null); }}
+                      style={{ fontSize: 10, padding: '3px 8px',
+                               background: c.uid === equipUid ? 'linear-gradient(180deg, #4a6a30, #2a3a18)' : undefined,
+                               borderColor: c.heldItem ? '#c9a664' : undefined }}
+                      title="Equip a held item"
+                    >
+                      {c.heldItem ? `${ITEMS[c.heldItem]?.icon} Item` : '⬡ Item'}
+                    </button>
                     {canRelease ? (
                       <button className="mtgBtn" onClick={() => setReleaseConfirm(i)}
                         style={{ fontSize: 10, padding: '3px 8px', opacity: 0.75 }}>
@@ -7893,6 +8301,15 @@ function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, st
                     <MoveSetEditor
                       creature={c}
                       onSwap={(fromIdx, toIdx) => onSwapMoves && onSwapMoves(c.uid, fromIdx, toIdx)}
+                    />
+                  )}
+                  {/* Held item picker — appears below the card when this creature is selected */}
+                  {c.uid === equipUid && (
+                    <HeldItemPicker
+                      creature={c}
+                      items={items}
+                      onEquip={(key) => { onEquipItem && onEquipItem(c.uid, key); setEquipUid(null); audio.sfx.confirm(); }}
+                      onUnequip={() => { onEquipItem && onEquipItem(c.uid, null); setEquipUid(null); audio.sfx.blip(); }}
                     />
                   )}
                 </div>
@@ -8143,14 +8560,14 @@ function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, st
               </div>
             );
           })()}
-          {/* Inventory list */}
+          {/* Inventory list — consumables only (held items are equipped via Team tab) */}
           <div style={{ display: 'grid', gap: 6, marginBottom: 12 }}>
-            {Object.entries(items).filter(([, n]) => n > 0).length === 0 && (
+            {Object.entries(items).filter(([k, n]) => n > 0 && ITEMS[k]?.kind !== 'held').length === 0 && (
               <div style={{ color: '#9080b0', fontSize: 12, textAlign: 'center', padding: 12 }}>
                 No items. Visit Merle's shop in town.
               </div>
             )}
-            {Object.entries(items).filter(([, n]) => n > 0).map(([key, count]) => {
+            {Object.entries(items).filter(([k, n]) => n > 0 && ITEMS[k]?.kind !== 'held').map(([key, count]) => {
               const it = ITEMS[key];
               if (!it) return null;
               return (
@@ -8183,6 +8600,38 @@ function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, st
               );
             })}
           </div>
+          {/* Held items section — shows bag stock; equip/unequip from Team tab */}
+          {Object.entries(items).some(([k, n]) => n > 0 && ITEMS[k]?.kind === 'held') && (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 10, color: '#c9a664', letterSpacing: 1.5,
+                            fontFamily: "'Cinzel', serif", marginBottom: 6 }}>
+                HELD ITEMS (equip via Team tab ▸ ⬡ Item)
+              </div>
+              <div style={{ display: 'grid', gap: 5 }}>
+                {Object.entries(items).filter(([k, n]) => n > 0 && ITEMS[k]?.kind === 'held').map(([key, count]) => {
+                  const it = ITEMS[key];
+                  const equippedCount = team.filter(c => c.heldItem === key).length;
+                  return (
+                    <div key={key} style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: 7, border: '1.5px solid #5a4a28', borderRadius: 4,
+                      background: 'rgba(201,166,100,0.06)',
+                    }}>
+                      <span style={{ fontSize: 18, width: 24, textAlign: 'center' }}>{it.icon}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#f4e5a8' }}>{it.name}</div>
+                        <div style={{ fontSize: 9, color: '#9888b0' }}>{it.desc}</div>
+                      </div>
+                      <div style={{ textAlign: 'right', fontSize: 10, color: '#c9a664', flexShrink: 0 }}>
+                        <div>× {count} in bag</div>
+                        {equippedCount > 0 && <div style={{ color: '#9888b0' }}>× {equippedCount} equipped</div>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           {storageBroken ? (
             <div style={{
               padding: 8, marginBottom: 6, fontSize: 11, color: '#c8b890',
@@ -8205,6 +8654,13 @@ function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, st
             Abandon run & return to title
           </button>
         </div>
+      )}
+      {tab === 'phone' && (
+        <PhoneTab
+          defeated={defeated}
+          trainerCycles={trainerCycles}
+          onCall={onCall}
+        />
       )}
     </div>
   );
@@ -8417,6 +8873,21 @@ function CreatureCard({ c, small }) {
             }} />
           </div>
         )}
+        {/* Held item badge — shown when a held item is equipped */}
+        {c.heldItem && ITEMS[c.heldItem] && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            background: 'rgba(201,166,100,0.15)', border: '1px solid #c9a664',
+            borderRadius: 3, padding: '2px 6px', marginTop: 1,
+            fontSize: textSize - 1, color: '#c9a664', fontFamily: 'sans-serif',
+          }} title={ITEMS[c.heldItem].desc}>
+            <span style={{ fontSize: textSize }}>{ITEMS[c.heldItem].icon}</span>
+            <span>{ITEMS[c.heldItem].name}</span>
+            {c.heldItemCharged && (
+              <span style={{ opacity: 0.5, fontSize: textSize - 2 }}>(used)</span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -8425,6 +8896,108 @@ function CreatureCard({ c, small }) {
 // =========================================================================
 // SHOP SCENE
 // =========================================================================
+// PHONE TAB — rendered inside MenuScreen when the player owns the Runic Phone.
+// Lists every trainer (town + zone) and lets the player call any defeated one
+// for a scaled-up rematch (trainerCycles + 1) without walking to their zone.
+// Undefeated trainers show their location and a hint to find them in person.
+// =========================================================================
+function PhoneTab({ defeated, trainerCycles, onCall }) {
+  // Build a unified list: town trainers first (the local duellists who gave the
+  // phone), then zone trainers grouped by zone order.
+  const townTrainers = NPCS_TOWN
+    .filter(n => TOWN_TRAINER_IDS.has(n.id))
+    .map(n => ({ ...n, zoneId: 'town', isTown: true }));
+  const zoneTrainers = Object.entries(NPCS_ZONE).flatMap(([zoneId, list]) =>
+    list.map(n => ({ ...n, zoneId, isTown: false }))
+  );
+  const allTrainers = [...townTrainers, ...zoneTrainers];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* Cycle info strip */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: '6px 10px',
+        border: '1.5px solid #5a4a68', borderRadius: 4,
+        background: 'linear-gradient(180deg, #1e1430 0%, #130e20 100%)',
+      }}>
+        <span style={{ fontSize: 11, color: '#9888b0' }}>
+          Current cycle: <b style={{ color: '#c9a664' }}>{trainerCycles + 1}</b>
+        </span>
+        <span style={{ fontSize: 10, color: '#7a6898', fontStyle: 'italic' }}>
+          Rematch teams: +{(trainerCycles + 1) * 2} lv
+        </span>
+      </div>
+
+      {/* Section heading */}
+      <div style={{ fontSize: 10, color: '#9080b0', letterSpacing: 1.4,
+                    fontFamily: "'Cinzel', serif" }}>
+        TRAINERS
+      </div>
+
+      {/* Trainer list */}
+      <div style={{ display: 'grid', gap: 6 }}>
+        {allTrainers.map(n => {
+          const isDefeated = defeated.includes(n.id);
+          const zoneName = n.isTown ? 'Runesmith Hollow' : (MAPS[n.zoneId]?.name || n.zoneId);
+          const rematchLv = (n.team?.[0]?.lv || 8) + (trainerCycles + 1) * 2;
+          return (
+            <div key={n.id} style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '7px 9px',
+              border: `1.5px solid ${isDefeated ? '#5a4a28' : '#2a2038'}`,
+              borderRadius: 4,
+              background: isDefeated
+                ? 'linear-gradient(180deg, #1e1810 0%, #130e08 100%)'
+                : '#0f0a18',
+              opacity: isDefeated ? 1 : 0.6,
+            }}>
+              {/* Color swatch */}
+              <div style={{
+                width: 8, height: 32, borderRadius: 2, flexShrink: 0,
+                background: n.color,
+                boxShadow: isDefeated ? `0 0 6px ${n.color}88` : 'none',
+              }} />
+              {/* Info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 700,
+                              color: isDefeated ? '#f4e5a8' : '#7a6898' }}>
+                  {n.name}
+                  {n.isTown && (
+                    <span style={{ fontSize: 9, color: '#7ab8d8', marginLeft: 5,
+                                   fontWeight: 400, letterSpacing: 0.3 }}>· LOCAL</span>
+                  )}
+                </div>
+                <div style={{ fontSize: 9, color: '#7a6898' }}>
+                  {zoneName} · {isDefeated ? `Rematch ~Lv ${rematchLv}` : 'Not yet defeated'}
+                </div>
+              </div>
+              {/* Call / locked */}
+              {isDefeated ? (
+                <button className="mtgBtn" onClick={() => onCall(n)}
+                  style={{ padding: '5px 10px', fontSize: 10, flexShrink: 0,
+                           borderColor: '#c9a664', color: '#f4e5a8' }}>
+                  ☎ Call
+                </button>
+              ) : (
+                <div style={{ fontSize: 9, color: '#4a3a58', fontStyle: 'italic',
+                               textAlign: 'right', flexShrink: 0, maxWidth: 60 }}>
+                  Find in person
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ marginTop: 4, fontSize: 9, color: '#5a4a70',
+                    textAlign: 'center', fontStyle: 'italic' }}>
+        "Defeat a trainer once and they'll take your call." — Bran, Ria, & Dax
+      </div>
+    </div>
+  );
+}
+
 function ShopScene({ gold, items, tokens, onBuy, onClose }) {
   return (
     <div style={{ width: 'min(94vw, 440px)', margin: 'auto' }}>
