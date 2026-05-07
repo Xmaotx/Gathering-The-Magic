@@ -432,6 +432,54 @@ function getPlaneName(plane) {
   return PLANE_NAMES[Math.min(plane, PLANE_NAMES.length - 1)];
 }
 
+// =========================================================================
+// ZONE EXIT SYSTEM — dynamic zone-to-direction mapping per plane
+// In Plane 0 the exits are fixed (south → wilds, east → ashen, etc.).
+// In later planes the same ZONE_RANK_ORDER shuffle that sets difficulty also
+// determines which physical direction leads to which zone, so the layout is
+// genuinely different every run.
+// =========================================================================
+// Zones in difficulty order: index 0 = easiest → index 4 = hardest.
+// This MUST match ZONE_DEFAULT_TIER ordering.
+const ZONE_RANK_ORDER = ['wilds', 'ashen', 'sanctum', 'umbral', 'plains'];
+
+// Exit slot names paired 1-to-1 with ZONE_RANK_ORDER.
+// Plane 0: wilds→south_center, ashen→east, sanctum→west, umbral→north, plains→south_west.
+const EXIT_SLOT_ORDER = ['south_center', 'east', 'west', 'north', 'south_west'];
+
+// Where the player re-enters town from each exit slot.
+const EXIT_TOWN_RETURN = {
+  south_center: { x: 7,  y: 11, face: 'up'    },
+  south_west:   { x: 2,  y: 11, face: 'up'    },
+  north:        { x: 7,  y: 1,  face: 'down'  },
+  east:         { x: 14, y: 6,  face: 'left'  },
+  west:         { x: 1,  y: 6,  face: 'right' },
+};
+
+// Where the player spawns when entering a zone from town (uses the zone's own map size).
+const ZONE_SPAWN_POS = {
+  wilds:   (_mw, _mh) => ({ x: 7,    y: 1,      face: 'down'  }),
+  plains:  (_mw, _mh) => ({ x: 13,   y: 1,      face: 'down'  }),
+  umbral:  (_mw,  mh) => ({ x: 7,    y: mh - 2, face: 'up'    }),
+  ashen:   (_mw, _mh) => ({ x: 1,    y: 6,      face: 'right' }),
+  sanctum: ( mw, _mh) => ({ x: mw-2, y: 6,      face: 'left'  }),
+};
+
+// Returns exit-slot → zone mapping for the current plane.
+function getExitZoneMap(planeZoneOrder) {
+  const order = planeZoneOrder || ZONE_RANK_ORDER;
+  const m = {};
+  EXIT_SLOT_ORDER.forEach((slot, i) => { m[slot] = order[i]; });
+  return m;
+}
+
+// Returns the exit slot that a given zone is assigned to in the current plane.
+function getZoneExitSlot(zone, planeZoneOrder) {
+  const order = planeZoneOrder || ZONE_RANK_ORDER;
+  const i = order.indexOf(zone);
+  return i >= 0 ? EXIT_SLOT_ORDER[i] : null;
+}
+
 // ---------- Items ----------
 // kind: 'heal' (restores HP), 'revive' (restores fainted), 'card' (adds catch tokens)
 const ITEMS = {
@@ -2892,23 +2940,30 @@ export default function GatheringTheMagic() {
         const saveAfterTransition = () => {
           if (!isRateLimited()) setTimeout(() => performSave(), 250);
         };
-        // From town, route by which edge we stepped onto
+        // From town — use the current plane's exit→zone mapping so zones physically
+        // rearrange each plane (south isn't always wilds, east isn't always ashen, etc.)
         if (currentMap === 'town') {
-          if (ny >= mh - 1) {
-            // Two south exits: SW (cols 1-3) → Plains, S (cols 6-8) → Wilds
-            if (nx <= 3) { setCurrentMap('plains'); saveAfterTransition(); return { x: 13, y: 1, face: 'down' }; }
-            setCurrentMap('wilds');   saveAfterTransition(); return { x: 7, y: 1, face: 'down' };
+          const exitZone = getExitZoneMap(planeZoneOrder);
+          let targetZone = null;
+          if      (ny >= mh - 1) targetZone = nx <= 3 ? exitZone.south_west : exitZone.south_center;
+          else if (ny <= 0)      targetZone = exitZone.north;
+          else if (nx >= mw - 1) targetZone = exitZone.east;
+          else if (nx <= 0)      targetZone = exitZone.west;
+          if (targetZone) {
+            const zt = MAPS[targetZone].tiles;
+            const spawn = ZONE_SPAWN_POS[targetZone](zt[0].length, zt.length);
+            setCurrentMap(targetZone); saveAfterTransition();
+            return spawn;
           }
-          if (ny <= 0)           { setCurrentMap('umbral');  saveAfterTransition(); return { x: 7, y: mh - 2, face: 'up' }; }
-          if (nx >= mw - 1)      { setCurrentMap('ashen');   saveAfterTransition(); return { x: 1, y: 6, face: 'right' }; }
-          if (nx <= 0)           { setCurrentMap('sanctum'); saveAfterTransition(); return { x: mw - 2, y: 6, face: 'left' }; }
         }
-        // From any zone back to town, use the reciprocal entry point
-        if (currentMap === 'wilds')   { setCurrentMap('town'); saveAfterTransition(); return { x: 7, y: 11, face: 'up' }; }
-        if (currentMap === 'ashen')   { setCurrentMap('town'); saveAfterTransition(); return { x: 14, y: 6, face: 'left' }; }
-        if (currentMap === 'sanctum') { setCurrentMap('town'); saveAfterTransition(); return { x: 1, y: 6, face: 'right' }; }
-        if (currentMap === 'umbral')  { setCurrentMap('town'); saveAfterTransition(); return { x: 7, y: 1, face: 'down' }; }
-        if (currentMap === 'plains')  { setCurrentMap('town'); saveAfterTransition(); return { x: 2, y: 11, face: 'up' }; }
+        // From any zone back to town — find which slot this zone occupies and
+        // return to the matching town-side position so the player exits cleanly.
+        if (ALL_ZONE_KEYS.includes(currentMap)) {
+          const slot = getZoneExitSlot(currentMap, planeZoneOrder);
+          const returnPos = (slot && EXIT_TOWN_RETURN[slot]) || EXIT_TOWN_RETURN.south_center;
+          setCurrentMap('town'); saveAfterTransition();
+          return returnPos;
+        }
         // ---- From a shrine interior, step out to the parent zone, just below its 'B' tile ----
         const parentZone = SHRINE_TO_ZONE[currentMap];
         if (parentZone) {
@@ -2949,7 +3004,7 @@ export default function GatheringTheMagic() {
       audio.sfx.step();
       return { x: nx, y: ny, face };
     });
-  }, [scene, currentMap, trainerCycles, medallions, npcMoveState]);
+  }, [scene, currentMap, trainerCycles, medallions, npcMoveState, planeZoneOrder]);
 
   // ---------- Hidden item pickup ----------
   // Declared before `interact` so the callback is initialized when interact references it.
@@ -3092,7 +3147,27 @@ export default function GatheringTheMagic() {
           onDone: () => { setDialog(null); setVaultOrigin('world'); setScene('vault'); }
         });
       } else if (n.noBattle) {
-        setDialog({ lines: [`${n.name}: "${n.dialog}"`], onDone: () => setDialog(null) });
+        // Special case: the Old Wanderer tells you which direction leads where —
+        // dynamically generated so it's accurate after zone rearrangement.
+        let npcLines;
+        if (n.id === 'guide') {
+          const ezMap = getExitZoneMap(planeZoneOrder);
+          const slotLabel = { south_center: 'South', south_west: 'Southwest', north: 'North', east: 'East', west: 'West' };
+          const zoneDesc = {
+            wilds:   'the Mana Wilds — soft-spoken and green',
+            ashen:   'the Ashen Wastes — all teeth and embers',
+            sanctum: 'the Sunken Sanctum — where the deep keeps its secrets',
+            umbral:  'the Umbral Grove — where shadows have weight',
+            plains:  'the Plains of Light — beautiful, and merciless',
+          };
+          const dirs = EXIT_SLOT_ORDER.map(slot =>
+            `${slotLabel[slot]}: ${zoneDesc[ezMap[slot]] || ezMap[slot]}`
+          ).join('. ');
+          npcLines = [`${n.name}: "Five planes touch this hollow. ${dirs}. Each breeds its own color — bring what the wheel favors. The shrine restores any creature you've bound."`];
+        } else {
+          npcLines = [`${n.name}: "${n.dialog}"`];
+        }
+        setDialog({ lines: npcLines, onDone: () => setDialog(null) });
       } else if (defeated.includes(n.id)) {
         const isZone = ZONE_TRAINER_IDS.has(n.id);
         const line = isZone
@@ -3106,7 +3181,7 @@ export default function GatheringTheMagic() {
         });
       }
     }
-  }, [scene, player, currentMap, defeated, medallions, planeswalkerDefeated, npcMoveState, checkHiddenItem]);
+  }, [scene, player, currentMap, defeated, medallions, planeswalkerDefeated, npcMoveState, checkHiddenItem, planeZoneOrder, currentPlane]);
 
   // Hidden item pickup helper — checks both the facing tile and standing tile.
   // Called from the interact callback above and extracted so it can also run on tile-step
