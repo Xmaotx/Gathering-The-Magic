@@ -352,6 +352,86 @@ const ZONE_POOLS = {
   plains:  buildZonePool('plains'),
 };
 
+// =========================================================================
+// NEW PLANE SYSTEM — scaling difficulty slots for New Game+
+// After defeating The Planeswalker, the player is hurled into a new plane.
+// All zones are rearranged (difficulty slots shuffled), and all levels are
+// offset by the defeated Planeswalker's level so the easiest new zone starts
+// where the old PW left off.
+// =========================================================================
+// Five difficulty tiers (easiest → hardest). Each tier defines a wild level
+// range and a shrine boss level. These stay fixed; what changes each plane is
+// which zone name is assigned to which tier.
+const PLANE_DIFFICULTY_SLOTS = [
+  { range: [2,6],   shrineLevel: 19 },  // tier 0 — easiest
+  { range: [5,9],   shrineLevel: 21 },  // tier 1
+  { range: [6,10],  shrineLevel: 23 },  // tier 2
+  { range: [8,12],  shrineLevel: 25 },  // tier 3
+  { range: [10,14], shrineLevel: 27 },  // tier 4 — hardest
+];
+// Original zone → tier index (plane 0 default)
+const ZONE_DEFAULT_TIER = { wilds: 0, ashen: 1, sanctum: 2, umbral: 3, plains: 4 };
+// The five zone keys in order used for shuffling
+const ALL_ZONE_KEYS = ['wilds', 'ashen', 'sanctum', 'umbral', 'plains'];
+
+// Get the tier index for a zone in the given plane's order.
+// planeZoneOrder is an array of zone keys where index = tier.
+// If null (original plane), fall back to ZONE_DEFAULT_TIER.
+function getZoneTier(zoneId, planeZoneOrder) {
+  if (!planeZoneOrder) return ZONE_DEFAULT_TIER[zoneId] ?? 0;
+  const idx = planeZoneOrder.indexOf(zoneId);
+  return idx >= 0 ? idx : (ZONE_DEFAULT_TIER[zoneId] ?? 0);
+}
+
+// Get the scaled wild level range for a zone.
+// planeBaseLevel: level offset (0 for original plane; PW level for subsequent planes)
+function getScaledZoneRange(zoneId, planeBaseLevel, planeZoneOrder) {
+  const tier = getZoneTier(zoneId, planeZoneOrder);
+  const { range } = PLANE_DIFFICULTY_SLOTS[tier];
+  return [range[0] + planeBaseLevel, range[1] + planeBaseLevel];
+}
+
+// Get the scaled shrine boss level for a zone.
+function getScaledBossLevel(zoneId, planeBaseLevel, planeZoneOrder) {
+  const tier = getZoneTier(zoneId, planeZoneOrder);
+  return PLANE_DIFFICULTY_SLOTS[tier].shrineLevel + planeBaseLevel;
+}
+
+// Planeswalker level scales per plane: 32 on plane 0, +30 per plane.
+function getPlaneswalkerLevel(currentPlane) {
+  return 32 + currentPlane * 30;
+}
+
+// Generate a shuffled zone order for a new plane. Seeded by plane number
+// for reproducibility (same plane always has same layout).
+function generatePlaneZoneOrder(plane) {
+  // Fisher-Yates shuffle with a simple seeded RNG.
+  const arr = [...ALL_ZONE_KEYS];
+  let seed = plane * 1_000_003 + 7_919;
+  const rand = () => {
+    seed = (seed * 1_664_525 + 1_013_904_223) >>> 0;
+    return seed / 0x100000000;
+  };
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// Flavor names for planes beyond the first (shown in UI and dialog).
+const PLANE_NAMES = [
+  'Runesmith Hollow',      // plane 0 — the original
+  'The Shattered Rift',    // plane 1
+  'Void Between Worlds',   // plane 2
+  'The Aether Crucible',   // plane 3
+  'Blind Eternities',      // plane 4
+  'The Dark Convergence',  // plane 5+
+];
+function getPlaneName(plane) {
+  return PLANE_NAMES[Math.min(plane, PLANE_NAMES.length - 1)];
+}
+
 // ---------- Items ----------
 // kind: 'heal' (restores HP), 'revive' (restores fainted), 'card' (adds catch tokens)
 const ITEMS = {
@@ -2147,7 +2227,16 @@ const audio = (() => {
 })();
 
 // ---------- Persistent storage ----------
-const SAVE_KEY = 'gtm:save:v1';
+// Per-mode save keys — classic and commander each get their own slot so
+// starting a new run in one mode never overwrites the other.
+// The legacy key (v1) is tried as a fallback so existing saves aren't lost.
+const SAVE_KEY_CLASSIC  = 'gtm:save:classic:v1';
+const SAVE_KEY_CMDR     = 'gtm:save:cmdr:v1';
+const SAVE_KEY_LEGACY   = 'gtm:save:v1';
+function getSaveKey(mode) {
+  return mode === 'commander' ? SAVE_KEY_CMDR : SAVE_KEY_CLASSIC;
+}
+
 let lastSaveFailure = null;
 let rateLimitBackoffUntil = 0;
 async function saveGame(state) {
@@ -2162,7 +2251,8 @@ async function saveGame(state) {
     return false;
   }
 
-  // Build payload defensively — if anything in `state` can't be serialized, catch it here.
+  const SAVE_KEY = getSaveKey(state.mode);
+
   let payload;
   try {
     payload = JSON.stringify(state);
@@ -2177,20 +2267,16 @@ async function saveGame(state) {
     return false;
   }
 
-  console.log('[GtM] saving payload, size:', payload.length);
+  console.log('[GtM] saving payload, size:', payload.length, 'key:', SAVE_KEY);
   try {
     const r = await window.storage.set(SAVE_KEY, payload);
     console.log('[GtM] storage.set returned:', r);
-    // Per docs: set returns {key, value, shared} on success, or null on failure.
-    // We accept any object response with the matching key as success — the API may
-    // not always echo back the full value for large payloads.
     if (r && typeof r === 'object' && r.key === SAVE_KEY) return true;
     if (r === null || r === undefined) {
       lastSaveFailure = 'rate limited';
       rateLimitBackoffUntil = Date.now() + 10 * 60 * 1000;
       return false;
     }
-    // Got something else — try reading back to confirm the write happened.
     try {
       const verify = await window.storage.get(SAVE_KEY);
       if (verify?.value === payload) return true;
@@ -2209,10 +2295,18 @@ async function saveGame(state) {
 }
 function getLastSaveFailure() { return lastSaveFailure; }
 function isRateLimited() { return Date.now() < rateLimitBackoffUntil; }
-async function loadGame() {
+
+// loadGame(mode) — loads the save for the given mode.
+// Falls back to the legacy single-slot key on a miss so older saves aren't lost.
+async function loadGame(mode) {
+  const key = getSaveKey(mode);
   try {
     if (typeof window !== 'undefined' && window.storage) {
-      const r = await window.storage.get(SAVE_KEY);
+      let r = await window.storage.get(key);
+      // Migrate: if no mode-specific save, try the legacy key once
+      if (!r?.value && key !== SAVE_KEY_LEGACY) {
+        try { r = await window.storage.get(SAVE_KEY_LEGACY); } catch (_) {}
+      }
       if (r?.value) return JSON.parse(r.value);
     }
   } catch (e) {
@@ -2220,10 +2314,19 @@ async function loadGame() {
   }
   return null;
 }
-async function clearSave() {
+
+// clearSave(mode) — deletes the save for one mode (or all saves if mode is omitted).
+async function clearSave(mode) {
   try {
     if (typeof window !== 'undefined' && window.storage) {
-      await window.storage.delete(SAVE_KEY);
+      if (mode) {
+        await window.storage.delete(getSaveKey(mode));
+      } else {
+        // Nuclear option: clear every slot
+        for (const k of [SAVE_KEY_CLASSIC, SAVE_KEY_CMDR, SAVE_KEY_LEGACY]) {
+          try { await window.storage.delete(k); } catch (_) {}
+        }
+      }
     }
   } catch (e) {
     console.error('[GtM] clearSave failed:', e);
@@ -2316,7 +2419,8 @@ export default function GatheringTheMagic() {
     }
   };
   const [loaded, setLoaded] = useState(false);
-  const [hasSave, setHasSave] = useState(false);
+  const [hasSaveClassic, setHasSaveClassic] = useState(false);
+  const [hasSaveCommander, setHasSaveCommander] = useState(false);
   const [storageBroken, setStorageBroken] = useState(false);
   const [storageDiag, setStorageDiag] = useState([]); // diagnostic lines from probe
 
@@ -2347,6 +2451,16 @@ export default function GatheringTheMagic() {
   // Pending: when set, the player is choosing a single attack to permanently learn
   // (post-Planeswalker reward). Closed by the championLearn UI.
   const [championLearnPending, setChampionLearnPending] = useState(false);
+
+  // ---- New Plane System ----
+  // currentPlane: which plane we're on (0 = original, 1+ = new planes after beating PW)
+  // planeBaseLevel: level offset applied to all wild/boss encounters (0 for plane 0)
+  // planeZoneOrder: shuffled array of zone keys for difficulty assignment (null = original)
+  // planePending: signals endBattle to trigger a plane-shift transition sequence
+  const [currentPlane, setCurrentPlane] = useState(0);
+  const [planeBaseLevel, setPlaneBaseLevel] = useState(0);
+  const [planeZoneOrder, setPlaneZoneOrder] = useState(null);
+  const [planePending, setPlanePending] = useState(false);
   const [tokens, setTokens] = useState(5); // Creature Cards (used to catch creatures)
   const [gold, setGold] = useState(0);
   const [items, setItems] = useState({ potion: 2 }); // consumable items inventory
@@ -2537,10 +2651,15 @@ export default function GatheringTheMagic() {
       setStorageDiag(diag);
       setStorageBroken(broken);
       if (!broken) {
+        // Check both save slots independently so each mode shows its own Continue button.
         try {
-          const s = await loadGame();
-          if (s) setHasSave(true);
-        } catch (e) { /* no save yet, fine */ }
+          const [sc, sk] = await Promise.all([
+            loadGame('classic').catch(() => null),
+            loadGame('commander').catch(() => null),
+          ]);
+          if (sc) setHasSaveClassic(true);
+          if (sk) setHasSaveCommander(true);
+        } catch (e) { /* no saves yet, fine */ }
       }
       setLoaded(true);
     })();
@@ -2553,8 +2672,8 @@ export default function GatheringTheMagic() {
   const currentStateRef = useRef(null);
   // Keep a ref of the latest state so save callbacks always grab fresh values.
   useEffect(() => {
-    currentStateRef.current = { currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, hiddenItemsFound, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated };
-  }, [currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, hiddenItemsFound, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated]);
+    currentStateRef.current = { currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, hiddenItemsFound, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated, currentPlane, planeBaseLevel, planeZoneOrder };
+  }, [currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, hiddenItemsFound, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated, currentPlane, planeBaseLevel, planeZoneOrder]);
 
   const performSave = async () => {
     const snap = currentStateRef.current;
@@ -2576,6 +2695,7 @@ export default function GatheringTheMagic() {
     setTeam([]); setVaultCreatures([]); setCodex({}); setLastDailyEncounters({}); setDefeated([]); setTokens(5); setGold(60); setItems({ potion: 2 });
     setMode('classic'); setCommanderColor(""); setTrainerCycles(0);
     setMedallions([]); setPlaneswalkerDefeated(false); setChampionLearnPending(false);
+    setCurrentPlane(0); setPlaneBaseLevel(0); setPlaneZoneOrder(null); setPlanePending(false);
     // Mark tutorial pending — the effect above will fire once the player lands
     // in the world (after picking mode + starter).
     setTutorialPending(true);
@@ -2614,10 +2734,10 @@ export default function GatheringTheMagic() {
     return () => clearTimeout(id);
   }, [tutorialPending, scene]);
 
-  const continueSave = async () => {
+  const continueSave = async (saveMode) => {
     audio.wake();
     try {
-      const s = await loadGame();
+      const s = await loadGame(saveMode);
       if (!s) {
         showToast('No save found.');
         return;
@@ -2644,6 +2764,10 @@ export default function GatheringTheMagic() {
       setTrainerCycles(s.trainerCycles || 0);
       setMedallions(s.medallions || []);
       setPlaneswalkerDefeated(!!s.planeswalkerDefeated);
+      setCurrentPlane(s.currentPlane || 0);
+      setPlaneBaseLevel(s.planeBaseLevel || 0);
+      setPlaneZoneOrder(s.planeZoneOrder || null);
+      setPlanePending(false);
       setScene(s.scene === 'battle' ? 'world' : (s.scene || 'world'));
     } catch (err) {
       showToast('Load failed: ' + (err?.message || 'unknown error'));
@@ -2717,7 +2841,11 @@ export default function GatheringTheMagic() {
         // Already collected this medallion? Let the player wander in and out freely.
         const enteringDialog = medallions.includes(shrineData.color)
           ? `${shrineData.label} stands silent. The warden has been laid to rest.`
-          : shrineData.dialog;
+          : (() => {
+              const scaledLv = getScaledBossLevel(currentMap, planeBaseLevel, planeZoneOrder);
+              const suffix = currentPlane > 0 ? ` (Lv. ${scaledLv} — Plane ${currentPlane})` : '';
+              return shrineData.dialog + suffix;
+            })();
         setTimeout(() => setDialog({
           lines: [enteringDialog],
           onDone: () => {
@@ -2872,18 +3000,60 @@ export default function GatheringTheMagic() {
           lines: [
             "The shrine pulses with light — your team is restored to full strength.",
             "Five medallions, five wakings. The shrine flares to life beneath your fingertips.",
-            "A figure crystallizes at the heart of the light — eyes burning with all five colors.",
-            "\"You've gathered the magic. Now spend it.\" — The Planeswalker draws its spark.",
+            currentPlane > 0
+              ? `A figure crystallizes — more powerful than before. Eyes burning with planar fury.`
+              : `A figure crystallizes at the heart of the light — eyes burning with all five colors.`,
+            currentPlane > 0
+              ? `"You found me again, walker. I've been growing stronger." — Level ${getPlaneswalkerLevel(currentPlane)} Planeswalker awakens.`
+              : `"You've gathered the magic. Now spend it." — The Planeswalker draws its spark.`,
           ],
           onDone: () => { setDialog(null); startPlaneswalkerBattle(); },
         });
         return;
       }
       if (allMedallions && planeswalkerDefeated) {
-        // Champion shrine — flavor + heal
+        // Champion shrine — always heals. On Plane 0, also offer the warp for
+        // players who beat the game before the new plane system existed.
         setTeam((tm) => tm.map(c => ({ ...c, hp: c.maxHp, status: null })));
         audio.sfx.heal();
-        showToast('The shrine hums in recognition. Your team is restored.');
+        if (currentPlane === 0) {
+          setDialog({
+            lines: [
+              "The shrine hums with recognition. Your team is restored.",
+              "The Planeswalker's torn essence lingers here — a rift bleeds through the stone.",
+              "You sense a doorway to a harder plane. Creatures you've never seen. Power you haven't tasted.",
+              `The Shattered Rift (Plane 1) awaits — base level ${getPlaneswalkerLevel(0) + 2}, new Planeswalker at Lv. ${getPlaneswalkerLevel(1)}.`,
+              "Will you step through? Your team, vault, gold and items carry over.",
+            ],
+            choices: [
+              {
+                label: '✦ Step through the rift — enter Plane 1',
+                action: () => {
+                  setDialog(null);
+                  const { nextPlane, newPlaneName, easyZone, hardZone, defeatedPWLevel } = doPlaneShift(0);
+                  setTimeout(() => setDialog({
+                    lines: [
+                      `The shrine shatters outward in five colors.`,
+                      `You are pulled through — into ${newPlaneName}.`,
+                      `${easyZone} stirs with level ${defeatedPWLevel + 2}–${defeatedPWLevel + 6} creatures. ${hardZone} holds things far worse.`,
+                      `The medallion bearers have been reset. A new Planeswalker waits at level ${getPlaneswalkerLevel(nextPlane)}.`,
+                    ],
+                    onDone: () => setDialog(null),
+                  }), 300);
+                },
+              },
+              {
+                label: '✓ Stay — remain in this plane',
+                action: () => {
+                  setDialog(null);
+                  showToast('The shrine hums in recognition. Your team is restored.');
+                },
+              },
+            ],
+          });
+        } else {
+          showToast('The shrine hums in recognition. Your team is restored.');
+        }
         return;
       }
       setTeam((tm) => tm.map(c => ({ ...c, hp: c.maxHp, status: null })));
@@ -3004,7 +3174,9 @@ export default function GatheringTheMagic() {
     if (freshTm !== tm) setTeam(freshTm);
     const pool = ZONE_POOLS[currentMap] || ZONE_POOLS.wilds;
     const pick = weightedPick(pool);
-    const lv = pick.lv[0] + Math.floor(Math.random() * (pick.lv[1] - pick.lv[0] + 1));
+    // Scale level by current plane
+    const [scaledLo, scaledHi] = getScaledZoneRange(currentMap, planeBaseLevel, planeZoneOrder);
+    const lv = scaledLo + Math.floor(Math.random() * (scaledHi - scaledLo + 1));
 
     // ---- Daily-encounter check ----
     // If a daily creature is eligible (right zone, right hour, hasn't appeared
@@ -3166,7 +3338,9 @@ export default function GatheringTheMagic() {
     const sd = SHRINE_DATA[zoneId];
     if (!sd) return;
     const tm = teamRef.current;
-    const boss = createCreature(sd.bossId, sd.bossLv);
+    // Scale boss level by current plane
+    const scaledBossLv = getScaledBossLevel(zoneId, planeBaseLevel, planeZoneOrder);
+    const boss = createCreature(sd.bossId, scaledBossLv);
     setCodex((cx) => ({ ...cx, [boss.id]: { caught: cx[boss.id]?.caught || 0, seen: (cx[boss.id]?.seen || 0) + 1 }}));
     const ws_lg = rollWeathersForZone(currentMap, 'legendary');
     const initLog_lg = [];
@@ -3201,9 +3375,11 @@ export default function GatheringTheMagic() {
   // ---------- Final boss: The Planeswalker (WUBRG) ----------
   const startPlaneswalkerBattle = () => {
     const tm = teamRef.current;
-    // Final boss draws power from all five medallions — bumped slightly above any legendary.
-    const boss = createCreature('the_planeswalker', 32);
+    // Planeswalker scales with each plane: level 32 on plane 0, +30 per plane.
+    const pwLevel = getPlaneswalkerLevel(currentPlane);
+    const boss = createCreature('the_planeswalker', pwLevel);
     setCodex((cx) => ({ ...cx, [boss.id]: { caught: cx[boss.id]?.caught || 0, seen: (cx[boss.id]?.seen || 0) + 1 }}));
+    const planeName = getPlaneName(currentPlane);
     setBattle({
       kind: 'planeswalker',
       enemyTeam: [boss],
@@ -3211,15 +3387,15 @@ export default function GatheringTheMagic() {
       myIdx: Math.max(0, firstAlive(tm)),
       log: [
         `THE PLANESWALKER manifests in a halo of five colors!`,
-        `Reality buckles — a Planar Storm engulfs the arena!`,
-        `"Show me the magic you've gathered."`,
+        `Reality buckles — a Planar Storm engulfs ${planeName}!`,
+        currentPlane === 0
+          ? `"Show me the magic you've gathered."`
+          : `"You found me again. I won't hold back this time."`,
       ],
       turn: 'player',
       intro: true,
       bossKind: 'planeswalker',
       bgZone: currentMap,
-      // Planar Storm is hard-coded — the climactic boss always brings the storm.
-      // Never stacks (the storm is already absolute chaos).
       weathers: ['planar'],
     });
     playSceneTransition('iris', () => setScene('battle'));
@@ -3565,17 +3741,23 @@ export default function GatheringTheMagic() {
       } else if (b.kind === 'planeswalker') {
         // Final boss victory — Champion badge + ability-learning prompt.
         const reward = 2000;
-        lines.push(`THE PLANESWALKER bows its head. "The spark... is yours."`);
-        lines.push(`Your commander absorbs a fragment of planar power!`);
-        lines.push(`+${reward} gold.`);
-        // Vault Sigil — a permanent gift that surfaces an "Open Vault" button in
-        // the menu. Only awarded on first defeat (a no-op if somehow already owned).
-        lines.push(`The Planeswalker presses a rune-iron sigil into your palm — "For the spirits that wait. Call them when you must."`);
-        lines.push(`Received the Vault Sigil!`);
-        setItems(it => ({ ...it, vault_sigil: 1 }));
+        if (currentPlane === 0) {
+          // First defeat — standard flavor, vault sigil, champion learn
+          lines.push(`THE PLANESWALKER bows its head. "The spark... is yours."`);
+          lines.push(`Your commander absorbs a fragment of planar power!`);
+          lines.push(`+${reward} gold.`);
+          lines.push(`The Planeswalker presses a rune-iron sigil into your palm — "For the spirits that wait. Call them when you must."`);
+          lines.push(`Received the Vault Sigil!`);
+          setItems(it => ({ ...it, vault_sigil: 1 }));
+          setChampionLearnPending(true);
+        } else {
+          lines.push(`THE PLANESWALKER staggers. "Again... how?"`);
+          lines.push(`Its eyes burn with all five colors — then go dark.`);
+          lines.push(`+${reward} gold.`);
+        }
         setGold(g => g + reward);
         setPlaneswalkerDefeated(true);
-        setChampionLearnPending(true);
+        setPlanePending(true);  // triggers plane-shift in endBattle
         setTimeout(() => audio.sfx.planarBurst(), 400);
         setTimeout(() => audio.sfx.fanfare(), 1500);
       } else {
@@ -3935,6 +4117,8 @@ export default function GatheringTheMagic() {
   };
 
   const endBattle = () => {
+    const wasPlanePending = planePending;
+
     // Iris-out transition back to the overworld. We clear `battle` immediately so
     // the battle UI stops animating, but the iris hides the abrupt scene swap.
     playSceneTransition('iris', () => {
@@ -3950,6 +4134,27 @@ export default function GatheringTheMagic() {
         setVaultSwapUid(pendingVaultSwapUid);
         setPendingVaultSwapUid(null);
       }
+      // Plane-shift: trigger the dramatic transition dialog after returning to world.
+      if (wasPlanePending) {
+        setPlanePending(false);
+        const { nextPlane, newPlaneName, easyZone, hardZone, defeatedPWLevel } = doPlaneShift(currentPlane);
+
+        setTimeout(() => {
+          setDialog({
+            lines: [
+              `With their dying breath, the Planeswalker reaches out — and tears a rift between planes.`,
+              `The sky above Runesmith Hollow peels back like burning parchment. Reality folds.`,
+              `You are pulled through — dragged into a new plane. Darker. Stranger. Hungrier.`,
+              `✦ You have entered: ${newPlaneName} (Plane ${nextPlane})`,
+              `The creatures here remember your face. They've been waiting.`,
+              `The land has shifted. ${easyZone} stirs with level ${defeatedPWLevel + 2}–${defeatedPWLevel + 6} creatures. ${hardZone} harbors things far worse.`,
+              `The medallion bearers have been reset. Five new wardens have taken their place.`,
+              `Somewhere in this plane, a new Planeswalker draws power — level ${getPlaneswalkerLevel(nextPlane)}.`,
+            ],
+            onDone: () => setDialog(null),
+          });
+        }, 350);
+      }
     });
     // Status effects clear when battle ends
     setTeam(tm => tm.map(c => c.status ? { ...c, status: null } : c));
@@ -3961,9 +4166,37 @@ export default function GatheringTheMagic() {
       showToast('You were revived at the shrine.');
     }
     // Save after each battle — but skip if rate-limited.
-    if (!isRateLimited()) {
+    if (!wasPlanePending && !isRateLimited()) {
       setTimeout(() => performSave(), 200);
     }
+  };
+
+  // ---- Plane shift (shared by endBattle planePending path AND the shrine warp option) ----
+  // Applies all the state transitions for entering the next plane. Safe to call
+  // at any time the player is back in the world scene (not mid-battle).
+  const doPlaneShift = (fromPlane) => {
+    const defeatedPWLevel = getPlaneswalkerLevel(fromPlane);
+    const nextPlane = fromPlane + 1;
+    const newZoneOrder = generatePlaneZoneOrder(nextPlane);
+    const newPlaneName = getPlaneName(nextPlane);
+    const easyZone = MAPS[newZoneOrder[0]]?.name || newZoneOrder[0];
+    const hardZone = MAPS[newZoneOrder[4]]?.name || newZoneOrder[4];
+
+    setCurrentPlane(nextPlane);
+    setPlaneBaseLevel(defeatedPWLevel);
+    setPlaneZoneOrder(newZoneOrder);
+    setMedallions([]);
+    setPlaneswalkerDefeated(false);
+    setDefeated(d => d.filter(id => !ZONE_TRAINER_IDS.has(id)));
+    setTeam(tm => tm.map(c => ({ ...c, hp: c.maxHp, status: null })));
+    setCurrentMap('town');
+    setPlayer({ x: 7, y: 7, face: 'down' });
+    audio.sfx.fanfare();
+    setTimeout(() => showToast(`Welcome to ${newPlaneName}. Plane ${nextPlane} begins.`), 400);
+    if (!isRateLimited()) setTimeout(() => performSave(), 700);
+
+    // Return the flavor info for the transition dialog (used by both callers)
+    return { nextPlane, newPlaneName, easyZone, hardZone, defeatedPWLevel };
   };
 
   // ---------- Keyboard ----------
@@ -5365,16 +5598,32 @@ export default function GatheringTheMagic() {
             A vertical-slice prototype. Summon creatures, walk the wilds, duel rivals.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '0 40px' }}>
-            {hasSave && (
-              <button className="mtgBtn" onClick={continueSave} style={{ fontSize: 16, padding: '12px' }}>Continue</button>
+            {hasSaveClassic && (
+              <button className="mtgBtn" onClick={() => continueSave('classic')} style={{ fontSize: 16, padding: '12px' }}>
+                ▸ Continue Classic
+              </button>
+            )}
+            {hasSaveCommander && (
+              <button className="mtgBtn" onClick={() => continueSave('commander')} style={{ fontSize: 16, padding: '12px' }}>
+                ▸ Continue Commander
+              </button>
             )}
             <button className="mtgBtn" onClick={startNew} style={{ fontSize: 16, padding: '12px' }}>
-              {hasSave ? 'New Game' : 'Begin'}
+              {(hasSaveClassic || hasSaveCommander) ? '+ New Game' : 'Begin'}
             </button>
-            {hasSave && (
-              <button className="mtgBtn" onClick={async () => { await clearSave(); setHasSave(false); }} style={{ fontSize: 11, padding: '6px', opacity: 0.6 }}>
-                Delete Save
-              </button>
+            {(hasSaveClassic || hasSaveCommander) && (
+              <div style={{ display: 'flex', gap: 6 }}>
+                {hasSaveClassic && (
+                  <button className="mtgBtn" onClick={async () => { await clearSave('classic'); setHasSaveClassic(false); }} style={{ flex: 1, fontSize: 10, padding: '5px', opacity: 0.55 }}>
+                    Delete Classic Save
+                  </button>
+                )}
+                {hasSaveCommander && (
+                  <button className="mtgBtn" onClick={async () => { await clearSave('commander'); setHasSaveCommander(false); }} style={{ flex: 1, fontSize: 10, padding: '5px', opacity: 0.55 }}>
+                    Delete Commander Save
+                  </button>
+                )}
+              </div>
             )}
             {storageBroken && (
               <div style={{ fontSize: 10, color: '#c8b890', textAlign: 'center', marginTop: 4, fontStyle: 'italic' }}>
@@ -5406,7 +5655,7 @@ export default function GatheringTheMagic() {
       {/* ======================= WORLD / HUD ======================= */}
       {scene === 'world' && (
         <>
-          <TopBar mapName={MAPS[currentMap].name} tokens={tokens} gold={gold} team={team} mode={mode} commanderColor={commanderColor} hourOfDay={hourOfDay} onMenu={() => { audio.sfx.menuOpen(); setScene('menu'); }} />
+          <TopBar mapName={MAPS[currentMap].name} tokens={tokens} gold={gold} team={team} mode={mode} commanderColor={commanderColor} hourOfDay={hourOfDay} currentPlane={currentPlane} onMenu={() => { audio.sfx.menuOpen(); setScene('menu'); }} />
 
           <div style={{ position: 'relative' }}>
             <canvas ref={canvasRef} style={{
@@ -5527,6 +5776,8 @@ export default function GatheringTheMagic() {
           trainerCycles={trainerCycles}
           medallions={medallions}
           planeswalkerDefeated={planeswalkerDefeated}
+          currentPlane={currentPlane}
+          planeBaseLevel={planeBaseLevel}
           vaultCount={vaultCreatures.length}
           lastDailyEncounters={lastDailyEncounters}
           hourOfDay={hourOfDay}
@@ -5582,7 +5833,8 @@ export default function GatheringTheMagic() {
           onSaveQuit={async () => {
             const ok = await performSave();
             if (ok) {
-              setHasSave(true);
+              if (mode === 'commander') setHasSaveCommander(true);
+              else setHasSaveClassic(true);
               setScene('title');
               showToast('Progress saved.');
             } else {
@@ -5601,37 +5853,38 @@ export default function GatheringTheMagic() {
               lines.push('window.storage is unavailable in this environment.');
             } else {
               lines.push('Storage API: present');
-              try {
-                const r = await window.storage.get(SAVE_KEY);
-                if (!r || !r.value) {
-                  lines.push('Save record: NONE');
-                  lines.push('No autosave has succeeded yet. Try winning a battle or changing zones, then check again.');
-                } else {
-                  let parsed;
-                  try { parsed = JSON.parse(r.value); } catch { parsed = null; }
-                  if (!parsed) {
-                    lines.push(`Save bytes: ${r.value.length}`);
-                    lines.push('Save value present but not parseable.');
+              // Check both save slots
+              for (const [label, m] of [['Classic', 'classic'], ['Commander', 'commander']]) {
+                try {
+                  const r = await window.storage.get(getSaveKey(m));
+                  if (!r?.value) {
+                    lines.push(`${label} save: NONE`);
                   } else {
-                    const teamSummary = (parsed.team || []).map(c => `${c.name} Lv${c.level}`).join(', ') || '(empty)';
-                    lines.push(`Map: ${parsed.currentMap}`);
-                    lines.push(`Team: ${teamSummary}`);
-                    lines.push(`Gold: ${parsed.gold}, Mode: ${parsed.mode}`);
-                    lines.push(`Save bytes: ${r.value.length}`);
+                    let parsed; try { parsed = JSON.parse(r.value); } catch { parsed = null; }
+                    if (!parsed) {
+                      lines.push(`${label} save: present but not parseable (${r.value.length} bytes)`);
+                    } else {
+                      const teamSummary = (parsed.team || []).map(c => `${c.name} Lv${c.level}`).join(', ') || '(empty)';
+                      lines.push(`${label} — Map: ${parsed.currentMap} · Gold: ${parsed.gold}`);
+                      lines.push(`  Team: ${teamSummary}`);
+                      if (parsed.currentPlane > 0) lines.push(`  Plane: ${parsed.currentPlane}`);
+                      lines.push(`  Bytes: ${r.value.length}`);
+                    }
                   }
-                }
-              } catch (e) {
-                lines.push(`Read error: ${e?.message || e}`);
+                } catch (e) { lines.push(`${label} read error: ${e?.message || e}`); }
               }
             }
             setDialog({ lines, onDone: () => setDialog(null) });
           }}
           onReset={async () => {
-            await clearSave();
+            await clearSave(mode);
             setTeam([]); setVaultCreatures([]); setCodex({}); setLastDailyEncounters({}); setHiddenItemsFound({}); setDefeated([]); setTokens(5); setGold(0); setItems({ potion: 2 });
             setMode('classic'); setCommanderColor(""); setTrainerCycles(0);
             setMedallions([]); setPlaneswalkerDefeated(false); setChampionLearnPending(false);
-            setHasSave(false); setScene('title');
+            setCurrentPlane(0); setPlaneBaseLevel(0); setPlaneZoneOrder(null); setPlanePending(false);
+            if (mode === 'commander') setHasSaveCommander(false);
+            else setHasSaveClassic(false);
+            setScene('title');
           }}
         />
       )}
@@ -6102,7 +6355,7 @@ function MiniMap({ map, player, npcs, npcMoveState, defeated, onClose }) {
 // =========================================================================
 // TOP BAR
 // =========================================================================
-function TopBar({ mapName, tokens, gold, team, mode, commanderColor, hourOfDay, onMenu }) {
+function TopBar({ mapName, tokens, gold, team, mode, commanderColor, hourOfDay, currentPlane, onMenu }) {
   return (
     <div style={{ width: 'min(96vw, 480px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, fontSize: 12 }}>
       <div>
@@ -6115,6 +6368,19 @@ function TopBar({ mapName, tokens, gold, team, mode, commanderColor, hourOfDay, 
               : hourOfDay >= 8 && hourOfDay < 18 ? '☀️'
               : hourOfDay >= 18 && hourOfDay < 20 ? '🌇'
               : '🌙'}
+            </span>
+          )}
+          {/* Plane badge — only shown from plane 1 onward */}
+          {currentPlane > 0 && (
+            <span title={`${getPlaneName(currentPlane)} — Plane ${currentPlane}`} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 3,
+              padding: '1px 5px',
+              background: `linear-gradient(90deg, #2a0c3c, #0c1a3c)`,
+              border: '1px solid #c8a860',
+              borderRadius: 3, fontSize: 9, color: '#f0d870', letterSpacing: 0.8,
+              fontWeight: 700,
+            }}>
+              ✦ PLANE {currentPlane}
             </span>
           )}
           {mode === 'commander' && commanderColor && (
@@ -7919,12 +8185,16 @@ function DialogPanel({ dialog }) {
     return () => clearInterval(id);
   }, [fullText, isComplete]);
   // First press = skip to end. Second press = onDone (dismiss).
+  // If dialog.choices are present, a second press shows the choices instead of auto-dismissing.
   const advance = () => {
-    if (isComplete) {
-      dialog.onDone?.();
-    } else {
+    if (!isComplete) {
       setRevealed(fullText.length);
+      return;
     }
+    // When choices are defined, clicking the background after text is done does nothing —
+    // the player must explicitly pick a choice button.
+    if (dialog.choices) return;
+    dialog.onDone?.();
   };
   // Render the revealed substring back as the original line array
   const shown = fullText.slice(0, revealed);
@@ -7961,10 +8231,26 @@ function DialogPanel({ dialog }) {
         {dialog.lines.length > lines.length && Array.from({ length: dialog.lines.length - lines.length }).map((_, i) => (
           <div key={`ph-${i}`} style={{ fontSize: 15, lineHeight: 1.5, marginBottom: 8, minHeight: '1.5em' }}>&nbsp;</div>
         ))}
-        <div style={{ textAlign: 'right', marginTop: 10 }}>
-          <button className="mtgBtn" onClick={(e) => { e.stopPropagation(); advance(); }} style={{ fontSize: 13, padding: '6px 14px' }}>
-            {isComplete ? '▸ Continue' : '» Skip'}
-          </button>
+        {/* Bottom action area: choice buttons when defined, otherwise single Continue/Skip */}
+        <div style={{ marginTop: 10 }}>
+          {dialog.choices && isComplete ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {dialog.choices.map((ch, i) => (
+                <button key={i} className="mtgBtn"
+                  onClick={(e) => { e.stopPropagation(); ch.action(); }}
+                  style={{ padding: '8px 14px', fontSize: 13, textAlign: 'left',
+                           ...(i === 0 ? { borderColor: '#c9a664', color: '#f4e5a8' } : { opacity: 0.7 }) }}>
+                  {ch.label}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'right' }}>
+              <button className="mtgBtn" onClick={(e) => { e.stopPropagation(); advance(); }} style={{ fontSize: 13, padding: '6px 14px' }}>
+                {isComplete ? (dialog.choices ? '...' : '▸ Continue') : '» Skip'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -8132,7 +8418,7 @@ function HeldItemPicker({ creature, items, onEquip, onUnequip }) {
   );
 }
 
-function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, storageBroken, defeated, trainerCycles, medallions, planeswalkerDefeated, vaultCount, lastDailyEncounters, hourOfDay, currentMap, onUseItem, onEquipItem, onCall, onRename, onSwapMoves, onOpenVault, onClose, onReset, onSaveQuit, onRelease, onCheckStorage }) {
+function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, storageBroken, defeated, trainerCycles, medallions, planeswalkerDefeated, currentPlane, planeBaseLevel, vaultCount, lastDailyEncounters, hourOfDay, currentMap, onUseItem, onEquipItem, onCall, onRename, onSwapMoves, onOpenVault, onClose, onReset, onSaveQuit, onRelease, onCheckStorage }) {
   const [tab, setTab] = useState('team');
   const [pickingFor, setPickingFor] = useState(null); // item key to use, waiting for team pick
   const [releaseConfirm, setReleaseConfirm] = useState(null); // index of creature awaiting release confirmation
@@ -8504,6 +8790,23 @@ function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, st
               {[...ZONE_TRAINER_IDS].filter(id => defeated.includes(id)).length} / 5 defeated this cycle
             </div>
           </div>
+          {/* Current Plane progress badge */}
+          {currentPlane > 0 && (
+            <div style={{
+              padding: 8, marginBottom: 10,
+              border: '1.5px solid #c8a860',
+              borderRadius: 4,
+              background: 'linear-gradient(135deg, #1a0c30 0%, #0c1428 100%)',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontSize: 12, color: '#f0d870' }}>✦ {getPlaneName(currentPlane)}</div>
+                <div style={{ fontSize: 11, color: '#c8a860' }}>Plane {currentPlane}</div>
+              </div>
+              <div style={{ fontSize: 10, color: '#a898c0', marginTop: 3 }}>
+                Base creature level: {planeBaseLevel + 2} · Next Planeswalker: Lv. {getPlaneswalkerLevel(currentPlane)}
+              </div>
+            </div>
+          )}
           {/* Medallions — earned by defeating each shrine boss. Once all 5 are gathered the
               town shrine becomes the gateway to The Planeswalker. */}
           <div style={{
