@@ -2297,17 +2297,27 @@ function getLastSaveFailure() { return lastSaveFailure; }
 function isRateLimited() { return Date.now() < rateLimitBackoffUntil; }
 
 // loadGame(mode) — loads the save for the given mode.
-// Falls back to the legacy single-slot key on a miss so older saves aren't lost.
+// Falls back to the legacy single-slot key ONLY when its stored mode matches,
+// so a legacy commander save never surfaces as a classic save and vice versa.
 async function loadGame(mode) {
   const key = getSaveKey(mode);
   try {
     if (typeof window !== 'undefined' && window.storage) {
-      let r = await window.storage.get(key);
-      // Migrate: if no mode-specific save, try the legacy key once
-      if (!r?.value && key !== SAVE_KEY_LEGACY) {
-        try { r = await window.storage.get(SAVE_KEY_LEGACY); } catch (_) {}
-      }
+      // Try the mode-specific key first
+      const r = await window.storage.get(key);
       if (r?.value) return JSON.parse(r.value);
+
+      // No mode-specific save found — check the legacy key, but validate the
+      // mode field inside it before returning. An absent mode field counts as
+      // 'classic' (that was the original default before commander mode existed).
+      try {
+        const legacy = await window.storage.get(SAVE_KEY_LEGACY);
+        if (legacy?.value) {
+          const parsed = JSON.parse(legacy.value);
+          const legacyMode = parsed.mode || 'classic';
+          if (legacyMode === mode) return parsed;
+        }
+      } catch (_) {}
     }
   } catch (e) {
     console.error('[GtM] loadGame failed:', e);
