@@ -193,6 +193,20 @@ const DEX = {
   // ---- Final boss (Planeswalker) — WUBRG, the ultimate challenge ----
   // Its kit pulls one signature attack from each color shrine, plus its own planar specials.
   the_planeswalker: { name: 'The Planeswalker',      c: 'WUBRG', t: 'Legendary Avatar', hp: 130, atk: 24, m: ['planar_collapse','spark_burst','dragons_wrath','sunken_tempest'], learnset: {} },
+
+  // ---- Dual-zone legendary wardens (Plane 1+) — one per guild pair ----
+  // These guard the mid-boss 'L' tile in each dual-color rift zone.
+  // Stats sit between mono legendaries: tougher than the harder mono boss, but below the Planeswalker.
+  azorius_sovereign:  { name: 'Azorius Sovereign',   c: 'WU', t: 'Legendary Sphinx',     hp: 88,  atk: 19, m: ['celestial_judgment','sunken_tempest','counterspell','mend'],             learnset: {} },
+  dimir_specter:      { name: 'Dimir Specter',        c: 'UB', t: 'Legendary Shade',      hp: 86,  atk: 20, m: ['sunken_tempest','soul_reap','lullaby','terror'],                          learnset: {} },
+  rakdos_lord:        { name: "Rakdos, Blood Lord",   c: 'BR', t: 'Legendary Demon',      hp: 90,  atk: 21, m: ['soul_reap','dragons_wrath','oblivion','inferno'],                        learnset: {} },
+  gruul_titan:        { name: 'Gruul World-Titan',    c: 'RG', t: 'Legendary Beast',      hp: 92,  atk: 22, m: ['dragons_wrath','world_crush','inferno','natures_might'],                 learnset: {} },
+  selesnya_ancient:   { name: 'Selesnya Ancient',     c: 'GW', t: 'Legendary Avatar',     hp: 90,  atk: 19, m: ['world_crush','celestial_judgment','wildgrowth','wrath'],                 learnset: {} },
+  orzhov_pontiff:     { name: 'Orzhov Pontiff',       c: 'WB', t: 'Legendary Spirit',     hp: 86,  atk: 19, m: ['celestial_judgment','soul_reap','mend','withering_hex'],                 learnset: {} },
+  izzet_overload:     { name: 'Izzet Overload',       c: 'UR', t: 'Legendary Drake',      hp: 84,  atk: 20, m: ['sunken_tempest','dragons_wrath','whirlpool','maddening_whisper'],         learnset: {} },
+  golgari_swarm:      { name: 'Golgari Swarm-Queen',  c: 'BG', t: 'Legendary Horror',     hp: 90,  atk: 20, m: ['soul_reap','world_crush','oblivion','dark_bite'],                        learnset: {} },
+  boros_legionnaire:  { name: 'Boros Legionnaire',    c: 'RW', t: 'Legendary Soldier',    hp: 88,  atk: 21, m: ['dragons_wrath','celestial_judgment','fireball','divine_light'],           learnset: {} },
+  simic_leviathan:    { name: 'Simic Leviathan',      c: 'GU', t: 'Legendary Leviathan',  hp: 90,  atk: 19, m: ['world_crush','sunken_tempest','trample','counterspell'],                  learnset: {} },
 };
 
 // ---------- Encounter pool for wilds ----------
@@ -242,7 +256,133 @@ const SHRINE_DATA = {
 const SHRINE_TO_ZONE = {};
 for (const [zone, data] of Object.entries(SHRINE_DATA)) SHRINE_TO_ZONE[data.mapId] = zone;
 // Set of all legendary creature ids — used to skip them in wild encounters and to detect boss fights.
-const LEGENDARY_IDS = new Set(['vigil_avatar','tidewarden','voidlord','pyreclaw','patriarch_wurm','the_planeswalker']);
+const DUAL_BOSS_IDS = new Set(['azorius_sovereign','dimir_specter','rakdos_lord','gruul_titan','selesnya_ancient','orzhov_pontiff','izzet_overload','golgari_swarm','boros_legionnaire','simic_leviathan']);
+const LEGENDARY_IDS = new Set(['vigil_avatar','tidewarden','voidlord','pyreclaw','patriarch_wurm','the_planeswalker',...DUAL_BOSS_IDS]);
+
+// =========================================================================
+// DUAL ZONE SYSTEM — guild-colored rift zones connecting pairs of mono zones
+// Active in Plane 1+. Each plane generates a seeded 5-cycle: a shuffled ring
+// of 5 colors where adjacent pairs become dual zones (e.g. G→R→W→U→B→G).
+// Every mono zone participates in exactly TWO dual zones (one on each side of
+// the ring), so each mono zone has TWO X-portal tiles at its deep end.
+// =========================================================================
+
+// Guild name lookup (normalized pair key → name)
+const GUILD_NAMES = {
+  WU:'Azorius', UW:'Azorius', UB:'Dimir',    BU:'Dimir',
+  BR:'Rakdos',  RB:'Rakdos',  RG:'Gruul',    GR:'Gruul',
+  GW:'Selesnya',WG:'Selesnya',WB:'Orzhov',   BW:'Orzhov',
+  UR:'Izzet',   RU:'Izzet',   BG:'Golgari',  GB:'Golgari',
+  RW:'Boros',   WR:'Boros',   GU:'Simic',    UG:'Simic',
+};
+
+// Dual boss DEX ID keyed by normalized (alpha-sorted) pair, e.g. 'GR' → 'gruul_titan'
+const DUAL_BOSS_BY_PAIR = {
+  WU:'azorius_sovereign', UB:'dimir_specter',  BR:'rakdos_lord',
+  GR:'gruul_titan',       GW:'selesnya_ancient',WB:'orzhov_pontiff',
+  UR:'izzet_overload',    BG:'golgari_swarm',  RW:'boros_legionnaire',
+  GU:'simic_leviathan',
+};
+function getDualBossId(cA, cB) { return DUAL_BOSS_BY_PAIR[[cA,cB].sort().join('')]; }
+
+// Inverse of ZONE_COLOR: color character → zone id
+const COLOR_TO_ZONE = Object.fromEntries(Object.entries(ZONE_COLOR).map(([z,c]) => [c,z]));
+
+// X-portal positions in each mono zone map.
+// xA: where this zone is the FIRST element of its cycle pair (outgoing direction).
+// xB: where this zone is the SECOND element of its cycle pair (incoming direction).
+const ZONE_X_PORTALS = {
+  wilds:   { xA:{x:10,y:13}, xB:{x:3,y:4}  },
+  ashen:   { xA:{x:14,y:6},  xB:{x:5,y:2}  },
+  sanctum: { xA:{x:1,y:6},   xB:{x:7,y:10} },
+  umbral:  { xA:{x:10,y:7},  xB:{x:3,y:6}  },
+  plains:  { xA:{x:9,y:8},   xB:{x:3,y:10} },
+};
+
+// IDs for all possible dual zone trainer NPCs (keyed by normalized pair)
+const DUAL_TRAINER_IDS = new Set([
+  'dual_trainer_WU','dual_trainer_UB','dual_trainer_BR','dual_trainer_GR',
+  'dual_trainer_GW','dual_trainer_WB','dual_trainer_UR','dual_trainer_BG',
+  'dual_trainer_RW','dual_trainer_GU',
+]);
+
+// Trainer data per guild pair (base team levels scaled at battle time)
+const DUAL_TRAINER_DATA = {
+  WU:{name:'Arbiter Olen',    color:'#8898c8', team:[{id:'skybinder',lv:20},{id:'arcane_sphinx',lv:22},{id:'jeskai_monk',lv:23}],    reward:600},
+  UB:{name:'Agent Threnody',  color:'#6070a0', team:[{id:'mind_reaver',lv:20},{id:'arcane_sphinx',lv:22},{id:'sultai_assassin',lv:23}],reward:600},
+  BR:{name:'Cultmaster Vrex', color:'#a05060', team:[{id:'hellraiser',lv:20},{id:'void_lich',lv:22},{id:'mardu_warlord',lv:23}],    reward:600},
+  GR:{name:'Warchief Koda',   color:'#a07050', team:[{id:'warbeast',lv:20},{id:'apex_predator',lv:22},{id:'temur_shaman',lv:23}],   reward:600},
+  GW:{name:'Grove-Elder Syl', color:'#78a868', team:[{id:'verdant_paladin',lv:20},{id:'blooming_titan',lv:22},{id:'silver_pegasus',lv:23}],reward:600},
+  WB:{name:'Exactor Mourne',  color:'#807090', team:[{id:'grim_priest',lv:20},{id:'arcane_sphinx',lv:22},{id:'abzan_warden',lv:23}], reward:600},
+  UR:{name:'Mage Zipplock',   color:'#7090b0', team:[{id:'stormwright',lv:20},{id:'void_lich',lv:22},{id:'jeskai_monk',lv:23}],    reward:600},
+  BG:{name:'Rites-Keeper Val',color:'#607070', team:[{id:'fungal_creeper',lv:20},{id:'apex_predator',lv:22},{id:'sultai_assassin',lv:23}],reward:600},
+  RW:{name:'Legionnaire Arro',color:'#c07858', team:[{id:'blazing_knight',lv:20},{id:'blooming_titan',lv:22},{id:'mardu_warlord',lv:23}],reward:600},
+  GU:{name:'Hybridist Merya', color:'#68a898', team:[{id:'reef_prowler',lv:20},{id:'silver_pegasus',lv:22},{id:'temur_shaman',lv:23}], reward:600},
+};
+
+// Returns true if a mapId is a dual zone
+function isDualZoneMap(mapId) { return !!(mapId && mapId.startsWith('dual_') && mapId.length === 7); }
+// Returns [colorA, colorB] from a dual zone mapId like 'dual_GR'
+function pairFromDualId(mapId) { return [mapId[5], mapId[6]]; }
+// Normalized pair key (alpha-sorted) for de-duplication: 'GR' for both ['G','R'] and ['R','G']
+function normPair(cA, cB) { return [cA,cB].sort().join(''); }
+
+// Generate a seeded 5-cycle of color pairs for the given plane (plane 0 → null).
+// Returns [[cA,cB],[cB,cC],[cC,cD],[cD,cE],[cE,cA]] after a seeded shuffle.
+function generateDualCycle(plane) {
+  if (plane === 0) return null;
+  const colors = ['W','U','B','R','G'];
+  const sh = [...colors];
+  let seed = plane * 5_000_011 + 31_337;
+  const rand = () => { seed = (seed * 1_664_525 + 1_013_904_223) >>> 0; return seed / 0x100000000; };
+  for (let i = sh.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [sh[i], sh[j]] = [sh[j], sh[i]];
+  }
+  return sh.map((c, i) => [c, sh[(i + 1) % sh.length]]);
+}
+
+// Build an encounter pool for a dual zone from both colors' creatures.
+function buildDualZonePool(cA, cB) {
+  const evolved = new Set(Object.values(DEX).filter(d => d.evo?.to).map(d => d.evo.to));
+  const pool = [];
+  for (const [id, d] of Object.entries(DEX)) {
+    if (evolved.has(id)) continue;
+    if (LEGENDARY_IDS.has(id)) continue;
+    const cols = colorsOf(d.c);
+    if (!cols.includes(cA) && !cols.includes(cB)) continue;
+    if (cols.length >= 5) continue;
+    pool.push({ id, lv: [6, 12], w: COLOR_COUNT_WEIGHT[cols.length] || 1 });
+  }
+  return pool.length > 0 ? pool : [{ id: 'hellraiser', lv: [10, 14], w: 100 }];
+}
+
+// Generate the 11×15 corridor map for a dual zone.
+function makeDualZoneMap(cA, cB) {
+  const W = 11, H = 15, mid = 7;
+  const encT = {W:'f',U:'o',B:'v',R:'l',G:'g'};
+  const wallT = {W:'k',U:'w',B:'t',R:'k',G:'t'};
+  const tA = encT[cA]||'g', tB = encT[cB]||'g';
+  const wA = wallT[cA]||'t', wB = wallT[cB]||'t';
+  const m = Array.from({length:H}, (_,y) => Array.from({length:W}, () => y < mid ? tA : tB));
+  for (let x = 0; x < W; x++) { m[0][x] = wA; m[H-1][x] = wB; }
+  for (let y = 0; y < H; y++) { m[y][0] = (y < mid ? wA : wB); m[y][W-1] = (y < mid ? wA : wB); }
+  for (let y = 1; y < H-1; y++) m[y][5] = 'p';  // central path
+  m[0][5] = 'E';      // top exit → colorA mono zone
+  m[H-1][5] = 'E';    // bottom exit → colorB mono zone
+  m[mid][5] = 'L';    // warden boss tile
+  // Decorative flanking encounter tiles, color split at mid
+  for (let y = 2; y <= mid-1; y++) { m[y][2] = tA; m[y][8] = tA; }
+  for (let y = mid+1; y <= H-3; y++) { m[y][2] = tB; m[y][8] = tB; }
+  m[mid-1][3] = tB; m[mid-1][7] = tB;
+  m[mid+1][3] = tA; m[mid+1][7] = tA;
+  // Trainer NPC sits at (2,4), blocking the path to encourage interaction
+  return m;
+}
+
+function getDualZoneName(cA, cB) {
+  return `${GUILD_NAMES[cA+cB] || (cA+cB)} Rift`;
+}
 
 // ---- Daily Encounters ----
 // Once per real-world day, each zone has a chance to spawn a "phantom" variant
@@ -980,6 +1120,9 @@ function makeWilds() {
   m[5][13] = '.';     // small clearing in front
   m[5][14] = 'B';     // burrow entrance (door tile)
   m[4][13] = 't'; m[4][14] = 't'; m[6][14] = 't';  // surround with trees so it feels hidden
+  // X-portals to dual zones (Plane 1+). xA at path-end south; xB northwest branch area.
+  m[13][10] = 'X';   // xA: this zone is first in its outgoing cycle pair
+  m[4][3]   = 'X';   // xB: this zone is second in its incoming cycle pair
   return m;
 }
 
@@ -1009,6 +1152,9 @@ function makeAshen() {
   for (const [x, y] of rocks) m[y][x] = 'k';
   // Cinder Cave entrance — a dark mouth in the eastern wall, just off the main path.
   m[5][13] = 'a'; m[4][13] = 'B';   // small clear approach + cave mouth
+  // X-portals to dual zones (Plane 1+). xA at far-east path end; xB in north ash area.
+  m[6][14] = 'X';   // xA: replaces last path tile — east end of main path
+  m[2][5]  = 'X';   // xB: north ash ground, accessible from main path
   return m;
 }
 
@@ -1038,6 +1184,9 @@ function makeSanctum() {
   for (const [x, y] of pillars) m[y][x] = 'w';
   // Tidehut Sanctum entrance — a small reed hut on a sunken islet to the west.
   m[2][2] = 'u'; m[1][2] = 'B';
+  // X-portals to dual zones (Plane 1+). xA at far-west path end; xB south pool area.
+  m[6][1]  = 'X';   // xA: far west end of main path
+  m[10][7] = 'X';   // xB: south shallow-water area
   return m;
 }
 
@@ -1068,6 +1217,9 @@ function makeUmbral() {
   for (const [x, y] of trees) m[y][x] = 't';
   // Withered Shack entrance — a leaning hovel deep in the grove.
   m[2][8] = 'm'; m[1][8] = 'B';
+  // X-portals to dual zones (Plane 1+). xA at path-end east; xB west vine area.
+  m[7][10] = 'X';   // xA: east end of path (path ends at [10,7] = m[7][10])
+  m[6][3]  = 'X';   // xB: west moss-ground, accessible from path
   return m;
 }
 
@@ -1097,6 +1249,9 @@ function makePlains() {
   for (const [x, y] of cairns) m[y][x] = 'k';
   // Heavenly Gates entrance — pearlescent gates at the southern edge of the plains.
   m[10][2] = 'c'; m[11][2] = 'B';
+  // X-portals to dual zones (Plane 1+). xA at path end (south-center); xB west flower area.
+  m[8][9]  = 'X';   // xA: path end (path ends at [9,8] = m[8][9])
+  m[10][3] = 'X';   // xB: southwest cobblestone area
   return m;
 }
 
@@ -1205,6 +1360,18 @@ const MAPS = {
   shrine_black: { tiles: makeShrineBlack(), name: 'Withered Shack' },
   shrine_white: { tiles: makeShrineWhite(), name: 'Heavenly Gates' },
 };
+
+// Pre-generate all 20 ordered dual zone maps (one per ordered color pair).
+// Dual zone map ID format: 'dual_XY' where X=colorA (top exit), Y=colorB (bottom exit).
+// Both orderings exist so the cycle can assign either direction to any pair.
+const _COLORS5 = ['W','U','B','R','G'];
+for (const cA of _COLORS5) {
+  for (const cB of _COLORS5) {
+    if (cA === cB) continue;
+    const mapId = 'dual_' + cA + cB;
+    MAPS[mapId] = { tiles: makeDualZoneMap(cA, cB), name: getDualZoneName(cA, cB) };
+  }
+}
 
 // ---------- NPCs ----------
 const NPCS_TOWN = [
@@ -1327,6 +1494,32 @@ const TRAINER_ZONE = {};
 for (const [zoneId, list] of Object.entries(NPCS_ZONE)) {
   for (const n of list) TRAINER_ZONE[n.id] = zoneId;
 }
+
+// Populate NPCS_ZONE with dual zone trainers for all 20 ordered dual maps.
+// The same normalized trainer (e.g. 'dual_trainer_GR') appears in both 'dual_GR' and 'dual_RG'
+// since either ordering might be used by the plane cycle. Trainer is at (2,4) off the central path.
+for (const cA of _COLORS5) {
+  for (const cB of _COLORS5) {
+    if (cA === cB) continue;
+    const pairKey = normPair(cA, cB);
+    const td = DUAL_TRAINER_DATA[pairKey];
+    if (!td) continue;
+    const mapId = 'dual_' + cA + cB;
+    const trainerId = `dual_trainer_${pairKey}`;
+    const guildName = GUILD_NAMES[pairKey] || pairKey;
+    NPCS_ZONE[mapId] = [{
+      id: trainerId,
+      x: 2, y: 4,
+      face: 'right',
+      color: td.color,
+      name: td.name,
+      dialog: `The ${guildName} rift hums with raw power. Only the worthy may approach the warden beyond.`,
+      team: td.team,
+      reward: td.reward,
+      isDualTrainer: true,
+    }];
+  }
+}
 // Town trainers — the three duellists in Runesmith Hollow. Defeating all three
 // is what unlocks the Runic Phone (a key item that opens the Phone tab in the
 // Spellbook menu, allowing remote rematches with any defeated trainer).
@@ -1378,7 +1571,7 @@ function isWalkable(tile) {
   // 'B' = building entrance (steppable, triggers transition)
   // 'F' = shrine floor (interior)
   // 'L' = legendary boss tile (steppable, triggers boss fight on contact)
-  return ['.', 'g', 'p', 'd', 'E',      'a', 'l', 'u', 'o', 'm', 'v', 'c', 'f', 'B', 'F', 'L'].includes(tile);
+  return ['.', 'g', 'p', 'd', 'E',      'a', 'l', 'u', 'o', 'm', 'v', 'c', 'f', 'B', 'F', 'L', 'X'].includes(tile);
 }
 function hasEncounter(tile) {
   // Tiles that can roll a wild encounter on step.
@@ -2515,10 +2708,14 @@ export default function GatheringTheMagic() {
   // planeBaseLevel: level offset applied to all wild/boss encounters (0 for plane 0)
   // planeZoneOrder: shuffled array of zone keys for difficulty assignment (null = original)
   // planePending: signals endBattle to trigger a plane-shift transition sequence
+  // planeDualPairs: 5-cycle color pairs for current plane's dual zones (null = plane 0)
+  // dualMedallions: array of normalized pair keys for defeated dual zone wardens (e.g. 'GR')
   const [currentPlane, setCurrentPlane] = useState(0);
   const [planeBaseLevel, setPlaneBaseLevel] = useState(0);
   const [planeZoneOrder, setPlaneZoneOrder] = useState(null);
   const [planePending, setPlanePending] = useState(false);
+  const [planeDualPairs, setPlaneDualPairs] = useState(null);
+  const [dualMedallions, setDualMedallions] = useState([]);
   const [tokens, setTokens] = useState(5); // Creature Cards (used to catch creatures)
   const [gold, setGold] = useState(0);
   const [items, setItems] = useState({ potion: 2 }); // consumable items inventory
@@ -2730,8 +2927,8 @@ export default function GatheringTheMagic() {
   const currentStateRef = useRef(null);
   // Keep a ref of the latest state so save callbacks always grab fresh values.
   useEffect(() => {
-    currentStateRef.current = { currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, hiddenItemsFound, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated, currentPlane, planeBaseLevel, planeZoneOrder };
-  }, [currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, hiddenItemsFound, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated, currentPlane, planeBaseLevel, planeZoneOrder]);
+    currentStateRef.current = { currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, hiddenItemsFound, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated, currentPlane, planeBaseLevel, planeZoneOrder, planeDualPairs, dualMedallions };
+  }, [currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, hiddenItemsFound, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated, currentPlane, planeBaseLevel, planeZoneOrder, planeDualPairs, dualMedallions]);
 
   const performSave = async () => {
     const snap = currentStateRef.current;
@@ -2754,6 +2951,7 @@ export default function GatheringTheMagic() {
     setMode('classic'); setCommanderColor(""); setTrainerCycles(0);
     setMedallions([]); setPlaneswalkerDefeated(false); setChampionLearnPending(false);
     setCurrentPlane(0); setPlaneBaseLevel(0); setPlaneZoneOrder(null); setPlanePending(false);
+    setPlaneDualPairs(null); setDualMedallions([]);
     // Mark tutorial pending — the effect above will fire once the player lands
     // in the world (after picking mode + starter).
     setTutorialPending(true);
@@ -2825,6 +3023,8 @@ export default function GatheringTheMagic() {
       setCurrentPlane(s.currentPlane || 0);
       setPlaneBaseLevel(s.planeBaseLevel || 0);
       setPlaneZoneOrder(s.planeZoneOrder || null);
+      setPlaneDualPairs(s.planeDualPairs || null);
+      setDualMedallions(s.dualMedallions || []);
       setPlanePending(false);
       setScene(s.scene === 'battle' ? 'world' : (s.scene || 'world'));
     } catch (err) {
@@ -2884,6 +3084,37 @@ export default function GatheringTheMagic() {
         return lx === nx && ly === ny;
       })) return { ...pp, face };
 
+      // ---- X portal tile — dual zone entrance (Plane 1+ only) ----
+      if (t === 'X') {
+        if (!planeDualPairs || currentPlane === 0) {
+          setTimeout(() => setDialog({
+            lines: ['The portal shimmers faintly — a rift sealed in this plane. Perhaps in another...'],
+            onDone: () => setDialog(null),
+          }), 50);
+          return { ...pp, face };
+        }
+        // Determine which of this zone's two portals was stepped on, then route to the right dual zone.
+        const zoneColor = ZONE_COLOR[currentMap];
+        if (!zoneColor) return { ...pp, face };
+        const portals = ZONE_X_PORTALS[currentMap];
+        const isXA = portals && (portals.xA.x === nx && portals.xA.y === ny);
+        // Find the cycle pair where this zone is first (xA) or second (xB)
+        const pair = isXA
+          ? planeDualPairs.find(([a]) => a === zoneColor)   // zone is first
+          : planeDualPairs.find(([, b]) => b === zoneColor); // zone is second
+        if (!pair) return { ...pp, face };
+        const dualMapId = 'dual_' + pair[0] + pair[1];
+        if (!MAPS[dualMapId]) return { ...pp, face };
+        const dualH = MAPS[dualMapId].tiles.length;
+        // Entering as A-side → spawn near BOTTOM of dual zone (walk north toward boss)
+        // Entering as B-side → spawn near TOP of dual zone (walk south toward boss)
+        const spawnY = isXA ? dualH - 2 : 1;
+        const spawnFace = isXA ? 'up' : 'down';
+        setCurrentMap(dualMapId);
+        if (!isRateLimited()) setTimeout(() => performSave(), 250);
+        return { x: 5, y: spawnY, face: spawnFace };
+      }
+
       // ---- Building entrance ('B') — only enterable after first full zone-trainer clear ----
       if (t === 'B') {
         const shrineData = SHRINE_DATA[currentMap];
@@ -2918,8 +3149,29 @@ export default function GatheringTheMagic() {
         return { ...pp, face };
       }
 
-      // ---- Legendary boss tile ('L') — inside a shrine only ----
+      // ---- Legendary boss tile ('L') — inside a shrine OR a dual zone ----
       if (t === 'L') {
+        // Dual zone boss
+        if (isDualZoneMap(currentMap)) {
+          const [cA, cB] = pairFromDualId(currentMap);
+          const pk = normPair(cA, cB);
+          if (dualMedallions.includes(pk)) return { x: nx, y: ny, face }; // already beaten, walk through
+          // Gate: all current plane's dual trainers must be defeated first
+          if (planeDualPairs) {
+            const currentDualIds = planeDualPairs.map(([a,b]) => `dual_trainer_${normPair(a,b)}`);
+            const gateOpen = currentDualIds.every(id => defeated.includes(id));
+            if (!gateOpen) {
+              setTimeout(() => setDialog({
+                lines: [`The ${GUILD_NAMES[pk]||pk} warden stirs... but waits. Defeat all five rift guardians first.`],
+                onDone: () => setDialog(null),
+              }), 100);
+              return { x: nx, y: ny, face };
+            }
+          }
+          setTimeout(() => triggerDualBossLegendary(currentMap), 100);
+          return { x: nx, y: ny, face };
+        }
+        // Mono shrine boss (original logic)
         const zoneId = SHRINE_TO_ZONE[currentMap];
         const sd = zoneId && SHRINE_DATA[zoneId];
         if (!sd) return { ...pp, face };
@@ -2964,6 +3216,22 @@ export default function GatheringTheMagic() {
           setCurrentMap('town'); saveAfterTransition();
           return returnPos;
         }
+        // From a dual zone — top 'E' (ny<=0) → colorA's mono zone; bottom 'E' → colorB's.
+        if (isDualZoneMap(currentMap)) {
+          const [cA, cB] = pairFromDualId(currentMap);
+          const targetColor = ny <= 0 ? cA : cB;
+          const targetZone = COLOR_TO_ZONE[targetColor];
+          if (targetZone) {
+            // Spawn near the X portal that connects to this dual zone on the target zone's side.
+            const portals = ZONE_X_PORTALS[targetZone];
+            const isAside = targetColor === cA;  // top exit → going to A-side zone
+            const portal = isAside ? portals?.xA : portals?.xB;
+            const sx = portal ? portal.x : 7;
+            const sy = portal ? Math.max(1, portal.y + (isAside ? 1 : -1)) : 7;
+            setCurrentMap(targetZone); saveAfterTransition();
+            return { x: sx, y: sy, face: isAside ? 'down' : 'up' };
+          }
+        }
         // ---- From a shrine interior, step out to the parent zone, just below its 'B' tile ----
         const parentZone = SHRINE_TO_ZONE[currentMap];
         if (parentZone) {
@@ -3004,7 +3272,7 @@ export default function GatheringTheMagic() {
       audio.sfx.step();
       return { x: nx, y: ny, face };
     });
-  }, [scene, currentMap, trainerCycles, medallions, npcMoveState, planeZoneOrder]);
+  }, [scene, currentMap, trainerCycles, medallions, npcMoveState, planeZoneOrder, planeDualPairs, currentPlane, dualMedallions, defeated]);
 
   // ---------- Hidden item pickup ----------
   // Declared before `interact` so the callback is initialized when interact references it.
@@ -3049,10 +3317,12 @@ export default function GatheringTheMagic() {
     // Returns true if an item was found so we don't fall through to NPC/shrine logic.
     if (checkHiddenItem(tx, ty) || checkHiddenItem(p.x, p.y)) return;
 
-    // Shrine — heals normally, but if the player has all 5 medallions, becomes the
-    // gateway to The Planeswalker (the final boss).
+    // Shrine — heals normally, but if the player has all medallions (5 mono + 5 dual in Plane 1+),
+    // becomes the gateway to The Planeswalker (the final boss).
     if (t === 's') {
-      const allMedallions = ['W','U','B','R','G'].every(c => medallions.includes(c));
+      const allMonoMedallions = ['W','U','B','R','G'].every(c => medallions.includes(c));
+      const allDualMedallions = !planeDualPairs || planeDualPairs.every(([a,b]) => dualMedallions.includes(normPair(a,b)));
+      const allMedallions = allMonoMedallions && allDualMedallions;
       if (allMedallions && !planeswalkerDefeated) {
         // Heal first — interacting with the shrine should always restore your
         // team, even on the run-up to the Planeswalker fight (otherwise the
@@ -3064,7 +3334,9 @@ export default function GatheringTheMagic() {
         setDialog({
           lines: [
             "The shrine pulses with light — your team is restored to full strength.",
-            "Five medallions, five wakings. The shrine flares to life beneath your fingertips.",
+            currentPlane > 0
+              ? "Ten medallions — five shrines, five rifts — all answered. The shrine erupts in planar fire."
+              : "Five medallions, five wakings. The shrine flares to life beneath your fingertips.",
             currentPlane > 0
               ? `A figure crystallizes — more powerful than before. Eyes burning with planar fury.`
               : `A figure crystallizes at the heart of the light — eyes burning with all five colors.`,
@@ -3123,7 +3395,14 @@ export default function GatheringTheMagic() {
       }
       setTeam((tm) => tm.map(c => ({ ...c, hp: c.maxHp, status: null })));
       audio.sfx.heal();
-      showToast('The shrine restores your team.');
+      const monoCount = medallions.length;
+      const dualCount = dualMedallions.length;
+      const dualTotal = planeDualPairs ? planeDualPairs.length : 0;
+      if (currentPlane > 0) {
+        showToast(`Shrine heals your team. Medallions: ${monoCount}/5 mono, ${dualCount}/${dualTotal} rift.`);
+      } else {
+        showToast(monoCount > 0 ? `Shrine heals your team. ${monoCount}/5 medallions collected.` : 'The shrine restores your team.');
+      }
       return;
     }
 
@@ -3257,10 +3536,24 @@ export default function GatheringTheMagic() {
     // Reset once-per-battle held items so Potion Vial recharges each fight.
     const freshTm = tm.map(c => c.heldItemCharged ? { ...c, heldItemCharged: false } : c);
     if (freshTm !== tm) setTeam(freshTm);
-    const pool = ZONE_POOLS[currentMap] || ZONE_POOLS.wilds;
+    // Dual zone maps use a blended pool from both colors; level is above the harder mono zone.
+    let pool, scaledLo, scaledHi;
+    if (isDualZoneMap(currentMap) && planeDualPairs) {
+      const [cA, cB] = pairFromDualId(currentMap);
+      pool = buildDualZonePool(cA, cB);
+      const tierA = getZoneTier(COLOR_TO_ZONE[cA], planeZoneOrder);
+      const tierB = getZoneTier(COLOR_TO_ZONE[cB], planeZoneOrder);
+      const harderTier = Math.max(tierA, tierB);
+      const harderRange = getScaledZoneRange(COLOR_TO_ZONE[cA] || 'wilds', planeBaseLevel, planeZoneOrder);
+      const hardestRange = getScaledZoneRange(COLOR_TO_ZONE[cB] || 'plains', planeBaseLevel, planeZoneOrder);
+      const baseRange = PLANE_DIFFICULTY_SLOTS[harderTier];
+      scaledLo = baseRange.levelLo + planeBaseLevel;
+      scaledHi = baseRange.levelHi + planeBaseLevel;
+    } else {
+      pool = ZONE_POOLS[currentMap] || ZONE_POOLS.wilds;
+      [scaledLo, scaledHi] = getScaledZoneRange(currentMap, planeBaseLevel, planeZoneOrder);
+    }
     const pick = weightedPick(pool);
-    // Scale level by current plane
-    const [scaledLo, scaledHi] = getScaledZoneRange(currentMap, planeBaseLevel, planeZoneOrder);
     const lv = scaledLo + Math.floor(Math.random() * (scaledHi - scaledLo + 1));
 
     // ---- Daily-encounter check ----
@@ -3329,8 +3622,13 @@ export default function GatheringTheMagic() {
     const freshTm = tm.map(c => c.heldItemCharged ? { ...c, heldItemCharged: false } : c);
     if (freshTm !== tm) setTeam(freshTm);
     // Zone trainers get a fresh team each fight (rerolled from zone pool, scaled by cycles).
+    // Dual zone trainers get a team from generateDualTrainerTeam (scaled to harder mono zone + plane).
     // Town trainers (Bran/Ria/Dax) keep their fixed teams as a stable starter benchmark.
-    const teamSpec = ZONE_TRAINER_IDS.has(npc.id) ? generateTrainerTeam(npc, trainerCycles) : npc.team;
+    const teamSpec = DUAL_TRAINER_IDS.has(npc.id)
+      ? generateDualTrainerTeam(npc, planeDualPairs, planeBaseLevel, planeZoneOrder)
+      : ZONE_TRAINER_IDS.has(npc.id)
+        ? generateTrainerTeam(npc, trainerCycles)
+        : npc.team;
     const et = teamSpec.map(c => createCreature(c.id, c.lv));
     et.forEach(e => {
       setCodex((cx) => ({ ...cx, [e.id]: { caught: cx[e.id]?.caught || 0, seen: (cx[e.id]?.seen || 0) + 1 }}));
@@ -3416,6 +3714,70 @@ export default function GatheringTheMagic() {
     playSceneTransition('iris', () => setScene('battle'));
     audio.sfx.battleStart('trainer');
     setTimeout(() => { setBattle(b => b ? { ...b, intro: false } : b); }, 1300);
+  };
+
+  // ---------- Dual zone trainer team generation ----------
+  function generateDualTrainerTeam(npc, planeDualPairsRef, planeBaseLevelRef, planeZoneOrderRef) {
+    const pairKey = npc.id.replace('dual_trainer_', ''); // e.g. 'GR'
+    const [cA, cB] = [pairKey[0], pairKey[1]];
+    const zoneA = COLOR_TO_ZONE[cA], zoneB = COLOR_TO_ZONE[cB];
+    const tierA = getZoneTier(zoneA, planeZoneOrderRef);
+    const tierB = getZoneTier(zoneB, planeZoneOrderRef);
+    const harderTier = Math.max(tierA, tierB);
+    const harderBossLevel = PLANE_DIFFICULTY_SLOTS[harderTier].shrineLevel + planeBaseLevelRef;
+    const trainerBaseLv = harderBossLevel - 4;
+    const pool = buildDualZonePool(cA, cB);
+    const picks = []; const usedIds = new Set();
+    for (let attempt = 0; attempt < 30 && picks.length < 3; attempt++) {
+      const e = weightedPick(pool);
+      if (!e || usedIds.has(e.id)) continue;
+      usedIds.add(e.id);
+      picks.push({ id: e.id, lv: trainerBaseLv + picks.length });
+    }
+    if (picks.length < 3 && npc.team) {
+      return npc.team.map(c => ({ id: c.id, lv: c.lv + planeBaseLevelRef }));
+    }
+    return picks;
+  }
+
+  // ---------- Dual zone boss battle ----------
+  const triggerDualBossLegendary = (dualMapId) => {
+    const [cA, cB] = pairFromDualId(dualMapId);
+    const bossId = getDualBossId(cA, cB);
+    if (!bossId) return;
+    const tierA = getZoneTier(COLOR_TO_ZONE[cA], planeZoneOrder);
+    const tierB = getZoneTier(COLOR_TO_ZONE[cB], planeZoneOrder);
+    const harderTier = Math.max(tierA, tierB);
+    const harderBossLv = PLANE_DIFFICULTY_SLOTS[harderTier].shrineLevel + planeBaseLevel;
+    const dualBossLv = harderBossLv + 4; // slightly above the harder mono boss
+    const tm = teamRef.current;
+    const boss = createCreature(bossId, dualBossLv);
+    setCodex(cx => ({...cx, [bossId]: {caught: cx[bossId]?.caught||0, seen: (cx[bossId]?.seen||0)+1}}));
+    const ws = rollWeathersForZone(currentMap, 'legendary');
+    const initLog = [];
+    if (ws.length === 2) initLog.push(`The ${WEATHER[ws[0]].name.toLowerCase()} and ${WEATHER[ws[1]].name.toLowerCase()} converge in the rift!`);
+    else if (ws.length === 1) initLog.push(`The ${WEATHER[ws[0]].name.toLowerCase()} surges through the rift.`);
+    const guildName = GUILD_NAMES[normPair(cA,cB)] || (cA+cB);
+    initLog.push(`The ${guildName} warden rises from the rift energy!`);
+    initLog.push(`${boss.name} will not yield this plane to you.`);
+    setBattle({
+      kind: 'legendary',
+      zoneId: dualMapId,
+      shrineColor: normPair(cA, cB), // normalized pair key acts as the "color" for reward logic
+      isDualBoss: true,
+      enemyTeam: [boss],
+      enemyIdx: 0,
+      myIdx: Math.max(0, firstAlive(tm)),
+      log: initLog,
+      turn: 'player',
+      intro: true,
+      bossKind: 'dual_legendary',
+      bgZone: currentMap,
+      weathers: ws,
+    });
+    playSceneTransition('iris', () => setScene('battle'));
+    audio.sfx.bossEntrance();
+    setTimeout(() => { setBattle(b => b ? {...b, intro: false} : b); }, 1200);
   };
 
   // ---------- Legendary boss battle (single mono-color creature, awards a medallion on win) ----------
@@ -3788,41 +4150,73 @@ export default function GatheringTheMagic() {
         setDefeated(d => {
           // Add this trainer to the defeated list
           const next = d.includes(b.npc.id) ? d : [...d, b.npc.id];
-          // Check if all five zone trainers are now defeated
+          // ── Mono zone trainer gate ──────────────────────────────────────────
           if (ZONE_TRAINER_IDS.has(b.npc.id)) {
             const allCleared = [...ZONE_TRAINER_IDS].every(id => next.includes(id));
             if (allCleared) {
-              // Cycle complete: bump counter and remove zone trainers from defeated
-              // so the player can fight them again with stronger teams.
               setTrainerCycles(c => c + 1);
               const filtered = next.filter(id => !ZONE_TRAINER_IDS.has(id));
-              // Use a microtask to show the toast after state settles
               setTimeout(() => showToast(`All zone challengers cleared! They've returned, stronger.`), 50);
               setTimeout(() => showToast(`The shrine gates have opened — five sealed buildings now beckon.`), 2000);
               setTimeout(() => audio.sfx.fanfare(), 1200);
               return filtered;
             }
           }
+          // ── Dual zone trainer gate ──────────────────────────────────────────
+          // When all 5 current plane dual-zone trainers are beaten, unlock the warden bosses.
+          if (DUAL_TRAINER_IDS.has(b.npc.id) && planeDualPairs) {
+            const currentDualIds = planeDualPairs.map(([a, bv]) => `dual_trainer_${normPair(a, bv)}`);
+            const allDualCleared = currentDualIds.every(id => next.includes(id));
+            if (allDualCleared) {
+              setTimeout(() => showToast(`All rift guardians defeated! The five warden seals have broken.`), 50);
+              setTimeout(() => showToast(`Step into the rift corridors and face the warden at each center tile.`), 2200);
+              setTimeout(() => audio.sfx.fanfare(), 1200);
+            }
+          }
           return next;
         });
       } else if (b.kind === 'legendary') {
-        // Legendary boss victory — award medallion + big gold purse.
         const reward = 400 + enemy.level * 20;
-        lines.push(`The ${enemy.name} crumbles into a beam of light...`);
-        lines.push(`You receive the ${COLOR_NAME[b.shrineColor]} Medallion!`);
-        lines.push(`+${reward} gold.`);
-        setGold(g => g + reward);
-        setMedallions(arr => arr.includes(b.shrineColor) ? arr : [...arr, b.shrineColor]);
-        // Cue: medallion sting first, then victory chord, all timed after the faint sound.
-        setTimeout(() => audio.sfx.medallion(b.shrineColor), 500);
-        setTimeout(() => audio.sfx.victory(), 1300);
-        // After the win flag flashes, also let the player know about the meta-progress.
-        setTimeout(() => {
-          const haveAfter = [...new Set([...medallions, b.shrineColor])];
-          const remaining = ['W','U','B','R','G'].filter(c => !haveAfter.includes(c));
-          if (remaining.length === 0) showToast('All five medallions gathered. The town shrine awaits...');
-          else showToast(`Medallion gained. ${remaining.length} more to go.`);
-        }, 80);
+        // ── Dual zone boss win ─────────────────────────────────────────────────
+        if (b.isDualBoss) {
+          const pk = b.shrineColor; // normalized pair key e.g. 'GR'
+          const guildName = GUILD_NAMES[pk] || pk;
+          lines.push(`The ${enemy.name} dissolves back into the rift energy...`);
+          lines.push(`You receive the ${guildName} Rift Medallion!`);
+          lines.push(`+${reward} gold.`);
+          setGold(g => g + reward);
+          setDualMedallions(arr => arr.includes(pk) ? arr : [...arr, pk]);
+          setTimeout(() => audio.sfx.medallion('U'), 500); // blue tone for rift
+          setTimeout(() => audio.sfx.victory(), 1300);
+          setTimeout(() => {
+            const haveAfter = [...new Set([...(planeDualPairs||[]).map(([a,bv])=>normPair(a,bv)), pk])];
+            const totalDual = planeDualPairs ? planeDualPairs.length : 0;
+            const clearedDual = haveAfter.filter(k => dualMedallions.includes(k) || k === pk).length;
+            const remaining = totalDual - clearedDual;
+            const monoRemaining = ['W','U','B','R','G'].filter(c => !medallions.includes(c)).length;
+            if (remaining === 0 && monoRemaining === 0) showToast('All 10 medallions gathered! The town shrine trembles...');
+            else showToast(`Rift Medallion gained. ${remaining} rift + ${monoRemaining} mono medallion(s) remain.`);
+          }, 80);
+        } else {
+          // ── Mono shrine boss win ───────────────────────────────────────────
+          lines.push(`The ${enemy.name} crumbles into a beam of light...`);
+          lines.push(`You receive the ${COLOR_NAME[b.shrineColor]} Medallion!`);
+          lines.push(`+${reward} gold.`);
+          setGold(g => g + reward);
+          setMedallions(arr => arr.includes(b.shrineColor) ? arr : [...arr, b.shrineColor]);
+          setTimeout(() => audio.sfx.medallion(b.shrineColor), 500);
+          setTimeout(() => audio.sfx.victory(), 1300);
+          setTimeout(() => {
+            const haveAfter = [...new Set([...medallions, b.shrineColor])];
+            const monoRemaining = ['W','U','B','R','G'].filter(c => !haveAfter.includes(c));
+            const dualTotal = planeDualPairs ? planeDualPairs.length : 0;
+            const dualCleared = dualMedallions.length;
+            const dualRemaining = dualTotal - dualCleared;
+            if (monoRemaining.length === 0 && dualRemaining === 0) showToast('All medallions gathered. The town shrine awaits...');
+            else if (monoRemaining.length === 0) showToast(`All mono medallions gathered! ${dualRemaining} rift medallion(s) remain.`);
+            else showToast(`Medallion gained. ${monoRemaining.length} mono + ${dualRemaining} rift medallion(s) remain.`);
+          }, 80);
+        }
       } else if (b.kind === 'planeswalker') {
         // Final boss victory — Champion badge + ability-learning prompt.
         const reward = 2000;
@@ -4270,9 +4664,12 @@ export default function GatheringTheMagic() {
     setCurrentPlane(nextPlane);
     setPlaneBaseLevel(defeatedPWLevel);
     setPlaneZoneOrder(newZoneOrder);
+    setPlaneDualPairs(generateDualCycle(nextPlane));
+    setDualMedallions([]);
     setMedallions([]);
     setPlaneswalkerDefeated(false);
-    setDefeated(d => d.filter(id => !ZONE_TRAINER_IDS.has(id)));
+    // Reset zone trainers AND dual zone trainers so the player must re-earn them
+    setDefeated(d => d.filter(id => !ZONE_TRAINER_IDS.has(id) && !DUAL_TRAINER_IDS.has(id)));
     setTeam(tm => tm.map(c => ({ ...c, hp: c.maxHp, status: null })));
     setCurrentMap('town');
     setPlayer({ x: 7, y: 7, face: 'down' });
@@ -4570,6 +4967,43 @@ export default function GatheringTheMagic() {
           ctx.fillStyle = '#7a5a20';
           ctx.fillRect(sx + 12, sy + 8, 8, 4);
           ctx.fillRect(sx + 12, sy + 20, 8, 4);
+          break;
+        }
+        case 'X': {
+          // Dual-zone rift portal — glowing X-shaped tear in the mana fabric.
+          // Only visually active in Plane 1+. Plane 0 shows as a faint sealed rune.
+          ctx.fillStyle = '#1a1028'; ctx.fillRect(sx, sy, TILE, TILE);
+          const active = currentPlane > 0;
+          const pulse = active ? (0.5 + 0.5 * Math.abs(Math.sin(animFrame * 0.25))) : 0.25;
+          // Two crossing diagonal lines form an X
+          ctx.save();
+          ctx.globalAlpha = pulse;
+          const portalColor = active ? '#b070ff' : '#5a4070';
+          const portalGlow  = active ? '#ff80ff' : '#806090';
+          ctx.strokeStyle = portalColor;
+          ctx.lineWidth = 2;
+          ctx.shadowColor = portalGlow;
+          ctx.shadowBlur = active ? 8 : 2;
+          ctx.beginPath();
+          ctx.moveTo(sx + 6, sy + 6); ctx.lineTo(sx + 26, sy + 26);
+          ctx.moveTo(sx + 26, sy + 6); ctx.lineTo(sx + 6, sy + 26);
+          ctx.stroke();
+          if (active) {
+            // Center energy burst
+            const grad = ctx.createRadialGradient(sx + 16, sy + 16, 2, sx + 16, sy + 16, 12);
+            grad.addColorStop(0, '#ffffff44');
+            grad.addColorStop(1, '#b070ff00');
+            ctx.fillStyle = grad;
+            ctx.fillRect(sx + 4, sy + 4, 24, 24);
+            // Corner sparkles
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowBlur = 4;
+            if ((animFrame + 0) % 8 < 4) { ctx.fillRect(sx + 5, sy + 5, 2, 2); }
+            if ((animFrame + 2) % 8 < 4) { ctx.fillRect(sx + 25, sy + 25, 2, 2); }
+            if ((animFrame + 4) % 8 < 4) { ctx.fillRect(sx + 25, sy + 5, 2, 2); }
+            if ((animFrame + 6) % 8 < 4) { ctx.fillRect(sx + 5, sy + 25, 2, 2); }
+          }
+          ctx.restore();
           break;
         }
         case 'd': {
@@ -5967,6 +6401,7 @@ export default function GatheringTheMagic() {
             setMode('classic'); setCommanderColor(""); setTrainerCycles(0);
             setMedallions([]); setPlaneswalkerDefeated(false); setChampionLearnPending(false);
             setCurrentPlane(0); setPlaneBaseLevel(0); setPlaneZoneOrder(null); setPlanePending(false);
+            setPlaneDualPairs(null); setDualMedallions([]);
             if (mode === 'commander') setHasSaveCommander(false);
             else setHasSaveClassic(false);
             setScene('title');
@@ -8935,9 +9370,44 @@ function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, st
                   }}>★</div>
               )}
             </div>
-            {(medallions || []).length === 0 && (
+            {(medallions || []).length === 0 && !planeDualPairs && (
               <div style={{ fontSize: 9, color: '#7a6898', marginTop: 5, fontStyle: 'italic' }}>
                 Each zone has a hidden building. Clear all five challengers once and the buildings open.
+              </div>
+            )}
+            {/* Dual zone rift medallions — shown in Plane 1+ only */}
+            {planeDualPairs && planeDualPairs.length > 0 && (
+              <div style={{ marginTop: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontSize: 11, color: '#b070ff' }}>✦ Rift Medallions</div>
+                  <div style={{ fontSize: 10, color: '#9060cc' }}>
+                    {(dualMedallions || []).length} / {planeDualPairs.length}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
+                  {planeDualPairs.map(([cA, cB]) => {
+                    const pk = normPair(cA, cB);
+                    const has = (dualMedallions || []).includes(pk);
+                    const gName = GUILD_NAMES[pk] || pk;
+                    return (
+                      <div key={pk} title={has ? `${gName} Rift Medallion (collected)` : `${gName} Rift Medallion (not yet)`}
+                        style={{
+                          padding: '2px 6px', borderRadius: 4, fontSize: 9, fontWeight: 700,
+                          background: has ? '#4a1a8a' : '#1a0e28',
+                          border: has ? '1px solid #b070ff' : '1px dashed #4a2870',
+                          color: has ? '#d0a0ff' : '#5a3880',
+                          boxShadow: has ? '0 0 5px #b070ff55' : 'none',
+                        }}>
+                        {has ? `✦ ${gName}` : `? ${gName}`}
+                      </div>
+                    );
+                  })}
+                </div>
+                {(dualMedallions || []).length === 0 && (
+                  <div style={{ fontSize: 9, color: '#7a5898', marginTop: 4, fontStyle: 'italic' }}>
+                    Find X-portals in each zone to enter rift corridors. Defeat all 5 rift guardians to unlock the wardens.
+                  </div>
+                )}
               </div>
             )}
           </div>
