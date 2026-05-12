@@ -4767,38 +4767,73 @@ export default function GatheringTheMagic() {
       const sy = (gy - camY) * TILE;
       switch (t) {
         case '.': {
-          ctx.fillStyle = '#4a7a3a'; ctx.fillRect(sx, sy, TILE, TILE);
-          ctx.fillStyle = '#3d6a30';
-          for (let i = 0; i < 3; i++) {
-            const dx = (gx * 7 + gy * 13 + i * 11) % TILE;
-            const dy = (gx * 11 + gy * 5 + i * 7) % TILE;
-            ctx.fillRect(sx + dx, sy + dy, 2, 2);
+          // HGSS-style bright walkable grass — two-tone checkerboard base + fine blade detail
+          const baseG = (gx + gy) % 2 === 0 ? '#5a9040' : '#528438';
+          ctx.fillStyle = baseG; ctx.fillRect(sx, sy, TILE, TILE);
+          // subtle lighter stripe along top edge for depth
+          ctx.fillStyle = '#68a84a';
+          ctx.fillRect(sx, sy, TILE, 3);
+          // small dark fleck variation
+          ctx.fillStyle = '#3a6228';
+          for (let i = 0; i < 4; i++) {
+            const dx = (gx * 7 + gy * 13 + i * 9) % (TILE - 2);
+            const dy = (gx * 11 + gy * 5 + i * 7) % (TILE - 2);
+            ctx.fillRect(sx + dx, sy + dy, 2, 1);
           }
+          // tiny bright highlights
+          ctx.fillStyle = '#78c058';
+          const hx = (gx * 5 + gy * 3) % (TILE - 2);
+          const hy = (gx * 3 + gy * 7) % (TILE - 2);
+          ctx.fillRect(sx + hx, sy + hy, 1, 1);
           break;
         }
         case 'g': {
-          ctx.fillStyle = '#2e5a22'; ctx.fillRect(sx, sy, TILE, TILE);
-          ctx.fillStyle = '#1c3a14';
-          for (let i = 0; i < 6; i++) {
-            const dx = (gx * 3 + i * 5) % TILE;
-            const dy = (gy * 7 + i * 11) % TILE;
-            ctx.fillRect(sx + dx, sy + dy, 2, 4);
+          // HGSS-style tall grass — darker base with prominent upright blades
+          ctx.fillStyle = '#3a6e28'; ctx.fillRect(sx, sy, TILE, TILE);
+          // darker bottom shadow strip
+          ctx.fillStyle = '#2a4e1a';
+          ctx.fillRect(sx, sy + TILE - 6, TILE, 6);
+          // blade pattern — tall vertical strokes with tips
+          ctx.fillStyle = '#4a8a34';
+          const bladeOffsets = [
+            [2,  0], [6,  2], [10, 0], [14, 3], [18, 1], [22, 0], [26, 2],
+            [4,  4], [8,  5], [12, 4], [16, 5], [20, 4], [24, 5], [28, 4],
+          ];
+          for (const [bx, by2] of bladeOffsets) {
+            const bxr = (bx + gx * 3 + gy * 2) % TILE;
+            const bladeH = 10 + ((gx * 7 + gy * 5 + bx) % 8);
+            ctx.fillRect(sx + bxr, sy + by2, 2, bladeH);
           }
-          ctx.strokeStyle = '#3a7028'; ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(sx + 8, sy + 22); ctx.lineTo(sx + 12, sy + 14);
-          ctx.moveTo(sx + 20, sy + 26); ctx.lineTo(sx + 24, sy + 18);
-          ctx.stroke();
+          // bright blade tips
+          ctx.fillStyle = '#72b84a';
+          for (let i = 0; i < 6; i++) {
+            const tx = (gx * 11 + i * 7 + gy * 3) % (TILE - 2);
+            const ty = (gy * 5 + i * 13 + gx) % 8;
+            ctx.fillRect(sx + tx, sy + ty, 1, 2);
+          }
           break;
         }
         case 'p': {
-          ctx.fillStyle = '#c9a96a'; ctx.fillRect(sx, sy, TILE, TILE);
-          ctx.fillStyle = '#a08850';
-          for (let i = 0; i < 4; i++) {
-            const dx = (gx * 7 + i * 9) % TILE;
-            const dy = (gy * 11 + i * 5) % TILE;
-            ctx.fillRect(sx + dx, sy + dy, 3, 2);
+          // HGSS-style dirt path — warm sandy beige with subtle pebble texture
+          ctx.fillStyle = '#c8a85c'; ctx.fillRect(sx, sy, TILE, TILE);
+          // subtle lighter center strip
+          ctx.fillStyle = '#d4b870';
+          ctx.fillRect(sx + 2, sy + 2, TILE - 4, TILE - 4);
+          // edge darkening (depth/edge shadow)
+          ctx.fillStyle = '#a88840';
+          ctx.fillRect(sx, sy, TILE, 1);
+          ctx.fillRect(sx, sy, 1, TILE);
+          // pebble/stone speckles
+          ctx.fillStyle = '#b89858';
+          for (let i = 0; i < 5; i++) {
+            const dx = (gx * 9 + i * 7 + gy * 3) % (TILE - 4) + 2;
+            const dy = (gy * 11 + i * 5 + gx * 7) % (TILE - 4) + 2;
+            ctx.fillRect(sx + dx, sy + dy, 2, 1);
           }
+          ctx.fillStyle = '#e8cc80';
+          const px = (gx * 5 + gy * 7) % (TILE - 4) + 2;
+          const py2 = (gy * 3 + gx * 5) % (TILE - 4) + 2;
+          ctx.fillRect(sx + px, sy + py2, 1, 1);
           break;
         }
         case 'a': {
@@ -4831,14 +4866,23 @@ export default function GatheringTheMagic() {
           break;
         }
         case 'u': {
-          ctx.fillStyle = '#3a6a90'; ctx.fillRect(sx, sy, TILE, TILE);
-          // shimmer streaks (animated)
-          const phase = (animFrame + gx * 2 + gy * 3) % 8;
-          ctx.strokeStyle = '#5a8ac0'; ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(sx + 4 + phase, sy + 8); ctx.lineTo(sx + 14 + phase, sy + 10);
-          ctx.moveTo(sx + 18 - phase, sy + 18); ctx.lineTo(sx + 28 - phase, sy + 20);
-          ctx.stroke();
+          // HGSS-style water — bright cobalt with animated highlight bands
+          ctx.fillStyle = '#2878c8'; ctx.fillRect(sx, sy, TILE, TILE);
+          // lighter strip at top (surface reflection)
+          ctx.fillStyle = '#3898e8';
+          ctx.fillRect(sx, sy, TILE, 6);
+          // animated shimmer bands
+          const phase1 = (animFrame + gx * 3 + gy * 2) % 16;
+          const phase2 = (animFrame * 2 + gx * 2 + gy * 4) % 16;
+          ctx.fillStyle = 'rgba(120, 200, 255, 0.5)';
+          ctx.fillRect(sx + phase1,      sy + 8,  8, 2);
+          ctx.fillRect(sx + 16 - phase1, sy + 16, 8, 2);
+          ctx.fillRect(sx + phase2,      sy + 22, 6, 1);
+          // white sparkle at crest
+          ctx.fillStyle = 'rgba(255,255,255,0.7)';
+          if ((animFrame + gx + gy) % 8 < 3) {
+            ctx.fillRect(sx + (gx * 7 + gy * 3) % (TILE - 3), sy + (gy * 5 + gx) % 10, 2, 1);
+          }
           break;
         }
         case 'o': {
@@ -4893,21 +4937,40 @@ export default function GatheringTheMagic() {
           break;
         }
         case 'f': {
-          ctx.fillStyle = '#bcd088'; ctx.fillRect(sx, sy, TILE, TILE);
-          ctx.fillStyle = '#7a9248';
+          // HGSS-style flower field — bright green base with dense colorful blooms
+          ctx.fillStyle = '#5a9840'; ctx.fillRect(sx, sy, TILE, TILE);
+          // slight lighter top strip
+          ctx.fillStyle = '#6aac4c';
+          ctx.fillRect(sx, sy, TILE, 4);
+          // grass blades between flowers
+          ctx.fillStyle = '#3e7030';
           for (let i = 0; i < 5; i++) {
-            const dx = (gx * 7 + i * 5) % TILE;
-            const dy = (gy * 11 + i * 9) % TILE;
-            ctx.fillRect(sx + dx, sy + dy, 1, 3);
+            const bx = (gx * 7 + i * 9 + gy * 3) % (TILE - 2);
+            ctx.fillRect(sx + bx, sy + 16, 1, 8);
           }
-          const cols = ['#fff8c8', '#f8d8e8', '#e8f4ff', '#ffe8a8'];
-          for (let i = 0; i < 3; i++) {
-            ctx.fillStyle = cols[(gx + gy + i) % cols.length];
-            const fx = sx + 4 + ((gx * 13 + i * 11) % 22);
-            const fy = sy + 4 + ((gy * 7 + i * 13) % 22);
-            ctx.fillRect(fx, fy, 3, 3);
-            ctx.fillStyle = '#e8c860';
-            ctx.fillRect(fx + 1, fy + 1, 1, 1);
+          // Flower petals — HGSS palette: pink, white, yellow, light-blue
+          const flowerData = [
+            { petal: '#f4a0c0', center: '#ffe040', x: 6,  y: 4  },
+            { petal: '#e8e8ff', center: '#ffc840', x: 20, y: 6  },
+            { petal: '#a8d4f8', center: '#ffe880', x: 14, y: 2  },
+            { petal: '#f4a0c0', center: '#ffe040', x: 26, y: 8  },
+            { petal: '#ffe8a0', center: '#f0a030', x: 4,  y: 18 },
+            { petal: '#e8e8ff', center: '#ffc840', x: 22, y: 20 },
+            { petal: '#a8d4f8', center: '#ffe880', x: 12, y: 22 },
+          ];
+          for (const { petal, center, x: fx, y: fy } of flowerData) {
+            // 4 petals in + pattern
+            ctx.fillStyle = petal;
+            ctx.fillRect(sx + fx,     sy + fy - 2, 2, 2); // top
+            ctx.fillRect(sx + fx,     sy + fy + 2, 2, 2); // bottom
+            ctx.fillRect(sx + fx - 2, sy + fy,     2, 2); // left
+            ctx.fillRect(sx + fx + 2, sy + fy,     2, 2); // right
+            // center dot
+            ctx.fillStyle = center;
+            ctx.fillRect(sx + fx, sy + fy, 2, 2);
+            // stem pixel
+            ctx.fillStyle = '#3e7030';
+            ctx.fillRect(sx + fx, sy + fy + 4, 1, 4);
           }
           break;
         }
@@ -5027,7 +5090,7 @@ export default function GatheringTheMagic() {
         case 'w':
         case 'B': {
           // these get their full visual in pass 2 — paint zone-appropriate floor here
-          let groundColor = '#4a7a3a';
+          let groundColor = '#528438';
           if (currentMap === 'ashen') groundColor = '#5a4e48';
           else if (currentMap === 'sanctum') groundColor = '#3a6a90';
           else if (currentMap === 'umbral') groundColor = '#2a3a26';
@@ -5050,24 +5113,35 @@ export default function GatheringTheMagic() {
       switch (t) {
         case 't': { // tree — trunk at base, foliage extending upward into row above
           // shadow on the tile
-          ctx.fillStyle = 'rgba(0,0,0,0.32)';
-          ctx.beginPath(); ctx.ellipse(cx, baseY - 4, 11, 4, 0, 0, Math.PI * 2); ctx.fill();
-          // trunk (visible front face)
-          ctx.fillStyle = '#3a2410';
-          ctx.fillRect(cx - 4, baseY - 16, 8, 12);
-          ctx.fillStyle = '#5a3a18';
-          ctx.fillRect(cx - 4, baseY - 16, 5, 12);
-          ctx.fillStyle = '#6a4a24';
-          ctx.fillRect(cx - 4, baseY - 16, 1, 12);
-          // foliage (extends UP above the tile)
-          ctx.fillStyle = '#1f4a1a';
-          ctx.beginPath(); ctx.ellipse(cx, baseY - 22, 16, 14, 0, 0, Math.PI * 2); ctx.fill();
-          // foliage highlight
-          ctx.fillStyle = '#2b6024';
-          ctx.beginPath(); ctx.ellipse(cx - 3, baseY - 26, 10, 8, 0, 0, Math.PI * 2); ctx.fill();
-          // tiny top sparkle
-          ctx.fillStyle = '#3a7a30';
-          ctx.fillRect(cx - 5, baseY - 30, 2, 2);
+          ctx.fillStyle = 'rgba(0,0,0,0.35)';
+          ctx.beginPath(); ctx.ellipse(cx, baseY - 3, 12, 5, 0, 0, Math.PI * 2); ctx.fill();
+          // trunk — wider, more visible
+          ctx.fillStyle = '#2a1808';
+          ctx.fillRect(cx - 4, baseY - 18, 9, 14);
+          ctx.fillStyle = '#4a2c10';
+          ctx.fillRect(cx - 4, baseY - 18, 6, 14);
+          ctx.fillStyle = '#6a4020';
+          ctx.fillRect(cx - 4, baseY - 18, 2, 14);
+          // bark texture line
+          ctx.fillStyle = '#2a1808';
+          ctx.fillRect(cx + 1, baseY - 14, 1, 8);
+          // foliage — 3-layer HGSS-style rounded canopy
+          // bottom / outer layer (darkest)
+          ctx.fillStyle = '#226018';
+          ctx.beginPath(); ctx.ellipse(cx, baseY - 24, 17, 13, 0, 0, Math.PI * 2); ctx.fill();
+          // mid layer
+          ctx.fillStyle = '#2e7820';
+          ctx.beginPath(); ctx.ellipse(cx - 1, baseY - 28, 14, 11, 0, 0, Math.PI * 2); ctx.fill();
+          // bright top highlight (HGSS trees have a light patch at top-left)
+          ctx.fillStyle = '#44a030';
+          ctx.beginPath(); ctx.ellipse(cx - 4, baseY - 32, 9, 7, 0, 0, Math.PI * 2); ctx.fill();
+          // small specular highlight
+          ctx.fillStyle = '#60c040';
+          ctx.fillRect(cx - 6, baseY - 36, 3, 3);
+          ctx.fillRect(cx - 4, baseY - 38, 2, 2);
+          // dark shadow under canopy on right
+          ctx.fillStyle = 'rgba(0,0,0,0.22)';
+          ctx.beginPath(); ctx.ellipse(cx + 4, baseY - 22, 8, 6, 0, 0, Math.PI * 2); ctx.fill();
           break;
         }
         case 'k': { // rock — chunky 3D-shaded boulder
@@ -5259,6 +5333,77 @@ export default function GatheringTheMagic() {
             const lpulse = 0.35 + 0.2 * Math.sin(animFrame * 0.18);
             ctx.fillStyle = `rgba(255, 240, 180, ${lpulse})`;
             ctx.fillRect(cx - 6, baseY - 28, 12, 26);
+          } else {
+            // HGSS-style town house — cream walls, red/orange triangular roof, dark door, window
+            const houseW = TILE - 2;
+            const houseTop = baseY - 38;
+            const wallTop  = baseY - 26;
+            // ── roof (triangle, red-orange) ──
+            ctx.fillStyle = '#c83820'; // dark roof underside
+            ctx.beginPath();
+            ctx.moveTo(sx + 1,          wallTop);
+            ctx.lineTo(cx,              houseTop);
+            ctx.lineTo(sx + houseW + 1, wallTop);
+            ctx.closePath(); ctx.fill();
+            // lighter roof face
+            ctx.fillStyle = '#e04828';
+            ctx.beginPath();
+            ctx.moveTo(sx + 1, wallTop);
+            ctx.lineTo(cx,     houseTop + 2);
+            ctx.lineTo(cx,     wallTop);
+            ctx.closePath(); ctx.fill();
+            // bright roof highlight
+            ctx.fillStyle = '#f06040';
+            ctx.beginPath();
+            ctx.moveTo(cx - 6, houseTop + 6);
+            ctx.lineTo(cx,     houseTop + 2);
+            ctx.lineTo(cx - 2, wallTop);
+            ctx.closePath(); ctx.fill();
+            // ── chimney ──
+            ctx.fillStyle = '#7a5040';
+            ctx.fillRect(cx + 4, houseTop - 4, 5, 8);
+            ctx.fillStyle = '#9a6858';
+            ctx.fillRect(cx + 4, houseTop - 4, 3, 8);
+            ctx.fillStyle = '#503028';
+            ctx.fillRect(cx + 3, houseTop - 5, 7, 2); // cap
+            // ── front wall (cream) ──
+            ctx.fillStyle = '#d8d0b8';
+            ctx.fillRect(sx + 1, wallTop, houseW, 26);
+            // left shadow stripe
+            ctx.fillStyle = '#b8aa98';
+            ctx.fillRect(sx + houseW - 4, wallTop, 4, 26);
+            // bright left face
+            ctx.fillStyle = '#eee8d4';
+            ctx.fillRect(sx + 1, wallTop, 4, 26);
+            // ── door (centered, wooden brown) ──
+            ctx.fillStyle = '#6a3c18';
+            ctx.fillRect(cx - 4, baseY - 14, 8, 12);
+            ctx.fillStyle = '#8a5228';
+            ctx.fillRect(cx - 4, baseY - 14, 5, 12);
+            // door knob
+            ctx.fillStyle = '#e8c040';
+            ctx.fillRect(cx + 2, baseY - 8, 1, 1);
+            // door top arch
+            ctx.fillStyle = '#8a5228';
+            ctx.beginPath();
+            ctx.arc(cx, baseY - 14, 4, Math.PI, 0);
+            ctx.fill();
+            // ── window (left of door, bright) ──
+            ctx.fillStyle = '#2a3a5a';
+            ctx.fillRect(sx + 5, baseY - 22, 8, 6);
+            // window panes
+            ctx.fillStyle = '#8ad0f8';
+            ctx.fillRect(sx + 6, baseY - 21, 3, 2);
+            ctx.fillRect(sx + 6, baseY - 18, 3, 2);
+            ctx.fillStyle = '#c8ecff';
+            ctx.fillRect(sx + 10, baseY - 21, 2, 2);
+            ctx.fillRect(sx + 10, baseY - 18, 2, 2);
+            // window frame
+            ctx.strokeStyle = '#a09080'; ctx.lineWidth = 1;
+            ctx.strokeRect(sx + 5, baseY - 22, 8, 6);
+            // ── base/foundation strip ──
+            ctx.fillStyle = '#a89878';
+            ctx.fillRect(sx + 1, baseY - 2, houseW, 2);
           }
           break;
         }
@@ -5290,381 +5435,838 @@ export default function GatheringTheMagic() {
       }
     };
 
-    // ---- character sprite (2.5D-styled, with idle bob) ----
+    // =========================================================
+    // PIXEL-ART SPRITE ENGINE  (DS / HGSS quality)
+    // Each logical pixel = PX×PX screen pixels.
+    // Sprite rows are strings; each char maps to a palette color.
+    // '.' = transparent. Rows may differ in length (auto-centered).
+    // =========================================================
+    const PX = 2; // screen pixels per logical pixel
+
+    const drawPS = (rows, pal, cx, baseY, flipH = false) => {
+      const maxW = rows.reduce((m, r) => Math.max(m, r.length), 0);
+      const H    = rows.length;
+      const ox   = cx - Math.round(maxW * PX / 2);
+      const oy   = baseY - H * PX;
+      for (let r = 0; r < H; r++) {
+        const row = rows[r];
+        for (let ci = 0; ci < row.length; ci++) {
+          const col = flipH ? row.length - 1 - ci : ci;
+          const k   = row[col];
+          if (k === '.' || !pal[k]) continue;
+          ctx.fillStyle = pal[k];
+          const screenX = flipH
+            ? ox + (maxW - row.length + ci) * PX
+            : ox + ci * PX;
+          ctx.fillRect(screenX, oy + r * PX, PX, PX);
+        }
+      }
+    };
+
+    // ── Shared outline / shadow pass ─────────────────────────
+    const drawShadow = (cx, baseY) => {
+      ctx.fillStyle = 'rgba(0,0,0,0.38)';
+      ctx.beginPath(); ctx.ellipse(cx, baseY + 1, 9, 3, 0, 0, Math.PI * 2); ctx.fill();
+    };
+
+    // ── Bob offset (2-frame idle cycle) ─────────────────────
+    const BOB = (Math.floor(animFrame / 6) % 2 === 0) ? 0 : -1;
+
+    // =========================================================
+    // SPRITE DATA
+    // =========================================================
+
+    // ── PLAYER (Ethan-style protagonist) ────────────────────
+    // SPRITE DATA
+    // =========================================================
+
+    // ── PLAYER (Ethan-style protagonist) ────────────────────
+    // ================================================================
+    //  SPRITE DATA  — strict single-char palette keys only
+    //  Rows are 12 chars wide (D/U) or 10 chars (S).
+    // ================================================================
+    // ── PLAYER (v13) ──────────────────────────
+    const palPlayer = {
+      H:'#2454a8', h:'#143478', l:'#4878d8',
+      A:'#d4c030', a:'#a09020',
+      F:'#e8c890', f:'#c8a070', E:'#180c08',
+      B:'#2868c0', b:'#184088', c:'#4488e0',
+      N:'#ece4d0',
+      P:'#202040', p:'#14142c', S:'#482818', s:'#281408',
+    };
+    const sprPlayer = {
+      D:[
+        '..hHHHHHHh....',
+        '.hHHHHHHHHh...',
+        '.hHHlllHHHHh..',
+        '.hHHHHHHHHHh..',
+        '.AAAaAAAAaAAA.',
+        '..FFFFFFFFF...',
+        '.FFEFFFEFFF...',
+        '.FFFFfffFFF...',
+        '..FFffffFF....',
+        '...NNNNN......',
+        '..BBBBBBBBb...',
+        '.BcBBBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBcBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.PPPpPPPpPPp..',
+        '.PPPpPPPpPPp..',
+        '.PPpPPPpPPp...',
+        '.SSsSSSsSSS...',
+        '..sSSSSSSs....',
+      ],
+      U:[
+        '..hHHHHHHh....',
+        '.hHHHHHHHHh...',
+        '.hHHHHHHHHHh..',
+        '.hHHHHHHHHHh..',
+        '.AAAaAAAAaAAA.',
+        '..hHHHHHHHh...',
+        '..hHHHHHHHh...',
+        '...NNNNNNN....',
+        '..BBBBBBBBb...',
+        '.BBBBBBBBBBb..',
+        '.BcBBBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.PPPpPPPpPPp..',
+        '.PPPpPPPpPPp..',
+        '.PPpPPPpPPp...',
+        '.SSsSSSsSSS...',
+        '.SSsSSSsSSS...',
+        '..sSSSSSSs....',
+      ],
+      S:[
+        '..hHHHHHHh....',
+        '.hHHHHHHHHh...',
+        '.hHHlllHHHHh..',
+        '.hHHHHHHHHHh..',
+        '.AAAaAAAAaAAA.',
+        '..FFFFFFFFF...',
+        '.FFFEFFFFFf...',
+        '.FFFFfffFFf...',
+        '..FFffffFf....',
+        '...NNNNNN.....',
+        '..BBBBBBBBb...',
+        '.BcBBBBBBBb...',
+        '.BBBBBBBBBb...',
+        '.BBBBBBBBBb...',
+        '.BBBcBBBBBb...',
+        '.BBBBBBBBBb...',
+        '.PPPpPPPpPP...',
+        '.PPPpPPPpPP...',
+        '.PPpPPPpPP....',
+        '.SSsSSSsSS....',
+      ],
+    };
+    // ── BRAN (v13) ──────────────────────────
+    const palBran = {
+      H:'#1a1208', h:'#0e0a04', l:'#2a2010',
+      A:'#c0a030',
+      F:'#c8a070', f:'#a07050', E:'#180c08',
+      B:'#487840', b:'#2e5428', c:'#68a050',
+      N:'#ece4d0', V:'#5a3820',
+      P:'#2a1a10', p:'#1a0e08', S:'#2a1808', s:'#180e04',
+      Z:'#5a4028',
+    };
+    const sprBran = {
+      D:[
+        '..hHHHHHHh....',
+        '.hHHHHHHHHh...',
+        '.hHHHlllHHHh..',
+        '.hHHHHHHHHHh..',
+        '..FFFFFFFFF...',
+        '.FFEFFFEFFF...',
+        '.FfffZZZffFf..',
+        '..ZZZZZZZZ....',
+        '...NNNNNN.....',
+        '..BBBBBBBBb...',
+        '.BcBBBBBBBBb..',
+        '.BBBVAVAVBBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.PPPpPPPpPPp..',
+        '.PPPpPPPpPPp..',
+        '.PPpPPPpPPp...',
+        '.SSsSSSsSSS...',
+        '..sSSSSSSs....',
+      ],
+      U:[
+        '..hHHHHHHh....',
+        '.hHHHHHHHHh...',
+        '.hHHHlllHHHh..',
+        '.hHHHHHHHHHh..',
+        '..hHHHHHHHh...',
+        '..hHHHHHHHh...',
+        '...NNNNNNN....',
+        '..BBBBBBBBb...',
+        '.BcBBBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBVAVAVBBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.PPPpPPPpPPp..',
+        '.PPPpPPPpPPp..',
+        '.PPpPPPpPPp...',
+        '.SSsSSSsSSS...',
+        '..sSSSSSSs....',
+      ],
+      S:[
+        '..hHHHHHHh....',
+        '.hHHHHHHHHh...',
+        '.hHHHHHHHHHh..',
+        '.hHHHHHHHHHh..',
+        '..FFFFFFFFF...',
+        '.FFFEFFFFFf...',
+        '.FFffZZZffFf..',
+        '..ZZZZZZZZ....',
+        '...NNNNNN.....',
+        '..BBBBBBBBb...',
+        '.BcBBBBBBBb...',
+        '.BBBVAVABBb...',
+        '.BBBBBBBBBb...',
+        '.BBBBBBBBBb...',
+        '.PPPpPPPpPP...',
+        '.PPPpPPPpPP...',
+        '.PPpPPPpPP....',
+        '.SSsSSSsSS....',
+      ],
+    };
+    // ── RIA (v13) ──────────────────────────
+    const palRia = {
+      H:'#28b8b8', h:'#187088', l:'#58d8d8',
+      A:'#d8e8f8',
+      F:'#e8d0b8', f:'#c8a890', E:'#0a2040',
+      B:'#384a90', b:'#1e2c5e', c:'#5878c8',
+      N:'#ece4d0', V:'#1a1828',
+      P:'#2c2858', p:'#181432', S:'#1a1432', s:'#0a0a1c',
+    };
+    const sprRia = {
+      D:[
+        '..hHHHHHHh....',
+        '.hHHHHHHHHh...',
+        '.hHlllllllHh..',
+        '.hHHHHHHHHHh..',
+        '.hH.FFFFFF.Hh.',
+        '.HHFFFFFFFFhh.',
+        '.HHFEFFFEFFhh.',
+        '..HFFfffffH...',
+        '..HHffffHH....',
+        '..hHHNNNHHh...',
+        '..BBBBABBBb...',
+        '.BcBBABABBBb..',
+        '.BBBBABBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBcBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.PPPpPPPpPPp..',
+        '.PPPpPPPpPPp..',
+        '.PPpPPPpPPp...',
+        '.SSsSSSsSSS...',
+        '..sSSSSSSs....',
+      ],
+      U:[
+        '..hHHHHHHh....',
+        '.hHHHHHHHHh...',
+        '.hHlllllllHh..',
+        '.hHHHHHHHHHh..',
+        '.hHHHHHHHHHh..',
+        '.hHHHHHHHHHh..',
+        '..hHHNNNHHh...',
+        '..BBBBBBBBb...',
+        '.BcBBBBBBBBb..',
+        '.BBBBABBBBBb..',
+        '.BBBBABBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.PPPpPPPpPPp..',
+        '.PPPpPPPpPPp..',
+        '.PPpPPPpPPp...',
+        '.SSsSSSsSSS...',
+        '.SSsSSSsSSS...',
+        '..sSSSSSSs....',
+      ],
+      S:[
+        '..hHHHHHHh....',
+        '.hHHHHHHHHh...',
+        '.hHlllllllHh..',
+        '.hHHHHHHHHHh..',
+        '.hHFFFFFFHHh..',
+        '.HHFEFFFFFhh..',
+        '.HHFFfffffH...',
+        '..HHffffHH....',
+        '..hHHNNNHH....',
+        '..BBBBBBBBb...',
+        '.BcBBABBBBb...',
+        '.BBBBABBBBb...',
+        '.BBBBBBBBBb...',
+        '.BBBcBBBBBb...',
+        '.BBBBBBBBBb...',
+        '.PPPpPPPpPP...',
+        '.PPPpPPPpPP...',
+        '.PPpPPPpPP....',
+        '.SSsSSSsSS....',
+      ],
+    };
+    // ── DAX (v13) ──────────────────────────
+    const palDax = {
+      H:'#c84020', h:'#7a2010', l:'#f86838',
+      A:'#f0c050',
+      F:'#e8b888', f:'#c08868', E:'#180c08',
+      B:'#702018', b:'#400e08', c:'#a04030',
+      N:'#ece4d0', V:'#3a0e08',
+      P:'#2a1a10', p:'#1a0e08', S:'#2a1808', s:'#180e04',
+    };
+    const sprDax = {
+      D:[
+        '..hHHHHHHh....',
+        '.hHHHHHHHHh...',
+        '.hHlHHlHlHHh..',
+        '.hHHHHHHHHHh..',
+        '.h..FFFFFF..h.',
+        '..FFFFFFFFFF..',
+        '..FFEFFFEFF...',
+        '..FFFfffFFF...',
+        '..FFffffFF....',
+        '..hHHNNNHHh...',
+        '..BBBBABBBb...',
+        '.BcBBBABBBBb..',
+        '.BBBBABBBBBb..',
+        '.BBVVVVVVVBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.PPPpPPPpPPp..',
+        '.PPPpPPPpPPp..',
+        '.PPpPPPpPPp...',
+        '.SSsSSSsSSS...',
+        '..sSSSSSSs....',
+      ],
+      U:[
+        '..hHHHHHHh....',
+        '.hHHHHHHHHh...',
+        '.hHlHHlHlHHh..',
+        '.hHHHHHHHHHh..',
+        '.hHHHHHHHHHh..',
+        '..hHHHHHHHh...',
+        '..hHHNNNHHh...',
+        '..BBBBBBBBb...',
+        '.BcBBBBBBBBb..',
+        '.BBVVVVVVVBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.PPPpPPPpPPp..',
+        '.PPPpPPPpPPp..',
+        '.PPpPPPpPPp...',
+        '.SSsSSSsSSS...',
+        '..sSSSSSSs....',
+      ],
+      S:[
+        '..hHHHHHHh....',
+        '.hHHHHHHHHh...',
+        '.hHlHHlHlHHh..',
+        '.hHHHHHHHHHh..',
+        '..FFFFFFFFF...',
+        '.FFFEFFFFFf...',
+        '.FFFFfffFFf...',
+        '..FFffffFf....',
+        '..hHHNNNHH....',
+        '..BBBBBBBBb...',
+        '.BcBBBABBBb...',
+        '.BBVVVVVBBb...',
+        '.BBBBBBBBBb...',
+        '.BBBcBBBBBb...',
+        '.BBBBBBBBBb...',
+        '.PPPpPPPpPP...',
+        '.PPPpPPPpPP...',
+        '.PPpPPPpPP....',
+        '.SSsSSSsSS....',
+      ],
+    };
+    // ── GUIDE (v13) ──────────────────────────
+    const palGuide = {
+      H:'#a8a098', h:'#787068', l:'#d8d0c8',
+      A:'#c89828',
+      F:'#d8b890', f:'#a89878', E:'#180c08',
+      B:'#5a4028', b:'#3a2818', c:'#7a6038',
+      N:'#ece4d0', V:'#3a2410',
+      P:'#5a4028', p:'#3a2818', S:'#2a1808', s:'#180e04',
+      Z:'#a8a098', o:'#8a6838', O:'#3a2410',
+    };
+    const sprGuide = {
+      D:[
+        '...hhHHhh.....',
+        '..hHHHHHHh....',
+        '..hHHlllHHh...',
+        '..hHHHHHHHh...',
+        '..FFFFFFFFF...',
+        '.FFEFFFEFFF...',
+        '.FZZZZZZZZF...',
+        '.FZZZZZZZZF...',
+        '..ZZZZZZZZ....',
+        '...NNNNNNN..o.',
+        '..BBBBBBBBb.O.',
+        '.BcBBBBBBBBbO.',
+        '.BBBBABBBBBbO.',
+        '.BBBBBBBBBBbO.',
+        '.BBBBBBBBBBbO.',
+        '.BBBBBBBBBBbO.',
+        '.BBBBBBBBBBbO.',
+        '.BBBBBBBBBBbO.',
+        '.BBBBBBBBBBbO.',
+        '.PPpPPpPPpPp..',
+        '.SSsSSsSSsSS..',
+      ],
+      U:[
+        '...hhHHhh.....',
+        '..hHHHHHHh....',
+        '..hHHlllHHh...',
+        '..hHHHHHHHh...',
+        '..hHHHHHHHh...',
+        '..hHHHHHHHh...',
+        '...NNNNNNN....',
+        '..BBBBBBBBb...',
+        '.BcBBBBBBBBb..',
+        '.BBBBABBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.PPpPPpPPpPp..',
+        '.SSsSSsSSsSS..',
+      ],
+      S:[
+        '...hhHHhh.....',
+        '..hHHHHHHh....',
+        '..hHHHHHHHh...',
+        '..hHHHHHHHh...',
+        '..FFFFFFFF....',
+        '.FFFEFFFFf....',
+        '.FZZZZZZZF....',
+        '.FZZZZZZZF....',
+        '..ZZZZZZZ.....',
+        '...NNNNNN..o..',
+        '..BBBBBBBb.O..',
+        '.BcBBBBBBb.O..',
+        '.BBBBABBBb.O..',
+        '.BBBBBBBBb.O..',
+        '.BBBBBBBBb.O..',
+        '.BBBBBBBBb.O..',
+        '.BBBBBBBBb.O..',
+        '.BBBBBBBBb.O..',
+        '.PPpPPpPPp....',
+        '.SSsSSsSSs....',
+      ],
+    };
+
+    // ── MERLE (v13) ──────────────────────────
+    const palMerle = {
+      H:'#684020', h:'#3a2010', l:'#8a6038',
+      A:'#3a2410',
+      F:'#e8c8a0', f:'#c8a880', E:'#180c08',
+      B:'#9a6e3a', b:'#5e3e1a', c:'#c89868',
+      N:'#ece4d0', V:'#d8c890',
+      P:'#3a2810', p:'#1a0e08', S:'#2a1808', s:'#180e04',
+      Z:'#3a2010',
+    };
+    const sprMerle = {
+      D:[
+        '...hHHHHh.....',
+        '..hHHHHHHh....',
+        '..hHHlllHHh...',
+        '..hHHHHHHHh...',
+        '..hHHHHHHHh...',
+        '..FFFFFFFFF...',
+        '.FFEFFFEFFF...',
+        '.FZZZZZZZZF...',
+        '..ZZZZZZZZ....',
+        '...NNNNNNN....',
+        '..BBBBBBBBb...',
+        '.BcBVVVVVBBb..',
+        '.BBBVVVVVBBb..',
+        '.BBVVAAAVBBb..',
+        '.BBVVVVVVVBBb.',
+        '.BBBVVVVVBBb..',
+        '.PPPpPPPpPPp..',
+        '.PPPpPPPpPPp..',
+        '.PPpPPPpPPp...',
+        '.SSsSSSsSSS...',
+        '..sSSSSSSs....',
+      ],
+      U:[
+        '...hHHHHh.....',
+        '..hHHHHHHh....',
+        '..hHHlllHHh...',
+        '..hHHHHHHHh...',
+        '..hHHHHHHHh...',
+        '..hHHHHHHHh...',
+        '...NNNNNNN....',
+        '..BBBBBBBBb...',
+        '.BcBVVVVVBBb..',
+        '.BBBVVVVVBBb..',
+        '.BBBVVVVVBBb..',
+        '.BBBVVVVVBBb..',
+        '.BBBBBBBBBBb..',
+        '.PPPpPPPpPPp..',
+        '.PPPpPPPpPPp..',
+        '.PPpPPPpPPp...',
+        '.SSsSSSsSSS...',
+        '..sSSSSSSs....',
+      ],
+      S:[
+        '...hHHHHh.....',
+        '..hHHHHHHh....',
+        '..hHHHHHHHh...',
+        '..hHHHHHHHh...',
+        '..FFFFFFFF....',
+        '.FFFEFFFFf....',
+        '.FZZZZZZZF....',
+        '..ZZZZZZZ.....',
+        '...NNNNNN.....',
+        '..BBBBBBBb....',
+        '.BcBVVVBBb....',
+        '.BBBVVVBBb....',
+        '.BBVAAVBBb....',
+        '.BBVVVVBBb....',
+        '.BBBVVVBBb....',
+        '.PPPpPPPpP....',
+        '.PPPpPPPpP....',
+        '.PPpPPPpP.....',
+        '.SSsSSSsS.....',
+      ],
+    };
+    // ── KEEPER (v13) ──────────────────────────
+    const palKeeper = {
+      H:'#5a3068', h:'#382044', l:'#8a58a0',
+      A:'#c8a058',
+      F:'#d8b8a8', f:'#a88878', E:'#180c08',
+      B:'#5a7088', b:'#384858', c:'#7a90a8',
+      N:'#ece4d0', V:'#1a1828',
+      P:'#2a1830', p:'#1a0e1c', S:'#1a1432', s:'#0a0a1c',
+    };
+    const sprKeeper = {
+      D:[
+        '..hhHHHHhh....',
+        '.hHHHHHHHHh...',
+        '.hHHhhhhHHHh..',
+        '.hHHHHHHHHHh..',
+        '.hH.FFFFFF.Hh.',
+        '.HHFFFFFFFFhh.',
+        '.HHFEFFFEFFhh.',
+        '..HFFfffffH...',
+        '..HHffffHH....',
+        '..hHHNNNHHh...',
+        '..BBBBABBBb...',
+        '.BcBBABABBBb..',
+        '.BBBBABBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBcBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.PPPpPPPpPPp..',
+        '.PPPpPPPpPPp..',
+        '.PPpPPPpPPp...',
+        '.SSsSSSsSSS...',
+        '..sSSSSSSs....',
+      ],
+      U:[
+        '..hhHHHHhh....',
+        '.hHHHHHHHHh...',
+        '.hHHHHHHHHHh..',
+        '.hHHHHHHHHHh..',
+        '.hHHHHHHHHHh..',
+        '.hHHHHHHHHHh..',
+        '..hHHNNNHHh...',
+        '..BBBBBBBBb...',
+        '.BcBBBBBBBBb..',
+        '.BBBBABBBBBb..',
+        '.BBBBABBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.BBBBBBBBBBb..',
+        '.PPPpPPPpPPp..',
+        '.PPPpPPPpPPp..',
+        '.PPpPPPpPPp...',
+        '.SSsSSSsSSS...',
+        '..sSSSSSSs....',
+      ],
+      S:[
+        '..hhHHHHhh....',
+        '.hHHHHHHHHh...',
+        '.hHHhhhhHHHh..',
+        '.hHHHHHHHHHh..',
+        '.hHFFFFFFHHh..',
+        '.HHFEFFFFFhh..',
+        '.HHFFfffffH...',
+        '..HHffffHH....',
+        '..hHHNNNHH....',
+        '..BBBBBBBBb...',
+        '.BcBBABBBBb...',
+        '.BBBBABBBBb...',
+        '.BBBBBBBBBb...',
+        '.BBBcBBBBBb...',
+        '.BBBBBBBBBb...',
+        '.PPPpPPPpPP...',
+        '.PPPpPPPpPP...',
+        '.PPpPPPpPP....',
+        '.SSsSSSsSS....',
+      ],
+    };
+
+
+    // ── YUGI (spiky hair, Millennium Puzzle) ──────────────────
+    const palYugi = {
+      H:'#d4c020', h:'#a09010', l:'#f0dc40',
+      M:'#d02060',
+      F:'#e8c890', f:'#c8a070',
+      E:'#3a1040',
+      B:'#1a2858', b:'#0e1838', c:'#2a3870',
+      N:'#e8e0d0',
+      V:'#e8c860', v:'#c0a030',
+      P:'#0a1430', p:'#060c20',
+      S:'#1a1020', s:'#0e080e',
+    };
+    const sprYugi = {
+      D:[
+        '..MHHhHHHMl.',
+        '.MHlHHHHlHM.',
+        '.lHHHHHHHHl.',
+        '..HHHHHHHHh.',
+        '..hHHHHHhHH.',
+        '..FFFFFFfFF.',
+        '.FfEFFFFEfF.',
+        '.FFFfffFFFf.',
+        '..NNNfNNN...',
+        '.BBBBBBBBBB.',
+        'bBcBBBBBBbB.',
+        'BBBBBVvBBBBb',
+        'BBBBBVvBBBBb',
+        'BBBBBBBBBBBB',
+        '.PPPpPPPpPP.',
+        'PPPpPPPpPPPP',
+        '.PPpPPPpPP..',
+        '.SSsSSSsSSS.',
+        '..sSSSSSSs..',
+      ],
+      U:[
+        '..MHHhHHHMl.',
+        '.MHlHHHHlHM.',
+        '.lHHHHHHHHl.',
+        '..HHHHHHHHh.',
+        '..hHHHHHhHH.',
+        '.BBBBBBBBBB.',
+        'bBcBBBBBBbB.',
+        'BBBBBBBBBBBb',
+        'BBBBBVvBBBBb',
+        'BBBBBVvBBBBb',
+        'BBBBBBBBBBBB',
+        'BBBBBBBBBBBb',
+        '.PPPpPPPpPP.',
+        'PPPpPPPpPPPP',
+        '.PPpPPPpPP..',
+        '.SSsSSSsSSS.',
+        '.SSsSSSsSSS.',
+        '..sSSSSSSs..',
+        '..sSSSSSSs..',
+      ],
+      S:[
+        '.MHHhHHMl.',
+        'MHlHHHlHM.',
+        '.lHHHHHHl.',
+        '..HHHHHHh.',
+        '..hHHHHhH.',
+        '..FFFFfFF.',
+        '.FEFfFFF..',
+        '.FFFffFF..',
+        '..NNfFNN..',
+        '.BBBBBBBBB',
+        'bBcBBBBBb.',
+        'BBBBVvBBBb',
+        'BBBBVvBBBb',
+        'BBBBBBBBBBB',
+        '.PPPpPPPpP.',
+        'PPPpPPPpPPP',
+        '.PPpPPPpP..',
+        '.SSsSSSsSS.',
+        '..sSSSSSss.',
+      ],
+    };
+
+    // ── ASH (red cap Pokemon trainer) ────────────────────────
+    const palAsh = {
+      H:'#241410', h:'#180e08',
+      F:'#e8c890', f:'#c8a070',
+      E:'#241410',
+      B:'#1a3878', b:'#102450', c:'#2a4898',
+      N:'#f0e8d8',
+      V:'#d82828', v:'#901818',
+      A:'#f4d850', a:'#c0a020',
+      P:'#1a3a1a', p:'#0e280e',
+      S:'#282018', s:'#1a1408',
+    };
+    const sprAsh = {
+      D:[
+        '..vVVVVVvv..',
+        '.VVVVVVVVVv.',
+        '.vcVVVVVVvv.',
+        '.VVVVVVVVV..',
+        '.NnNNNNNNNn.',
+        '..HhFFFFhH..',
+        '.FFFEFFEFff.',
+        '.FFFfffFFFf.',
+        '..NnFNNNnN..',
+        '.BBBBBBBBBB.',
+        'bBcBBBBBBbB.',
+        '.AAAAAAAAAA.',
+        '.BBBBBBBBBB.',
+        '.BBBBBBBBBB.',
+        '.PPPpPPPpPP.',
+        '.PPPpPPPpPP.',
+        '..PPpPPPpPP.',
+        '..SSsSSSsSS.',
+        '..sSSSSSSSs.',
+      ],
+      U:[
+        '..vVVVVVvv..',
+        '.VVVVVVVVVv.',
+        '.vcVVVVVVvv.',
+        '.VVVVVVVVV..',
+        '.NnNNNNNNNn.',
+        '.BBBBBBBBBB.',
+        'bBcBBBBBBbB.',
+        'BBBBBBBBBBBb',
+        '.AAAAAAAAAA.',
+        'AAAAAAAAAAAAA',
+        '.BBBBBBBBBB.',
+        '.BBBBBBBBBB.',
+        '.PPPpPPPpPP.',
+        '.PPPpPPPpPP.',
+        '..PPpPPPpPP.',
+        '..SSsSSSsSS.',
+        '..SSsSSSsSS.',
+        '..sSSSSSSSs.',
+        '..sSSSSSSSs.',
+      ],
+      S:[
+        '..vVVVVvv.',
+        '.VVVVVVVVv',
+        '.vcVVVVVvv',
+        '.VVVVVVVVV',
+        '.NnNNNNNNn',
+        '..HhFFFFhH',
+        '.FFFEFFFff.',
+        '.FFFfffFff.',
+        '..NnFNNNn..',
+        '.BBBBBBBBB.',
+        'bBcBBBBBb..',
+        '.AAAAAAAAA.',
+        '.BBBBBBBBB.',
+        '.PPPpPPPpP.',
+        'PPPpPPPpPPP',
+        '.PPpPPPpP..',
+        '.SSsSSSsSS.',
+        '..sSSSSSSSs',
+      ],
+    };
+
+    // ── Generic NPC ───────────────────────────────────────────
+    const makeGenericPal = (bodyHex, hairHex) => {
+      const ri = parseInt(bodyHex.slice(1,3),16);
+      const gi = parseInt(bodyHex.slice(3,5),16);
+      const bi = parseInt(bodyHex.slice(5,7),16);
+      const d = (n) => Math.max(0,n-45).toString(16).padStart(2,'0');
+      const u = (n) => Math.min(255,n+35).toString(16).padStart(2,'0');
+      return {
+        B: bodyHex,
+        b: `#${d(ri)}${d(gi)}${d(bi)}`,
+        c: `#${u(ri)}${u(gi)}${u(bi)}`,
+        H: hairHex||'#1a1010', h:'#0e0808', l:'#2a2020',
+        F:'#e0b888', f:'#c09060', E:'#180e08',
+        N:'#e0d8c0',
+        P:'#1a1a30', p:'#0e0e1e',
+        S:'#2a1808', s:'#180e04',
+      };
+    };
+    const sprGenericD = [
+      '..hHHHHHhH..',
+      '.HHHHHHHHHh.',
+      '.HHHHHHHHHh.',
+      '..FFFFFFfF..',
+      '.FfEFFfEFF..',
+      '.FFFfffFFF..',
+      '.BBBBBBBBBB.',
+      'bBcBBBBBBbB.',
+      'BBBBBBBBBBBb',
+      '.BBBBBBBBBB.',
+      '.PPPpPPPpPP.',
+      'PPPpPPPpPPPP',
+      '.SSsSSSsSSS.',
+    ];
+    const sprGenericU = [
+      '..hHHHHHhH..',
+      '.HHHHHHHHHh.',
+      '.HHHHHHHHHh.',
+      '.BBBBBBBBBB.',
+      'bBcBBBBBBbB.',
+      'BBBBBBBBBBBb',
+      'BBBBBBBBBBBB',
+      '.BBBBBBBBBB.',
+      '.PPPpPPPpPP.',
+      'PPPpPPPpPPPP',
+      '.PPpPPPpPP..',
+      '.SSsSSSsSSS.',
+      '..sSSSSSSs..',
+    ];
+    const sprGenericS = [
+      '..hHHHhH..',
+      '.HHHHHHHh.',
+      '.HHHHHHHh.',
+      '..FFFFfF..',
+      '.FEFfFFF..',
+      '.FFFffFF..',
+      '.BBBBBBBBB',
+      'bBcBBBBBb.',
+      'BBBBBBBBBb',
+      '.BBBBBBBb.',
+      '.PPPpPPpP.',
+      'PPPpPPpPPP',
+      '.SSsSsSSSS',
+    ];
+
+    const getSpr = (o, face) =>
+      face==='up' ? o.U : (face==='left'||face==='right') ? o.S : o.D;
+    const isFlip = (face) => face === 'right';
+
     const drawCharacter = (gx, gy, bodyColor, face, faded, isPlayer, npcId) => {
       const sx = (gx - camX) * TILE;
       const sy = (gy - camY) * TILE;
       const cx = sx + TILE / 2;
-      const baseY = sy + TILE - 2;       // anchor near the bottom of the tile
-      if (faded) ctx.globalAlpha = 0.45;
-      // soft shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.4)';
-      ctx.beginPath(); ctx.ellipse(cx, baseY, 9, 3, 0, 0, Math.PI * 2); ctx.fill();
-      // idle bob — slight lift on alternating frames
-      const bob = (Math.floor(animFrame / 3) % 2 === 0) ? 0 : -1;
-      const by = baseY + bob;
-
-      // Branch to special character renderers (Yugi / Ash) if this is one of them.
-      if (npcId === 'yugi') {
-        drawYugi(cx, by, face, faded);
-        return;
+      const baseY = sy + TILE - 2 + BOB;
+      if (faded) ctx.globalAlpha = 0.38;
+      drawShadow(cx, sy + TILE);
+      let rows, pal;
+      if (isPlayer)              { rows=getSpr(sprPlayer,face); pal=palPlayer; }
+      else if (npcId==='yugi')   { rows=getSpr(sprYugi,face);  pal=palYugi;   }
+      else if (npcId==='ash')    { rows=getSpr(sprAsh,face);   pal=palAsh;    }
+      else if (npcId==='vaultkeeper'){ rows=getSpr(sprKeeper,face); pal=palKeeper; }
+      else if (npcId==='bran')   { rows=getSpr(sprBran,face);  pal=palBran;   }
+      else if (npcId==='ria')    { rows=getSpr(sprRia,face);   pal=palRia;    }
+      else if (npcId==='dax')    { rows=getSpr(sprDax,face);   pal=palDax;    }
+      else if (npcId==='guide')  { rows=getSpr(sprGuide,face); pal=palGuide;  }
+      else if (npcId==='merle')  { rows=getSpr(sprMerle,face); pal=palMerle;  }
+      else {
+        pal=makeGenericPal(bodyColor||'#4a6ea0','#1a1010');
+        rows = face==='up' ? sprGenericU
+             : (face==='left'||face==='right') ? sprGenericS
+             : sprGenericD;
       }
-      if (npcId === 'ash') {
-        drawAsh(cx, by, face, faded);
-        return;
-      }
-      if (npcId === 'vaultkeeper') {
-        drawKeeper(cx, by, face, faded);
-        return;
-      }
-
-      // body — three vertical bands for shading depth
-      ctx.fillStyle = shade(bodyColor, 0.7);   // dark right side
-      ctx.fillRect(cx - 6, by - 14, 12, 12);
-      ctx.fillStyle = bodyColor;                // mid
-      ctx.fillRect(cx - 6, by - 14, 8, 12);
-      ctx.fillStyle = shade(bodyColor, 1.2);    // highlight left edge
-      ctx.fillRect(cx - 6, by - 14, 2, 12);
-      // legs
-      ctx.fillStyle = '#2a1810';
-      ctx.fillRect(cx - 5, by - 2, 4, 4);
-      ctx.fillRect(cx + 1, by - 2, 4, 4);
-      // head
-      ctx.fillStyle = '#e6c9a2';
-      ctx.fillRect(cx - 5, by - 24, 10, 10);
-      // face shadow on right
-      ctx.fillStyle = '#c9a684';
-      ctx.fillRect(cx + 2, by - 24, 3, 10);
-      // hair/hat
-      ctx.fillStyle = isPlayer ? '#1a2a3a' : '#2a1a1a';
-      ctx.fillRect(cx - 6, by - 25, 12, 4);
-      ctx.fillRect(cx - 5, by - 27, 10, 3);
-      // hat highlight
-      ctx.fillStyle = isPlayer ? '#2a4060' : '#3a2820';
-      ctx.fillRect(cx - 5, by - 27, 3, 1);
-      // eyes per facing
-      ctx.fillStyle = '#1a1a1a';
-      if (face === 'down') {
-        ctx.fillRect(cx - 3, by - 18, 2, 2);
-        ctx.fillRect(cx + 1, by - 18, 2, 2);
-      } else if (face === 'left') {
-        ctx.fillRect(cx - 4, by - 18, 2, 2);
-      } else if (face === 'right') {
-        ctx.fillRect(cx + 2, by - 18, 2, 2);
-      }
-      // (face === 'up' shows back of head — no eyes)
+      drawPS(rows, pal, cx, baseY, isFlip(face));
       if (faded) ctx.globalAlpha = 1;
     };
-
-    // ---- Yugi sprite ----
-    // Spiky blonde hair with magenta-tip accents and the Millennium Puzzle.
-    // The whole hair shape reads as a single yellow spiked silhouette with the
-    // iconic lightning fringe falling between the eyes.
-    const drawYugi = (cx, by, face, faded) => {
-      // Blue blazer body
-      ctx.fillStyle = '#1a2858'; ctx.fillRect(cx - 6, by - 14, 12, 12);
-      ctx.fillStyle = '#2a3a78'; ctx.fillRect(cx - 6, by - 14, 8, 12);
-      ctx.fillStyle = '#3f5098'; ctx.fillRect(cx - 6, by - 14, 2, 12);
-      // White shirt collar peeking out
-      ctx.fillStyle = '#e8e0d0';
-      ctx.fillRect(cx - 2, by - 14, 4, 2);
-      ctx.fillRect(cx - 1, by - 12, 2, 1);
-      // Millennium Puzzle — gold inverted pyramid + chain
-      ctx.fillStyle = '#2a2218';
-      ctx.fillRect(cx - 1, by - 11, 2, 1);   // chain link
-      ctx.fillStyle = '#e8c860';
-      ctx.fillRect(cx - 2, by - 10, 4, 3);   // puzzle body
-      ctx.fillStyle = '#c8a440';
-      ctx.fillRect(cx + 1, by - 10, 1, 3);   // shadow side
-      ctx.fillStyle = '#2a2218';
-      ctx.fillRect(cx - 1, by - 9, 2, 1);    // dark "eye" engraving
-      // Pants/legs (dark blue trousers)
-      ctx.fillStyle = '#0a1430';
-      ctx.fillRect(cx - 5, by - 2, 4, 4);
-      ctx.fillRect(cx + 1, by - 2, 4, 4);
-      // Head
-      ctx.fillStyle = '#e6c9a2'; ctx.fillRect(cx - 5, by - 24, 10, 10);
-      ctx.fillStyle = '#c9a684'; ctx.fillRect(cx + 2, by - 24, 3, 10);
-
-      // ---- Spiky blonde hair (single coherent shape) ----
-      const hairBright = '#f4d850';   // dominant blonde
-      const hairShade  = '#c8a830';   // shadow side of the spikes
-      const tipColor   = '#b8307a';   // magenta accents at the very tips
-
-      // Hair mass that sits ON the head (just covering forehead & sides of skull)
-      ctx.fillStyle = hairBright;
-      ctx.fillRect(cx - 5, by - 25, 10, 3);   // wide band on top of the head
-      ctx.fillRect(cx - 6, by - 24, 1, 4);    // left sideburn
-      ctx.fillRect(cx + 5, by - 24, 1, 4);    // right sideburn
-
-      // Five upward spikes, fanning outward from center
-      // Spike 1: far left
-      ctx.fillRect(cx - 6, by - 28, 2, 3);
-      // Spike 2: left-mid (taller)
-      ctx.fillRect(cx - 3, by - 30, 2, 5);
-      // Spike 3: center (tallest)
-      ctx.fillRect(cx,     by - 31, 2, 6);
-      // Spike 4: right-mid (taller)
-      ctx.fillRect(cx + 3, by - 30, 2, 5);
-      // Spike 5: far right
-      ctx.fillRect(cx + 5, by - 28, 2, 3);
-
-      // Shading on right side of each spike (1px column of darker yellow)
-      ctx.fillStyle = hairShade;
-      ctx.fillRect(cx - 4, by - 28, 1, 3);    // shadow on spike 1
-      ctx.fillRect(cx - 1, by - 30, 1, 5);    // spike 2
-      ctx.fillRect(cx + 2, by - 31, 1, 6);    // spike 3 (longest shadow)
-      ctx.fillRect(cx + 4, by - 30, 1, 5);    // spike 4
-      ctx.fillRect(cx + 6, by - 28, 1, 3);    // spike 5
-      ctx.fillRect(cx + 3, by - 25, 2, 3);    // shadow on the right of the hair mass
-
-      // Magenta accent tips on the three tallest spikes
-      ctx.fillStyle = tipColor;
-      ctx.fillRect(cx - 3, by - 30, 2, 1);    // spike 2 tip
-      ctx.fillRect(cx,     by - 31, 2, 1);    // spike 3 tip
-      ctx.fillRect(cx + 3, by - 30, 2, 1);    // spike 4 tip
-
-      // Subtle black accent just under each red tip (the iconic Yugi "under-shadow")
-      ctx.fillStyle = '#1a0a14';
-      ctx.fillRect(cx - 3, by - 29, 2, 1);    // under spike 2 tip
-      ctx.fillRect(cx,     by - 30, 2, 1);    // under spike 3 tip
-      ctx.fillRect(cx + 3, by - 29, 2, 1);    // under spike 4 tip
-
-      // Lightning-bolt fringe falling between the eyes (single thicker blade)
-      ctx.fillStyle = hairBright;
-      ctx.fillRect(cx - 1, by - 22, 2, 4);    // central blade, ends just above eyes
-      ctx.fillStyle = hairShade;
-      ctx.fillRect(cx,     by - 22, 1, 4);    // 1px shadow stripe down the right of fringe
-
-      // Eyes — narrowed determined look
-      ctx.fillStyle = '#3a1a3a';
-      if (face === 'down') {
-        ctx.fillRect(cx - 3, by - 18, 2, 1);
-        ctx.fillRect(cx + 1, by - 18, 2, 1);
-      } else if (face === 'left') {
-        ctx.fillRect(cx - 4, by - 18, 2, 1);
-      } else if (face === 'right') {
-        ctx.fillRect(cx + 2, by - 18, 2, 1);
-      }
-      if (faded) ctx.globalAlpha = 1;
-    };
-
-    // ---- Ash sprite ----
-    // Red baseball cap clearly perched ABOVE the head with white band, green
-    // half-circle emblem, blue jacket, white sleeves, yellow trim.
-    const drawAsh = (cx, by, face, faded) => {
-      // Blue jacket body
-      ctx.fillStyle = '#1a3878'; ctx.fillRect(cx - 6, by - 14, 12, 12);
-      ctx.fillStyle = '#2a4a98'; ctx.fillRect(cx - 6, by - 14, 8, 12);
-      ctx.fillStyle = '#3f5fb0'; ctx.fillRect(cx - 6, by - 14, 2, 12);
-      // White sleeves at the body sides
-      ctx.fillStyle = '#e8e0d0';
-      ctx.fillRect(cx - 6, by - 10, 2, 6);
-      ctx.fillRect(cx + 4, by - 10, 2, 6);
-      // Yellow chest trim (V across the shirt opening)
-      ctx.fillStyle = '#f4d850';
-      ctx.fillRect(cx - 4, by - 13, 8, 1);
-      ctx.fillRect(cx - 2, by - 12, 4, 1);
-      // White undershirt visible at the neck
-      ctx.fillStyle = '#e8e0d0';
-      ctx.fillRect(cx - 2, by - 14, 4, 1);
-      // Green pants
-      ctx.fillStyle = '#1a3a1a';
-      ctx.fillRect(cx - 5, by - 2, 4, 4);
-      ctx.fillRect(cx + 1, by - 2, 4, 4);
-      // Head
-      ctx.fillStyle = '#e6c9a2'; ctx.fillRect(cx - 5, by - 24, 10, 10);
-      ctx.fillStyle = '#c9a684'; ctx.fillRect(cx + 2, by - 24, 3, 10);
-
-      // Dark hair tufts at sides BELOW the cap (clearly under it)
-      ctx.fillStyle = '#241410';
-      ctx.fillRect(cx - 5, by - 24, 1, 3);   // left tuft (top 3 px of left side)
-      ctx.fillRect(cx + 4, by - 24, 1, 3);   // right tuft
-
-      // ---- Cap (big, bold, clearly above the head) ----
-      const capRed     = '#e02828';
-      const capRedDark = '#9a1818';
-      const capRedLite = '#f04848';
-      const capWhite   = '#f4ecd8';
-
-      // Cap dome — 5 rows tall, narrowing toward the top for a rounded shape
-      ctx.fillStyle = capRed;
-      ctx.fillRect(cx - 1, by - 30, 3, 1);   // tip (3 wide)
-      ctx.fillRect(cx - 2, by - 29, 5, 1);   // 5 wide
-      ctx.fillRect(cx - 3, by - 28, 7, 1);   // 7 wide
-      ctx.fillRect(cx - 4, by - 27, 9, 1);   // 9 wide
-      ctx.fillRect(cx - 5, by - 26, 10, 1);  // 10 wide (full bottom of dome)
-
-      // Highlight along the top-left of the dome (light source upper-left)
-      ctx.fillStyle = capRedLite;
-      ctx.fillRect(cx - 1, by - 30, 1, 1);
-      ctx.fillRect(cx - 2, by - 29, 1, 1);
-      ctx.fillRect(cx - 3, by - 28, 1, 1);
-
-      // Shadow along the right side of the dome (depth)
-      ctx.fillStyle = capRedDark;
-      ctx.fillRect(cx + 1, by - 30, 1, 1);
-      ctx.fillRect(cx + 2, by - 29, 1, 1);
-      ctx.fillRect(cx + 3, by - 28, 1, 1);
-      ctx.fillRect(cx + 4, by - 27, 1, 1);
-      ctx.fillRect(cx + 4, by - 26, 1, 1);
-
-      // White band — thick (1 px) row clearly separating dome from brim
-      ctx.fillStyle = capWhite;
-      ctx.fillRect(cx - 5, by - 25, 10, 1);
-
-      // Green half-circle emblem on the front (only when facing camera)
-      if (face === 'down') {
-        ctx.fillStyle = '#3a8038';
-        ctx.fillRect(cx - 1, by - 27, 2, 1);   // top of half-circle
-        ctx.fillRect(cx - 2, by - 26, 4, 1);   // base of half-circle
-      }
-
-      // Brim — clearly visible, 2 px tall, direction follows facing
-      // Draw brim AFTER everything else so it sits on top
-      ctx.fillStyle = capRed;
-      if (face === 'right') {
-        // Brim sticks right, beyond the head
-        ctx.fillRect(cx + 5, by - 25, 4, 2);
-        ctx.fillStyle = capRedDark;
-        ctx.fillRect(cx + 5, by - 24, 4, 1); // dark underside
-      } else if (face === 'left') {
-        // Brim sticks left, beyond the head
-        ctx.fillRect(cx - 8, by - 25, 4, 2);
-        ctx.fillStyle = capRedDark;
-        ctx.fillRect(cx - 8, by - 24, 4, 1); // dark underside
-      } else if (face === 'down') {
-        // Front-facing — brim across the forehead, 2 px tall, narrower than head
-        ctx.fillRect(cx - 4, by - 24, 8, 2);
-        // Dark shadow line along the bottom of the brim (where it casts onto the forehead)
-        ctx.fillStyle = capRedDark;
-        ctx.fillRect(cx - 4, by - 23, 8, 1);
-      }
-      // (face === 'up' shows back of cap — no brim visible)
-
-      // Eyes — drawn last so they sit on top of everything
-      ctx.fillStyle = '#241410';
-      if (face === 'down') {
-        ctx.fillRect(cx - 3, by - 19, 2, 2);
-        ctx.fillRect(cx + 1, by - 19, 2, 2);
-        // tiny zigzag-ish cheek marks (1px hint)
-        ctx.fillStyle = '#c98864';
-        ctx.fillRect(cx - 4, by - 16, 1, 1);
-        ctx.fillRect(cx + 3, by - 16, 1, 1);
-      } else if (face === 'left') {
-        ctx.fillRect(cx - 4, by - 19, 2, 2);
-        ctx.fillStyle = '#c98864';
-        ctx.fillRect(cx - 4, by - 16, 1, 1);
-      } else if (face === 'right') {
-        ctx.fillRect(cx + 2, by - 19, 2, 2);
-        ctx.fillStyle = '#c98864';
-        ctx.fillRect(cx + 3, by - 16, 1, 1);
-      }
-      if (faded) ctx.globalAlpha = 1;
-    };
-
-    // ---- Keeper Solenne sprite ----
-    // The Hollow Vault's keeper. A taller, hooded figure in slate-blue robes with
-    // a rune-iron staff in her right hand and small spirit-runes circling above
-    // her hood. Visually distinct from townspeople: longer silhouette, no hair,
-    // glowing pale eyes, animated rune ring that signals "magic person, talk to me."
-    const drawKeeper = (cx, by, face, faded) => {
-      // Long robe — wider at the bottom than other NPCs to read as "trailing"
-      const robeMid = '#3a4a68';
-      const robeDark = '#1a2238';
-      const robeHi   = '#5a6e90';
-      // Robe trail (slightly flared bottom)
-      ctx.fillStyle = robeDark;
-      ctx.beginPath();
-      ctx.moveTo(cx - 7, by - 2);
-      ctx.lineTo(cx - 8, by);
-      ctx.lineTo(cx + 8, by);
-      ctx.lineTo(cx + 7, by - 2);
-      ctx.closePath();
-      ctx.fill();
-      // Body (taller than standard 12px)
-      ctx.fillStyle = robeDark;
-      ctx.fillRect(cx - 6, by - 16, 12, 14);
-      ctx.fillStyle = robeMid;
-      ctx.fillRect(cx - 6, by - 16, 8, 14);
-      ctx.fillStyle = robeHi;
-      ctx.fillRect(cx - 6, by - 16, 2, 14);
-      // Sash — diagonal silver belt across the chest
-      ctx.fillStyle = '#c0c8d8';
-      ctx.fillRect(cx - 5, by - 10, 10, 1);
-      ctx.fillStyle = '#8090a8';
-      ctx.fillRect(cx - 5, by - 9, 10, 1);
-      // Hood — wraps the head, peaked top
-      ctx.fillStyle = robeDark;
-      ctx.fillRect(cx - 6, by - 26, 12, 8);   // hood body
-      ctx.fillStyle = robeMid;
-      ctx.fillRect(cx - 6, by - 26, 8, 8);
-      ctx.fillStyle = robeHi;
-      ctx.fillRect(cx - 6, by - 26, 2, 8);
-      // Hood peak (taller silhouette than townspeople)
-      ctx.fillStyle = robeDark;
-      ctx.fillRect(cx - 4, by - 28, 8, 2);
-      ctx.fillStyle = robeMid;
-      ctx.fillRect(cx - 4, by - 28, 5, 2);
-      // Face shadow inside the hood (deep, atmospheric)
-      ctx.fillStyle = '#1a1424';
-      ctx.fillRect(cx - 4, by - 22, 8, 5);
-      // Glowing pale eyes — visible from front and sides, not from behind
-      const glow = 0.8 + 0.2 * Math.abs(Math.sin(animFrame * 0.18));
-      ctx.fillStyle = `rgba(180, 220, 255, ${glow})`;
-      if (face === 'down') {
-        ctx.fillRect(cx - 3, by - 20, 2, 2);
-        ctx.fillRect(cx + 1, by - 20, 2, 2);
-      } else if (face === 'left') {
-        ctx.fillRect(cx - 4, by - 20, 2, 2);
-      } else if (face === 'right') {
-        ctx.fillRect(cx + 2, by - 20, 2, 2);
-      }
-      // Rune-iron staff — held in right hand, taller than the keeper
-      // (drawn behind the body for 'left' face, in front for others)
-      const drawStaff = () => {
-        const staffX = cx + 7;
-        // shaft
-        ctx.fillStyle = '#3a3a4a';
-        ctx.fillRect(staffX, by - 28, 2, 28);
-        ctx.fillStyle = '#6a6a80';
-        ctx.fillRect(staffX, by - 28, 1, 28);  // highlight on left edge
-        // crook / orb at top — pulsing rune-glow
-        const orbPulse = 0.65 + 0.35 * Math.abs(Math.sin(animFrame * 0.22));
-        ctx.fillStyle = `rgba(140, 200, 240, ${orbPulse * 0.6})`;
-        ctx.fillRect(staffX - 2, by - 32, 6, 4);
-        ctx.fillStyle = `rgba(220, 240, 255, ${orbPulse})`;
-        ctx.fillRect(staffX - 1, by - 31, 4, 2);
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(staffX, by - 30, 2, 1);
-      };
-      if (face === 'left') {
-        // staff is behind her — already drawn above body before face details? No,
-        // body is already laid down. Draw the staff but slightly faded so it reads as "behind".
-        ctx.globalAlpha = (faded ? 0.45 : 1) * 0.55;
-        drawStaff();
-        ctx.globalAlpha = faded ? 0.45 : 1;
-      } else {
-        drawStaff();
-      }
-      // Floating spirit-runes circling above the hood (3 small runes orbiting)
-      // Each rune offset by 120° around the orbit; orbit radius pulses subtly.
-      const orbitR = 7;
-      for (let i = 0; i < 3; i++) {
-        const a = animFrame * 0.07 + (i * Math.PI * 2) / 3;
-        const rx = cx + Math.cos(a) * orbitR;
-        const ry = (by - 32) + Math.sin(a) * 2;  // shallow elliptical bob
-        ctx.fillStyle = `rgba(180, 210, 255, ${0.45 + 0.4 * Math.abs(Math.sin(a + animFrame * 0.1))})`;
-        ctx.fillRect(rx - 1, ry - 1, 2, 2);
-        // tiny spark center
-        ctx.fillStyle = 'rgba(240, 250, 255, 0.9)';
-        ctx.fillRect(rx, ry, 1, 1);
-      }
-      if (faded) ctx.globalAlpha = 1;
-    };
-
-    // ---- PASS 1: ground tiles (top-down grid) ----
-    for (let py = 0; py < VH; py++) {
+        for (let py = 0; py < VH; py++) {
       for (let px = 0; px < VW; px++) {
         const gx = camX + px, gy = camY + py;
         const t = map[gy]?.[gx] ?? 't';
@@ -6297,6 +6899,8 @@ export default function GatheringTheMagic() {
           planeswalkerDefeated={planeswalkerDefeated}
           currentPlane={currentPlane}
           planeBaseLevel={planeBaseLevel}
+          planeDualPairs={planeDualPairs}
+          dualMedallions={dualMedallions}
           vaultCount={vaultCreatures.length}
           lastDailyEncounters={lastDailyEncounters}
           hourOfDay={hourOfDay}
@@ -7784,94 +8388,1703 @@ const SPRITE_SPEC = {
   forest_runt:     { shape: 'beast',    ears: 'round', tailBushy: true },
   elfling_scout:   { shape: 'humanoid', ears: 'long', slim: true, bow: true },
   grove_wurm:      { shape: 'serpent',  segments: true, big: true, leaves: true },
-
-  // --- Two-color: combine color identities visually ---
-  // Azorius (W+U): cleric+merfolk — staff and head fin
+  // --- Two-color ---
   skybinder:       { shape: 'humanoid', halo: 1, headFin: 1, staff: true, slim: true },
-  // Dimir (U+B): wisp+hood — shadowy blue ghost
   mind_reaver:     { shape: 'wisp',     hood: true, wispTails: 2, glow: true },
-  // Rakdos (B+R): imp + flames
   hellraiser:      { shape: 'blob',     wings: 'bat', flames: 2, fangs: true, horns: 1 },
-  // Gruul (R+G): beast + flames/horns
   warbeast:        { shape: 'beast',    ears: 'round', horns: 2, flames: 1, tailSpike: true },
-  // Selesnya (G+W): humanoid + halo + bow
   verdant_paladin: { shape: 'humanoid', halo: 1, bow: true, leaves: true, ears: 'long' },
-  // Orzhov (W+B): robed figure, hood + halo
   grim_priest:     { shape: 'humanoid', hood: true, halo: 1, staff: true, slim: true },
-  // Izzet (U+R): wisp-like mage with flames and fins
   stormwright:     { shape: 'wisp',     wispTails: 2, flames: 1, glow: true, sideFins: true },
-  // Golgari (B+G): creepy wurm with leaves
   fungal_creeper:  { shape: 'serpent',  segments: true, leaves: true, fangs: true, glow: true },
-  // Boros (R+W): armored knight
   blazing_knight:  { shape: 'humanoid', halo: 1, flames: 1, staff: true, wings: 'bird' },
-  // Simic (G+U): amphibious hybrid with fin and leaves
   reef_prowler:    { shape: 'merfolk',  headFin: 1, sideFins: true, leaves: true, ears: 'pointy' },
-
   // --- Three-color: Shards ---
   arcane_sphinx:   { shape: 'merfolk',  wings: 'angel', halo: 1, headFin: 1, regal: true },
   void_lich:       { shape: 'wisp',     hood: true, flames: 1, glow: true, fangs: true },
   apex_predator:   { shape: 'beast',    horns: 2, fangs: true, flames: 1, tailSpike: true },
   blooming_titan:  { shape: 'humanoid', halo: 1, leaves: true, flames: 1, big: true },
   silver_pegasus:  { shape: 'beast',    wings: 'angel', halo: 1, leaves: true, ears: 'long' },
-
   // --- Three-color: Wedges ---
   abzan_warden:    { shape: 'humanoid', halo: 1, hood: true, leaves: true, staff: true },
   jeskai_monk:     { shape: 'humanoid', halo: 1, headFin: 1, flames: 1, slim: true },
   sultai_assassin: { shape: 'humanoid', hood: true, leaves: true, headFin: 1, fangs: true },
   mardu_warlord:   { shape: 'humanoid', halo: 1, flames: 2, fangs: true, horns: 1 },
   temur_shaman:    { shape: 'beast',    horns: 2, leaves: true, flames: 1, headFin: 1 },
-
-  // --- Four-color: Nephilim (legendary multi-headed shapes) ---
+  // --- Four-color: Nephilim ---
   yore_tiller:     { shape: 'humanoid', wings: 'bat', halo: 2, headFin: 1, flames: 1, hood: true, regal: true },
   glint_eye:       { shape: 'wisp',     wings: 'bat', wispTails: 2, flames: 1, leaves: true, fangs: true, glow: true },
   dune_brood:      { shape: 'beast',    horns: 2, halo: 1, flames: 2, leaves: true, tailSpike: true, big: true },
   ink_treader:     { shape: 'merfolk',  wings: 'angel', halo: 1, leaves: true, flames: 1, headFin: 1 },
   witch_maw:       { shape: 'serpent',  segments: true, halo: 1, leaves: true, headFin: 1, fangs: true, big: true },
-
-  // --- Five-color Prismatic Avatar (all features)
+  // --- Five-color ---
   prismatic_avatar:{ shape: 'humanoid', wings: 'angel', halo: 2, staff: true, regal: true, flames: 1 },
-
-  // --- Legendary shrine bosses — beefy versions of their typeline with maxed features ---
+  // --- Legendary shrine bosses ---
   vigil_avatar:    { shape: 'humanoid', wings: 'angel', halo: 2, staff: true, regal: true, big: true },
   tidewarden:      { shape: 'serpent',  dorsalFin: 2, sideFins: true, big: true, segments: true, fangs: true },
   voidlord:        { shape: 'wisp',     hood: true, wispTails: 3, glow: true, fangs: true, horns: 2, flames: 1, big: true },
   pyreclaw:        { shape: 'drake',    wings: 'dragon', horns: 2, tailSpike: true, scales: true, flames: 2, fangs: true, big: true },
   patriarch_wurm:  { shape: 'serpent',  segments: true, big: true, leaves: true, horns: 2, fangs: true },
-
-  // --- Final boss Planeswalker — the most ornate, all-color presence ---
-  the_planeswalker: { shape: 'humanoid', wings: 'angel', halo: 2, staff: true, regal: true, flames: 2, big: true, glow: true },
+  the_planeswalker:{ shape: 'humanoid', wings: 'angel', halo: 2, staff: true, regal: true, flames: 2, big: true, glow: true },
 };
 
 function specFor(id) {
   return SPRITE_SPEC[id] || { shape: 'blob' };
 }
 
+// ================================================================
+//  CREATURE PIXEL-ART SPRITE SYSTEM  (DS / HGSS quality)
+//  Replaces abstract SVG paths with hand-crafted pixel art.
+//  PXS = logical pixel size in SVG units.
+//  Sprites are centered in the 72×88 viewBox with bottom anchor.
+// ================================================================
+
+// ── Archetype pixel art data ─────────────────────────────────
+// Single-char keys; '.' = transparent
+// '1'=primary  '2'=primary-dark  '3'=primary-light
+// 'F'=face  'f'=face-shadow  'E'=eye  'e'=eye-white
+// 'G'=gold  'g'=gold-dark  'A'=light-accent  'a'=accent-shadow
+// 'P'=legs  'p'=leg-shadow  'S'=shoe  's'=shoe-shadow
+
+// ================================================================
+//  CREATURE PIXEL-ART SYSTEM v3 — anatomy-driven, hand-authored
+//  Each archetype has unique posture, asymmetry, species-specific
+//  facial structure, and silhouette readability at small scale.
+// ================================================================
+//
+//  Pixel-key conventions:
+//  '.'  transparent
+//  '1'  primary body color
+//  '2'  primary dark (outline / shadow)
+//  '3'  primary light (specular / highlight)
+//  'A'  accent / scale highlight
+//  'a'  accent dark
+//  'F'  face / muzzle color (humanoid skin or body shade for animals)
+//  'f'  face shadow
+//  'E'  eye pupil
+//  'e'  eye glow
+//  'G'  gold / belt
+//  'P'  legs
+//  'S'  shoes / claws
+//  's'  shoe shadow
+
+// ================================================================
+//  PER-CREATURE PIXEL ART  (v7 — modeled on reference sheet)
+//  Hand-authored sprites for each mono-color creature.
+//  Falls back to CR_SPR archetypes for any creature not listed.
+//
+//  KEY CONVENTIONS:
+//    .  transparent
+//    1  body main color        2  body outline / dark
+//    3  body highlight         4  secondary accent
+//    F  face/hood SHADOW       E  eye glow
+//    H  halo bright            h  halo dark
+//    W  feather white          w  feather mid          v  feather dark
+//    M  wing membrane          m  membrane dark
+//    K  flame core             k  flame mid            x  flame dark
+//    o  horn/claw light        O  horn dark
+//    l  leaf bright            L  leaf dark
+//    P  leg                    S  foot
+//    A  highlight pixel
+// ================================================================
+
+const PER_CREATURE_SPR = {
+  // ---------- WHITE ----------
+  plains_acolyte: [
+    '....HHHHHH....',
+    '...Hh....hH...',
+    '....HHHHHH....',
+    '......22......',
+    '.....2112.....',
+    '....21FF12....',
+    '...21FFFF12...',
+    '...21FEEFF1...',
+    '...21FFFFF1...',
+    '...21FFFFF1...',
+    '....22FF22....',
+    '....2111122...',
+    '...211333112..',
+    '..2111111112..',
+    '..2111111112..',
+    '..2113311112..',
+    '..2111111112..',
+    '..2111111112..',
+    '...211111112..',
+    '....22..22....',
+    '....22..22....',
+    '....22..22....',
+  ],
+  aven_sentinel: [
+    '......22........',
+    '.....2112.......',
+    '....21FF12......',
+    '...21FFFF12.....',
+    '...21FEEFF1.....',
+    '...21FFFFF1.....',
+    '...21FFFFF1.....',
+    '....22FF22......',
+    '....2111122.....',
+    'k..211333112..k.',
+    'kxk1111111112kxk',
+    'KxK1111111112KxK',
+    'kxk1111111112kxk',
+    'k...2111111122.k',
+    '....2111111122..',
+    '....2111111122..',
+    '....211111112...',
+    '.....22..22.....',
+    '.....22..22.....',
+    '.....22..22.....',
+  ],
+  radiant_seraph: [
+    '......HHHHHH......',
+    '.....Hh....hH.....',
+    '......HHHHHH......',
+    '........22........',
+    '.......2112.......',
+    'W.....21FF12.....W',
+    'WW...21FFFF12...WW',
+    'WwW..21FEEFF1..WwW',
+    'WwwW.21FFFFF1.WwwW',
+    'WvwwW21FFFFF1WwwvW',
+    'WvwwW.22FF22.WwwvW',
+    '.WvwW.2111122.WvwW',
+    '.WvW.211333112.WvW',
+    '..WW.2111111112.WW',
+    '..W..2111111112..W',
+    '.....2113311112...',
+    '.....2111111112...',
+    '.....2111111112...',
+    '......22..22......',
+    '......22..22......',
+    '......22..22......',
+  ],
+
+  // ---------- BLUE ----------
+  tideling: [
+    '....22.22.....',
+    '...2113311....',
+    '...2113311....',
+    '....211112....',
+    '...21FFFF12...',
+    '...21FEEFF1...',
+    '...21FFFFF1...',
+    '....22FF22....',
+    '....2111122...',
+    '...211333112..',
+    '...2113333112.',
+    '...2113333112.',
+    '...2111111112.',
+    '....21111112..',
+    '....2111112...',
+    '...2113112....',
+    '..211131122...',
+    '.21111312222..',
+    '21113112222...',
+    '.2113122......',
+    '..21222.......',
+    '...22.........',
+  ],
+  phantom_sprite: [
+    '...22222222...',
+    '..2111111112..',
+    '.211333333112.',
+    '.211333333112.',
+    '.21FFFFFFFF12.',
+    '.21FEEFFFEEF1.',
+    '.21FFFFFFFFF1.',
+    '.21FFFFFFFFF1.',
+    '..21FFFFFFf2..',
+    '..2111ffff112.',
+    '.2111111111112',
+    '.2111111111112',
+    '..21111111112.',
+    '...21111111A..',
+    '....2A1A1A2...',
+    '...2A.2A.2A...',
+    '..2A...A...2..',
+    '..A....A....A.',
+    '.A.....A.....A',
+    'A......A......',
+  ],
+  storm_leviathan: [
+    '...22.........',
+    '..2113........',
+    '..21133.......',
+    '...22112......',
+    '....21FF22....',
+    '...21FEEFF2...',
+    '...21FFFFFF2..',
+    '...21FFFFFF2..',
+    '....2FFffff2..',
+    '....2211ff22..',
+    '....22113311..',
+    '....2113331...',
+    '...21133311...',
+    '...211333112..',
+    '..21133331122.',
+    '..2113333112..',
+    '..21133311....',
+    '.21133311.....',
+    '.211333112....',
+    '..21133311....',
+    '...211331.....',
+    '....211331....',
+    '.....21133....',
+    '......21331...',
+    '.......21311..',
+    '........2113..',
+    '.........212..',
+  ],
+
+  // ---------- BLACK ----------
+  shade_whelp: [
+    '....2222....',
+    '...211112...',
+    '..21FFFF12..',
+    '.21FFFFFF12.',
+    '.21FEEEEFF1.',
+    '.21FFFFFFF1.',
+    '.21FFFFFFF1.',
+    '.21FFFFFFF1.',
+    '.21FFFFFFF1.',
+    '.211FFFFFf12',
+    '.2113FFFf312',
+    '.21133333312',
+    '.2111333112.',
+    '.2111111112.',
+    '.21111111A2.',
+    '.21111111A2.',
+    '..2111111A..',
+    '..2222222...',
+  ],
+  blood_imp: [
+    '......22.......',
+    '.....2oo2......',
+    '....21FF12.....',
+    '...21FFFF12....',
+    '...21FEEFF1....',
+    '...21FFFFF1....',
+    '....22FF22.....',
+    'M..2111111A2..M',
+    'MmM21133312MmM.',
+    'MmmM1133311MmmM',
+    'MmmmM11331MmmmM',
+    'MmmmM11111MmmmM',
+    '.MmmM21111MmmM.',
+    '..MmM21112MmM..',
+    '...MM2112MM....',
+    '....211112.....',
+    '....221122.....',
+    '....22..22.....',
+  ],
+  nightfall_wraith: [
+    '...22222....',
+    '..2111112...',
+    '.21133312...',
+    '.211FFFF12..',
+    '.21FFFFFF1..',
+    '.21FEEEEF1..',
+    '.21FFFFFF1..',
+    '.21FFFFFF1..',
+    '..2FFFFFf12.',
+    '..2111ff112.',
+    '..21111111A.',
+    '..211111A12.',
+    '...2A11A12..',
+    '...A2A1A2...',
+    '..A.2A.2A...',
+    '.A...A...A..',
+    'A....A....A.',
+    '.....A......',
+  ],
+
+  // ---------- RED ----------
+  emberkin: [
+    '...K....K...',
+    '..KkK..KkK..',
+    '.KkxkKKkxkK.',
+    '..kxXxxXxk..',
+    '...xXxxXx...',
+    '...22xx22...',
+    '..211331122.',
+    '.21FFFFFF12.',
+    '.21FEEEEFF1.',
+    '.21FFFFFFF1.',
+    '..2FFFFFf2..',
+    '..211ff112..',
+    '.2111333112.',
+    '.211333331A2',
+    '.21333333312',
+    '.21333331112',
+    '.2111111111A',
+    '.2111111111A',
+    '..21111111A.',
+    '...2222222..',
+  ],
+  goblin_raider: [
+    '............O...',
+    '...........OoO..',
+    '............O...',
+    '...22.......O...',
+    '..2112......O...',
+    '.21FF12.....O...',
+    '21FFFFF2....O...',
+    '21FEEFFF2...O...',
+    '21FFFFFF2...O...',
+    '.21FFFf12...O...',
+    '..22FF22....O...',
+    '...211122..2O...',
+    '..21133312.OO...',
+    '..213333112O....',
+    '..21333311112...',
+    '..2111111112....',
+    '..2111111112....',
+    '..2111111112....',
+    '...21....12.....',
+    '...22....22.....',
+    '...22....22.....',
+  ],
+  cinder_drake: [
+    '..M.............',
+    '.MmM............',
+    'MmmmM...22......',
+    'MmmmmM.2113.....',
+    'MmmmmmM21F2.....',
+    'MmmmmmM21FE12...',
+    '.MmmmmM2FFFFF12.',
+    '..MmmmM2FFFffF12',
+    '..MmmmM2211ff112',
+    '..MmmmM21133312.',
+    '..MmmmM21333312.',
+    '...MmmM2113331..',
+    '....MmM21111A2..',
+    '.....MM21111A2..',
+    '......M2111A12..',
+    '......M2A1A12...',
+    '......M22A2.....',
+    '.......2A2.k....',
+    '......2.....k...',
+    '.....22..22.k...',
+    '.....2P..2P.....',
+    '.....2S..2S.....',
+  ],
+
+  // ---------- GREEN ----------
+  forest_runt: [
+    '..22........22..',
+    '.2112.......2112',
+    '.2113........11.',
+    '..211111111111..',
+    '.21133333333112.',
+    '.21FFFFFFFFFF12.',
+    '.21FEEFFFFEEF12.',
+    '.21FFFFFFFFFF12.',
+    '..21FfffffFf12..',
+    '...22FFFFFf22...',
+    '...211111111....',
+    '..2111111111122.',
+    '..2113333333112.',
+    '..21133333311A2.',
+    '..21111111111A..',
+    '..2111111111A2..',
+    '...22..22..22...',
+    '...22..22..22...',
+    '...22..22..22...',
+    '...22..22..22...',
+  ],
+  elfling_scout: [
+    '...2...........',
+    '..2o...........',
+    '.2oo..22.......',
+    '.2o..2112......',
+    '.2o.21FF12.....',
+    'O2.21FFFFF2....',
+    'O.21FEEFFF2....',
+    'O.21FFFFFF2....',
+    'O..21FFFf12....',
+    'O...22ff22.....',
+    'O....211122....',
+    'O...211333112..',
+    'O..21133333112.',
+    'O..21133331112.',
+    'O..21111111112.',
+    'O...211111112..',
+    '2....211111112.',
+    '2o....21....12.',
+    '.2o...22....22.',
+    '..2....22....22',
+    '...2...22....22',
+  ],
+  grove_wurm: [
+    '...l...l......',
+    '..lLl.lLl.....',
+    '...l...l......',
+    '....22.22.....',
+    '...2113311....',
+    '..21133311....',
+    '..21FFFFFF2...',
+    '..21FEEFFFF2..',
+    '..21FFFFFFFF2.',
+    '...2FFffffFF2.',
+    '...2211FFff12.',
+    '....21111ff12.',
+    '....21133312..',
+    '...21133331...',
+    '...21133311...',
+    '...211333112..',
+    '....21333311..',
+    '....2113331...',
+    '.....211331...',
+    '......21331...',
+    '......21331...',
+    '.......21331..',
+    '........2113..',
+    '.........212..',
+    '..........22..',
+  ],
+
+  // ── Multi-color, Nephilim, Legendaries (v13) ────────────
+  skybinder: [
+    '....HHHHHH....',
+    '...Hh....hH...',
+    '....HHHHHH....',
+    '......22......',
+    '.....2112.....',
+    '....21FF12....',
+    '...21FFFF12...',
+    '...21FEEFF1...',
+    '...21FFFFF1...',
+    '....22FF22....',
+    '....2111122...',
+    '...211333112..',
+    '..2111111112..',
+    '..2114444112..',
+    '..2114444112..',
+    '..2111111112..',
+    '..2111111112..',
+    '...211111112..',
+    '....22..22....',
+    '....22..22....',
+    '....22..22....',
+  ],
+  mind_reaver: [
+    '...22222....',
+    '..2111112...',
+    '.21133312...',
+    '.211FFFF12..',
+    '.21FFFFFF1..',
+    '.21FEEEEF1..',
+    '.21FFFFFF1..',
+    '.21FFFFFF1..',
+    '..2FFFFFf12.',
+    '..2114ff112.',
+    '..21144441A.',
+    '..211441A12.',
+    '...2A11A12..',
+    '...A2A1A2...',
+    '..A.2A.2A...',
+    '.A...A...A..',
+    'A....A....A.',
+    '.....A......',
+  ],
+  hellraiser: [
+    '..K.........K..',
+    '.KkK.......KkK.',
+    '..xX.o...o.Xx..',
+    '...22.o.o.22...',
+    '..21FFFFFFFF12.',
+    '..21FEEFFEEF12.',
+    '..21FFFFFFFF12.',
+    'M.21FFFFFFFFf2M',
+    'MM2114444112MM.',
+    'MM1144444411MM.',
+    '.M1144444411M..',
+    '.M1144444411M..',
+    '..21111111112..',
+    '..21111111112..',
+    '...2111111A....',
+    '....211111.....',
+    '....22...22....',
+    '....22...22....',
+  ],
+  warbeast: [
+    '..o..........o..',
+    '..oO........oO..',
+    '..22........22..',
+    '.2112.......2112',
+    '.21133333333312.',
+    '.21FFFFFFFFFF12.',
+    '.21FEEFFFFEEF12.',
+    '.21FFFFFFFFFF12.',
+    '..21FfffffFf12..',
+    '...22FFFFFf22...',
+    'k..211444411..k.',
+    'kxk1144444411xKk',
+    'k..211444411..k.',
+    '..2111111111122.',
+    '..21111111111A..',
+    '...22..22..22...',
+    '...22..22..22...',
+    '...22..22..22...',
+    '...22..22..22...',
+  ],
+  verdant_paladin: [
+    '....HHHHHH....',
+    '...Hh....hH...',
+    '....HHHHHH....',
+    '......22......',
+    '.l...2112...l.',
+    'lLl.21FF12.lLl',
+    '...21FFFF12...',
+    '...21FEEFF1...',
+    '...21FFFFF1...',
+    '....22FF22....',
+    '....2111122...',
+    '...211333112..',
+    '..2111441112..',
+    '..2114444112..',
+    '..2114444112..',
+    '..2111111112..',
+    '..2111111112..',
+    '...211111112..',
+    '....22..22....',
+    '....22..22....',
+    '....22..22....',
+  ],
+  grim_priest: [
+    '....HHHHHH....',
+    '...Hh....hH...',
+    '....HHHHHH....',
+    '......22......',
+    '....2244442...',
+    '...244FFFF42..',
+    '...24FFFFFF1..',
+    '...24FEEFFFF..',
+    '...24FFFFFFF..',
+    '....24FFFF42..',
+    '....24FFFF42..',
+    '....2222FF22..',
+    '....2111122...',
+    '...211333112..',
+    '..2111111112..',
+    '..2111111112..',
+    '..2111441112..',
+    '..2111111112..',
+    '...211111112..',
+    '....22..22....',
+    '....22..22....',
+    '....22..22....',
+  ],
+  stormwright: [
+    '....K....K....',
+    '...KkK..KkK...',
+    '....x....x....',
+    '...22222222...',
+    '..2111111112..',
+    '.211333333112.',
+    '.21FFFFFFFF12.',
+    '.21FEEFFFEEF1.',
+    '.21FFFFFFFFF1.',
+    '..21FFFFFFf2..',
+    '..2111ffff112.',
+    '.2111144441112',
+    '.2111144441112',
+    '..21111111112.',
+    '...21111111A..',
+    '....2A1A1A2...',
+    '...2A.2A.2A...',
+    '..2A...A...2..',
+    '..A....A....A.',
+    '.A.....A.....A',
+  ],
+  fungal_creeper: [
+    '...l...l......',
+    '..lLl.lLl.....',
+    '...l...l......',
+    '....22.22.....',
+    '...2113311....',
+    '..21133311....',
+    '..21FFFFFF2...',
+    '..21FEEFFFF2..',
+    '..21FFFFFFFF2.',
+    '...2FFffffFF2.',
+    '...2211FFff12.',
+    '....21144412..',
+    '....21144331..',
+    '...21144331...',
+    '...21133311...',
+    '...211333112..',
+    '....21333311..',
+    '....2113331...',
+    '.....211331...',
+    '......21331...',
+    '.......21331..',
+    '........2113..',
+    '.........212..',
+    '..........22..',
+  ],
+  blazing_knight: [
+    '......HHHHHH......',
+    '.....Hh....hH.....',
+    '......HHHHHH......',
+    '........22........',
+    '.......2112.......',
+    'k.....21FF12.....k',
+    'kxk..21FFFF12..kxk',
+    'KxK..21FEEFF1..KxK',
+    'kxk..21FFFFF1..kxk',
+    'k.....22FF22.....k',
+    '......2111122.....',
+    '.....211333112....',
+    '....21111441112...',
+    '....21114444112...',
+    '....21114444112...',
+    '....21111111112...',
+    '....21111111112...',
+    '....21111111112...',
+    '.....22..22.......',
+    '.....22..22.......',
+    '.....22..22.......',
+  ],
+  reef_prowler: [
+    '..l.........l.',
+    '.lLl.......lLl',
+    '..l.22.22..l..',
+    '...2113311....',
+    '...2113311....',
+    '....211112....',
+    '...21FFFF12...',
+    '...21FEEFF1...',
+    '...21FFFFF1...',
+    '....22FF22....',
+    '....2111122...',
+    '...211333112..',
+    '...2114444112.',
+    '...2114444112.',
+    '...2111111112.',
+    '....21111112..',
+    '....2111112...',
+    '...2113112....',
+    '..211131122...',
+    '.21111312222..',
+    '21113112222...',
+    '.2113122......',
+    '..21222.......',
+    '...22.........',
+  ],
+  arcane_sphinx: [
+    '......HHHHHH......',
+    '.....Hh....hH.....',
+    '......HHHHHH......',
+    '........22........',
+    '.......2112.......',
+    'W.....21FF12.....W',
+    'WwW..21FFFF12..WwW',
+    'WwwW.21FEEFF1.WwwW',
+    'WvwwW21FFFFF1WwwvW',
+    '.WvwW.22FF22.WvwW.',
+    '.WvW.2111122..WvW.',
+    '..WW211333112..WW.',
+    '...211444411112...',
+    '...211333311112...',
+    '....21111111A2....',
+    '.....22..22.......',
+    '.....22..22.......',
+    '.....22..22.......',
+  ],
+  void_lich: [
+    '....K....K....',
+    '...KkK..KkK...',
+    '...22222......',
+    '..2111112.....',
+    '.21133312.....',
+    '.211FFFF12....',
+    '.21FFFFFF1....',
+    '.21FEEEEF1....',
+    '.21FFFFFF1....',
+    '..2FFFFFf12...',
+    '..2111ff112...',
+    '..21144441A2..',
+    '...211441A12..',
+    '...A2A14A2....',
+    '..A.2A.2A.....',
+    '.A...A...A....',
+    'A....A....A...',
+    '.....A........',
+  ],
+  apex_predator: [
+    '..o..........o..',
+    '..oO........oO..',
+    '..22........22..',
+    '.2112.......2112',
+    '.21133333333312.',
+    'k.21FFFFFFFFFk..',
+    'k.21FEEFFFFEEk..',
+    '..21FFFFFFFFFF12',
+    '..21FfffffFf12..',
+    '...22FFffff22...',
+    '...211111111....',
+    '..21134444112...',
+    '..21111111112...',
+    '..21111111A12...',
+    '...22..22..22...',
+    '...22..22..22...',
+    '...22..22..22...',
+    '...22..22..22...',
+  ],
+  blooming_titan: [
+    '......HHHHHH......',
+    '.....Hh....hH.....',
+    '......HHHHHH......',
+    '.l......22......l.',
+    'lLl....2112....lLl',
+    '......21FF12......',
+    '....21FFEEFFF12...',
+    '....21FFFFFFF12...',
+    '....21FFFFFFF12...',
+    '.....22FFFFf22....',
+    '....2111111122....',
+    '...211111144112...',
+    '..21111111441112..',
+    '..21111144441112..',
+    '..21111111111112..',
+    '..21111111111112..',
+    '..21111111111112..',
+    '...22..22..22.....',
+    '...22..22..22.....',
+    '...22..22..22.....',
+  ],
+  silver_pegasus: [
+    '......HHHHHH......',
+    '.....Hh....hH.....',
+    '......HHHHHH......',
+    '........22........',
+    '..22..2112........',
+    '.2112.21FF12......',
+    '.211333FFFFFF12...',
+    '.21FFFFEEFFFFFF...',
+    '.21FFFFFFFFFFFF...',
+    '.21FfffffFffFf12..',
+    '..2FFFFFffF12.....',
+    '...2111111112.....',
+    '...211111111A.....',
+    '...211114411112...',
+    '...211144441112...',
+    '...21111111111A...',
+    '....211111111A....',
+    '....22..22..22....',
+    '....22..22..22....',
+    '....22..22..22....',
+  ],
+  abzan_warden: [
+    '....HHHHHH....',
+    '...Hh....hH...',
+    '....HHHHHH....',
+    '.l....22....l.',
+    'lLl.2244442.lL',
+    '...244FFFF42..',
+    '...24FFFFFF1..',
+    '...24FEEFFFF..',
+    '...24FFFFFFF..',
+    '....24FFFF42..',
+    '....2222FF22..',
+    '....2111122...',
+    '...211333112..',
+    '..2111441112..',
+    '..2114444112..',
+    '..2114444112..',
+    '..2111111112..',
+    '...211111112..',
+    '....22..22....',
+    '....22..22....',
+    '....22..22....',
+  ],
+  jeskai_monk: [
+    '....HHHHHH....',
+    '...Hh....hH...',
+    '....HHHHHH....',
+    'k....22....k..',
+    'kxk2113311kxk.',
+    '...21FFFFFF12.',
+    '...21FEEFFFF1.',
+    '...21FFFFFFF1.',
+    '....22FFFF22..',
+    '....2111122...',
+    '...211333112..',
+    '..2114444112..',
+    '..2114444112..',
+    '..2111111112..',
+    '..2111111112..',
+    '..2111111112..',
+    '...211111112..',
+    '....22..22....',
+    '....22..22....',
+    '....22..22....',
+  ],
+  sultai_assassin: [
+    'l..............',
+    'lLl............',
+    '....22.22......',
+    '...2113311.....',
+    '...211FFFF1....',
+    '....2FFFFFFF...',
+    '....2FEEFFFF...',
+    '....2FFFFFFF...',
+    '....2FFFFFf2...',
+    '....22ff22.....',
+    '...2111111A2...',
+    '..21344441A12..',
+    '..21344441112..',
+    '..21111111112..',
+    '..21111111112..',
+    '..21111111112..',
+    '...211111112...',
+    '....22..22.....',
+    '....22..22.....',
+    '....22..22.....',
+  ],
+  mardu_warlord: [
+    '....HHHHHH....',
+    '...Hh....hH...',
+    '....HHHHHH....',
+    'k....22....k..',
+    'kx.o2112o..xk.',
+    '...oFFFFo.....',
+    '...21FFFF12...',
+    '...21FEEFF1...',
+    '...21FFFFF1...',
+    '....22FF22....',
+    '....2111122...',
+    '...211333112..',
+    '..2114444112..',
+    '..2114444112..',
+    '..2111111112..',
+    '..2111111112..',
+    '..2111111112..',
+    '...211111112..',
+    '....22..22....',
+    '....22..22....',
+    '....22..22....',
+  ],
+  temur_shaman: [
+    '..o.l..l.o....',
+    '..oOlLlLloO...',
+    '..22.....22...',
+    '.2112....2112.',
+    '.211333333312.',
+    '.21FFFFFFFFFF.',
+    '.21FEEFFFFEEF.',
+    '.21FFFFFFFFFF.',
+    '..21Fffffffff.',
+    '...22FFFFff...',
+    '...211111111..',
+    'k.21144441A12k',
+    'k.21144441112k',
+    '..2111111111..',
+    '..21111111A...',
+    '...22..22..22.',
+    '...22..22..22.',
+    '...22..22..22.',
+    '...22..22..22.',
+  ],
+  yore_tiller: [
+    '......HHHHHH......',
+    '.....Hh....hH.....',
+    '......HHHHHH......',
+    '........22........',
+    '.......2112.......',
+    'M....21FFFF12....M',
+    'MmM.21FEEFFF12.MmM',
+    'MmmM21FFFFFF12MmmM',
+    'MmmM.22FFFF22.MmmM',
+    '.MmM2111111112MmM.',
+    '..MM21133311122MM.',
+    '...2114411111A2...',
+    '...2114411111A2...',
+    '...2113333111A2...',
+    '...2111111111A2...',
+    '...2111111111A2...',
+    '....22..22..22....',
+    '....22..22..22....',
+    '....22..22..22....',
+    '....22..22..22....',
+  ],
+  glint_eye: [
+    '...l........l...',
+    '..lLl..K....lLl.',
+    '...l..KkK....l..',
+    'M..22.222...22.M',
+    'MmM2111112.2MmM.',
+    'MmmM3333312MmmM.',
+    'MmmFFFFFFFF2MmM.',
+    '.MmFEEFFFFFFMM..',
+    '..MFFFFFFFFF.M..',
+    '...FFFFFFFFf....',
+    '....111ff112....',
+    '....11144441....',
+    '....11144441....',
+    '....2A11A12.....',
+    '....A2A1A2A.....',
+    '...A.2A.2A.A....',
+    '..A...A...A.....',
+    '.A....A....A....',
+    'A.....A.....A...',
+    '......A.........',
+  ],
+  dune_brood: [
+    '......HHHHHH......',
+    '.....Hh....hH.....',
+    '......HHHHHH......',
+    '..o..l....l..o....',
+    '..oOlLl..lLloO....',
+    '..22........22....',
+    '.2112.......2112..',
+    '.21133333333312...',
+    'k.21FFFFFFFFFk....',
+    'k.21FEEFFFFEEk....',
+    '..21FFFFFFFFFF12..',
+    '..21FfffffFf12....',
+    '...22FFffff22.....',
+    '...211111111......',
+    '..21134434112.....',
+    '..21111111112.....',
+    '..21111111A12.....',
+    '...22..22..22.....',
+    '...22..22..22.....',
+    '...22..22..22.....',
+  ],
+  ink_treader: [
+    '......HHHHHH......',
+    '.....Hh....hH.....',
+    '......HHHHHH......',
+    '.l......22......l.',
+    'lLl....2112....lLl',
+    'W.....21FF12.....W',
+    'WwW..21FFFF12..WwW',
+    'WwwW.21FEEFF1.WwwW',
+    'WvwwW21FFFFF1WwwvW',
+    '.WvwW.22FF22.WvwW.',
+    '.WvW.2111122..WvW.',
+    '..WW.211333112.WW.',
+    '.....2114441112...',
+    '.....2114443112...',
+    '.....2111111112...',
+    '.....2111111112...',
+    '.....2111111112...',
+    '......22..22......',
+    '......22..22......',
+    '......22..22......',
+  ],
+  witch_maw: [
+    '....HHHHHH....',
+    '...Hh....hH...',
+    '....HHHHHH....',
+    'l..l.....l..l.',
+    'lLl.lLl.lLl.l.',
+    '....22.22.....',
+    '...2113311....',
+    '...2113311....',
+    '...21FFFFFF2..',
+    '...21FEEFFFF2.',
+    '...21FFFFFFFF2',
+    '....2FFffffFFF',
+    '....2211FFff12',
+    '....21111ff12.',
+    '....21144412..',
+    '...21144331...',
+    '...21133311...',
+    '...211333112..',
+    '....2113331...',
+    '.....211331...',
+    '......21331...',
+    '.......21331..',
+    '........2113..',
+    '.........212..',
+  ],
+  prismatic_avatar: [
+    '......HHHHHHHH......',
+    '.....Hh......hH.....',
+    '......HHHHHHHH......',
+    '........22..........',
+    '.......2112.........',
+    'W.....21FF12.....W..',
+    'WwW..21FFFF12..WwW..',
+    'WwwW.21FEEFF1.WwwW..',
+    'WvwwW21FFFFF1WwwvW..',
+    '.WvwW.22FF22.WvwW...',
+    '.WvW.2111122.WvW....',
+    '..WW.211333112.WW...',
+    'k....2113344112....k',
+    'kxk.211443344112.kxk',
+    'k...211344334112....',
+    '....211443344112....',
+    '....211111111112....',
+    '.....22..22..22.....',
+    '.....22..22..22.....',
+    '.....22..22..22.....',
+  ],
+  vigil_avatar: [
+    '......HHHHHHHH.......',
+    '....HHh......hHH.....',
+    '......HHHHHHHH.......',
+    '........22...........',
+    '.......2112..........',
+    'W......21FF12......W.',
+    'WwW...21FEEFF12...WwW',
+    'WwwW.21FFFFFFF1.WwwW.',
+    'WvwwW2FFFFFFFFF2WwwvW',
+    'WvwwW2211FFFF112WwwvW',
+    'WvvwW.21111111A.WvvwW',
+    '.WvwW2113333311A.WvwW',
+    '.WvW.21133333312.WvW.',
+    '..WW.21133311112.WW..',
+    '.....21111111112.....',
+    '.....21134431112.....',
+    '.....21133331112.....',
+    '.....21111111112.....',
+    '......22..22.........',
+    '......22..22.........',
+    '......22..22.........',
+  ],
+  tidewarden: [
+    '...22..............',
+    '..2113.............',
+    '..21133............',
+    '...21133...........',
+    '...22113...........',
+    '....21FF22.........',
+    '...21FEEFF2........',
+    '..21FFFFFFF2.......',
+    '..21FFFFFFFF2......',
+    '..21FFFffffFF2.....',
+    '..21FFFffff112.....',
+    '...2211FFff112.....',
+    '....2113311112.....',
+    '...21133311111.....',
+    '..21133331122......',
+    '..2113333112.......',
+    '..21133311.........',
+    '.21133311..........',
+    '.211333112.........',
+    '..21133311.........',
+    '...21133311........',
+    '....2113311........',
+    '.....211331........',
+    '......21331........',
+    '.......21331.......',
+    '........2113.......',
+    '.........212.......',
+    '..........22.......',
+  ],
+  voidlord: [
+    '..o..K.....K..o..',
+    '..oOkkK...KkkOo..',
+    '..oOO.x...x.OOo..',
+    '...22.........22.',
+    '..2111111111122..',
+    '.21133331113332..',
+    '.21FFFFFFFFFF12..',
+    '.21FFFFFFFFFFF1..',
+    '.21FEEFFFFEEFFF..',
+    '.21FFFFFFFFFFFF..',
+    '.21FFFFFFFFFFFF..',
+    '..2FFFFFFFFFf12..',
+    '..2111ffffff112..',
+    '..2113333333A12..',
+    '..21133333111A2..',
+    '..21111111111A...',
+    '...21111111A12...',
+    '....2A11A11A2....',
+    '....A2A1A1A2A....',
+    '...A.2A.2A.2A....',
+    '..A...A...A...A..',
+    '.A....A....A.....',
+    'A.....A.....A....',
+  ],
+  pyreclaw: [
+    'M.................',
+    'MmM...............',
+    'MmmM......o....o..',
+    'MmmmM.....oO..oO..',
+    'MmmmmM....22..22..',
+    'MmmmmmM..21122112.',
+    'MmmmmmM2211FFFFE12',
+    '.MmmmmM2FFFFFFFFFE',
+    '.MmmmmM2FFFFFFFFFF',
+    '..MmmmM221FFFFFff1',
+    '..MmmmM221111ff112',
+    '..MmmmM21133333112',
+    '...MmmM2113333312.',
+    '....MmM21133331...',
+    '....MmM21111A12...',
+    '.....MM21111A12...',
+    '......M2A1A11A2...',
+    '......M2A1A1A22...',
+    '......2A1A1A2..k..',
+    '....2P22A1A2...kk.',
+    '....2P22.A2....k..',
+    '....2S2.........K.',
+    '....2s2...........',
+  ],
+  patriarch_wurm: [
+    '...l...l...l......',
+    '..lLl.lLl.lLl.....',
+    '...l...l...l......',
+    'o.....22.22.....o.',
+    'oO...2113311...oO.',
+    '..21133333311.....',
+    '..21FFFFFFFFF2....',
+    '..21FEEFFFEEFF2...',
+    '..21FFFFFFFFFFF2..',
+    '..21FFffffffFFFF2.',
+    '..21FFffffffffFFF2',
+    '...221FFFFFFffff12',
+    '....221111ffff112.',
+    '....211133331112..',
+    '....2113333311....',
+    '....21133331......',
+    '....21133311......',
+    '....21133311......',
+    '....211333112.....',
+    '.....21133311.....',
+    '......21133311....',
+    '.......2113331....',
+    '........211331....',
+    '.........21133....',
+    '..........2113....',
+    '...........212....',
+    '............22....',
+  ],
+  the_planeswalker: [
+    '......HHHHHHHH.......',
+    '....HHh......hHH.....',
+    '......HHHHHHHH.......',
+    '........22...........',
+    '.......2112..........',
+    'W.....21FF12.....W...',
+    'WwW..21FFFF12..WwW...',
+    'WwwW.21FEEFF1.WwwW...',
+    'WvwwW2FFFFFFF2WwwvW..',
+    'WvwwW2211FFFF112WvwW.',
+    '.WvwW.A1111111A.WvwW.',
+    '.WvW.2113344112.WvW..',
+    '..WW.2113444412..WW..',
+    'k...21134333311112.k.',
+    'kxK.21133443331112Kxk',
+    'k...21111111111112..k',
+    '....21111111111112...',
+    '....21111111111112...',
+    '.....22..22..22......',
+    '.....22..22..22......',
+    '.....22..22..22......',
+  ],
+};
+
+// Rich palette: extends crPal with all the keys our hand-authored sprites use.
+// Falls back gracefully for legacy archetype sprites (those keys are still present).
+function crPalRich(c1, c2, c3, archetype, primary) {
+  const base = crPal(c1, c2, c3, archetype);
+  // Color-tinted feature palettes (so a Black wraith's wisp tendrils stay purple,
+  // a Green wurm's leaves stay green, etc).
+  const lighten = (hex, amt = 60) => {
+    if (!hex || hex.length < 7) return '#ffffff';
+    const r = Math.min(255, parseInt(hex.slice(1,3),16)+amt);
+    const g = Math.min(255, parseInt(hex.slice(3,5),16)+amt);
+    const b = Math.min(255, parseInt(hex.slice(5,7),16)+amt);
+    return '#'+r.toString(16).padStart(2,'0')+g.toString(16).padStart(2,'0')+b.toString(16).padStart(2,'0');
+  };
+  const darken = (hex, amt = 50) => {
+    if (!hex || hex.length < 7) return '#000000';
+    const r = Math.max(0, parseInt(hex.slice(1,3),16)-amt);
+    const g = Math.max(0, parseInt(hex.slice(3,5),16)-amt);
+    const b = Math.max(0, parseInt(hex.slice(5,7),16)-amt);
+    return '#'+r.toString(16).padStart(2,'0')+g.toString(16).padStart(2,'0')+b.toString(16).padStart(2,'0');
+  };
+  return {
+    ...base,
+    // Hooded face shadow — always near-black, eye color tinted by primary
+    'F': '#1a0e08',
+    'E': primary === 'B' ? '#e8c8ff' :
+         primary === 'U' ? '#d8f0ff' :
+         primary === 'G' ? '#fff8d0' :
+         primary === 'R' ? '#fff8d0' :
+                            '#fff8d0',
+    // Halo gold (shared)
+    'H': '#f8d850', 'h': '#a08428',
+    // Angel feather palette
+    'W': '#fff8e8', 'w': '#d8c098', 'v': '#7a6038',
+    // Bat / dragon wing membrane — uses creature dark color so it blends
+    'M': c2, 'm': darken(c2, 30),
+    // Flames (universal)
+    'K': '#fffadd', 'k': '#ffd870', 'x': '#ff7020',
+    // Horns / claws / spear shaft
+    'o': '#a89070', 'O': '#48381c',
+    // Leaves (always green even on non-green creatures)
+    'l': '#88c850', 'L': '#1a3810',
+    // Highlight pixel
+    'A': lighten(c1, 40),
+    // Legs / feet (kept as before)
+    'P': c2, 'S': '#2a1808',
+    // Numbers
+    '1': c1, '2': c2, '3': lighten(c1, 60), '4': c3 || c1,
+  };
+}
+
+
+const CR_SPR = {
+  // HUMANOID
+  humanoid: [
+    '...22222222...',
+    '..2111111112..',
+    '..2111111112..',
+    '..2233333322..',
+    '...21FFFF12...',
+    '..21FFEEFF12..',
+    '..21FfffffF2..',
+    '..21FFFFFFf2..',
+    '...211ff112...',
+    '.222111111222.',
+    '21A211111121A1',
+    '21AAA1111A21AA',
+    '21AAAAAAAAA1A1',
+    '21AAAAAAAAA1A1',
+    '212GGGGGGGG112',
+    '21222222222222',
+    '..2P2....2P2..',
+    '..2P2....2P2..',
+    '..2P2....2P2..',
+    '..2S2....2S2..',
+    '..2s2....2s2..',
+  ],
+  // BEAST
+  beast: [
+    '..3.........3...',
+    '..32........32..',
+    '..32........32..',
+    '..3322....2233..',
+    '.231111111111132',
+    '.23111111111111.',
+    '.23E11A11A11E13.',
+    '.23111111111113.',
+    '.23F1FFFFFF1F13.',
+    '..2311ffff1132..',
+    '...23ffffff32...',
+    '...2311111132...',
+    '..231111111132..',
+    '.23111111111322.',
+    '.2311AAAAAA1322.',
+    '.231111111113322',
+    '.23111111111332.',
+    '..23P21..21P32..',
+    '...2P2....2P2...',
+    '...2S2....2S2...',
+  ],
+  // MERFOLK
+  merfolk: [
+    '....22222....',
+    '...211111122.',
+    '...21FFFF112.',
+    '...21FEEFF12.',
+    '...21Ff1Ff12.',
+    '...21FFFFf12.',
+    '...211FFf112.',
+    '....2111122..',
+    '..2A111111A2.',
+    '..21AAAA112..',
+    '..2AA11AAA2..',
+    '...2111112...',
+    '...21A1A12...',
+    '...21111A2...',
+    '...211A12....',
+    '..221A22.....',
+    '.221A22......',
+    '221A22.......',
+    '.22A2........',
+    '..22.........',
+  ],
+  // WISP
+  wisp: [
+    '....222222....',
+    '..2211111122..',
+    '.2111111111A2.',
+    '.21111AAAA112.',
+    '.21A1AAAAAA12.',
+    '.21EeAAAAEe12.',
+    '.21A1AAAA1A12.',
+    '.21111111111A.',
+    '.21111A111122.',
+    '.21111111122..',
+    '..21A1A1112...',
+    '...21A1112....',
+    '...21111A2....',
+    '....22A22.....',
+    '.....2A2......',
+    '...2A2........',
+    '..2A2.........',
+    '..22..........',
+  ],
+  // SERPENT
+  serpent: [
+    '...2222.......',
+    '..211112......',
+    '.21111122.....',
+    '21EE111122....',
+    '2111AAA1122...',
+    '21111111122...',
+    '2113333111122.',
+    '.211111111122.',
+    '..21111111122.',
+    '..2A11111A112.',
+    '..2111A11A1122',
+    '..21AA111111A2',
+    '..21111A11A112',
+    '..2A1A1111A1A2',
+    '...21111A1112.',
+    '...2A1A11AA12.',
+    '....2111A112..',
+    '....2A11A12...',
+    '.....21A12....',
+    '......222.....',
+  ],
+  // DRAKE
+  drake: [
+    '...222222....2....',
+    '..21111112...2....',
+    '.211111A12...22...',
+    '21E111111122..2...',
+    '211111111112..22..',
+    '2113333AA1122..2..',
+    '.21111111122...22.',
+    '..2111111122....2.',
+    '..21111A1122...22.',
+    '..211A11AA1222.22.',
+    '.2111AAAAAA1222.2.',
+    '21111AAAAAAA1222..',
+    '2A111AAA111A11222.',
+    '21A11A1AA1A111222.',
+    '.2A1AAAAAA1A1222..',
+    '..211111111A1222..',
+    '..211111A111122...',
+    '..2P22112P22A22...',
+    '..2P2...2P22A22...',
+    '..2S2...2S22A22...',
+    '..2s2...2s222A2...',
+    '............22A2..',
+  ],
+  // BLOB
+  blob: [
+    '....2222......',
+    '..221111122...',
+    '.21111111112..',
+    '.211AAAA1122..',
+    '21E11AA11E122.',
+    '21111111111122',
+    '21133331111A22',
+    '21111111111A22',
+    '.21111111A122.',
+    '.21A11111122..',
+    '.21111111122..',
+    '..2111111122..',
+    '..2111111122..',
+    '..21111111A2..',
+    '...211111122..',
+    '....2P22P2....',
+    '....2P22P2....',
+    '....2S22S2....',
+    '....2s22s2....',
+  ],
+};
+
+const SHAPE_TO_ARCHETYPE = {
+  humanoid: 'humanoid',
+  beast:    'beast',
+  merfolk:  'merfolk',
+  wisp:     'wisp',
+  serpent:  'serpent',
+  drake:    'drake',
+  blob:     'blob',
+};
+
+// Build dynamic palette from creature colors
+// Faces are body-tinted (within palette family) for ALL archetypes
+function crPal(c1, c2, c3, archetype) {
+  const lighten = (hex, amt = 55) => {
+    if (!hex || hex.length < 7) return '#ffffff';
+    const r = Math.min(255, parseInt(hex.slice(1,3),16)+amt);
+    const g = Math.min(255, parseInt(hex.slice(3,5),16)+amt);
+    const b = Math.min(255, parseInt(hex.slice(5,7),16)+amt);
+    return '#'+r.toString(16).padStart(2,'0')+g.toString(16).padStart(2,'0')+b.toString(16).padStart(2,'0');
+  };
+  const darken = (hex, amt = 45) => {
+    if (!hex || hex.length < 7) return '#000000';
+    const r = Math.max(0, parseInt(hex.slice(1,3),16)-amt);
+    const g = Math.max(0, parseInt(hex.slice(3,5),16)-amt);
+    const b = Math.max(0, parseInt(hex.slice(5,7),16)-amt);
+    return '#'+r.toString(16).padStart(2,'0')+g.toString(16).padStart(2,'0')+b.toString(16).padStart(2,'0');
+  };
+  // Faces always blend with the body palette — never default skin
+  // Humanoids/merfolk get a SLIGHTLY desaturated lighter tone for a face;
+  // animals get a pure body-color shade
+  const useSkin = archetype === 'humanoid' || archetype === 'merfolk';
+  // Tint white slightly toward body color for humanoid faces, but keep them in palette family
+  const faceLight = useSkin ? lighten(c1, 35) : lighten(c1, 25);
+  const faceDark  = useSkin ? c1             : darken(c1, 15);
+  return {
+    '1': c1,
+    '2': c2,
+    '3': lighten(c1),
+    '4': c3,
+    'F': faceLight,
+    'f': faceDark,
+    'E': '#180e10',
+    'e': '#f0e8d8',
+    'G': '#d4c030',
+    'g': '#a09020',
+    'A': lighten(c1),
+    'a': c1,
+    'P': c2,
+    'p': '#0a0810',
+    'S': '#2a1808',
+    's': '#180e04',
+    'M': '#d020a0',
+    'B': lighten(c1),
+    'b': c2,
+    'W': '#ffffff',
+    'O': '#0a0814',
+  };
+}
+
+// Pixel-art renderer — emits SVG <rect> elements
+function renderPxSpr(rows, pal, cx=36, baseY=80, ps=3) {
+  if (!rows) return null;
+  const maxW = rows.reduce((m,r)=>Math.max(m,r.length),0);
+  const H = rows.length;
+  const ox = cx - Math.floor(maxW*ps/2);
+  const oy = baseY - H*ps;
+  const elems = [];
+  rows.forEach((row,r)=>{
+    for(let c=0;c<row.length;c++){
+      const k=row[c];
+      if(k==='.' || !pal[k]) continue;
+      elems.push(<rect key={r+'-'+c} x={ox+c*ps} y={oy+r*ps} width={ps} height={ps} fill={pal[k]} shapeRendering="crispEdges"/>);
+    }
+  });
+  return { elems, top: oy, bottom: oy+H*ps, left: ox, right: ox+maxW*ps, cx, h: H*ps, w: maxW*ps };
+}
+
 function CreatureSprite({ creature, facing, scale = 1 }) {
-  const s = specFor(creature.id);
   const cols = colorsOf(creature.c);
-  const primary = cols[0] || 'W';
-  const c = COLOR_HEX[primary];
-  const d = COLOR_DEEP[primary];
-  const tier = creature.tier || 0;
+  const primary   = cols[0] || 'W';
+  const secondary = cols[1] || primary;
+  const c1 = COLOR_HEX[primary];
+  const c2 = COLOR_DEEP[primary];
+  const c3 = COLOR_HEX[secondary];
+
   const W = 72, H = 88;
-  const gid = `grad_${creature.uid || creature.id || 'x'}`;
-  const glowColor = `${c}88`;
+  const s = specFor(creature.id);
+  const tier = creature.tier || 0;
   const flashing = creature.flashUntil && creature.flashUntil > Date.now();
-  // Trigger a re-render at flash end so the glow clears cleanly.
+  const glowColor = c1 + '88';
+
   const [, force] = useState(0);
   useEffect(() => {
     if (!flashing) return;
     const remaining = creature.flashUntil - Date.now();
-    const id = setTimeout(() => force(n => n + 1), remaining + 50);
+    const id = setTimeout(() => force(n => n+1), remaining + 50);
     return () => clearTimeout(id);
   }, [creature.flashUntil, flashing]);
+
   const filter = flashing
-    ? `drop-shadow(0 0 14px #ffe888) drop-shadow(0 0 20px #fff6c8)`
-    : `drop-shadow(0 0 8px ${glowColor})`;
+    ? 'drop-shadow(0 0 14px #ffe888) drop-shadow(0 0 20px #fff6c8)'
+    : 'drop-shadow(0 0 8px ' + glowColor + ')';
+
+  // Use per-creature pixel art when available; fall back to archetype shape.
+  const archetype = SHAPE_TO_ARCHETYPE[s.shape] || 'blob';
+  const customRows = PER_CREATURE_SPR[creature.id];
+  const rows = customRows || CR_SPR[archetype];
+  const pal  = customRows
+    ? crPalRich(c1, c2, c3, archetype, primary)
+    : crPal(c1, c2, c3, archetype);
+  const sprite = renderPxSpr(rows, pal);
+
+  // === FX layers ===================================================
+  // All FX are positioned RELATIVE to the actual sprite bbox so they
+  // always sit at the right anatomy point regardless of sprite size.
+  const bgFx = [];   // behind sprite (back wings)
+  const fgFx = [];   // in front of / on top of sprite (halo, flames, horns, front wings)
+
+  const spriteTop    = sprite.top;
+  const spriteBottom = sprite.bottom;
+  const spriteCx     = sprite.cx;
+  const spriteH      = sprite.h;
+  // Anatomical reference points
+  const headTop      = spriteTop;
+  const headBottom   = spriteTop + Math.min(28, spriteH * 0.35);
+  // Shoulder line: about 35-40% down for humanoids; for non-humanoids approximate similarly
+  const shoulderY    = spriteTop + Math.round(spriteH * 0.36);
+  const hipY         = spriteTop + Math.round(spriteH * 0.65);
+
+  // ---- Wings (positioned at shoulder/upper-back, asymmetric pose) ----
+  if (s.wings === 'angel' || s.wings === 'bird') {
+    const wColor  = '#f4ead0';
+    const wShadow = '#c9b888';
+    const wDetail = '#a08858';
+    // LEFT wing (slightly lower / spread back)
+    bgFx.push(
+      <g key="wingL" opacity="0.96">
+        <rect x={spriteCx-26} y={shoulderY-2}  width="14" height="6" fill={wShadow} shapeRendering="crispEdges"/>
+        <rect x={spriteCx-30} y={shoulderY+2}  width="16" height="6" fill={wShadow} shapeRendering="crispEdges"/>
+        <rect x={spriteCx-32} y={shoulderY+6}  width="14" height="6" fill={wShadow} shapeRendering="crispEdges"/>
+        <rect x={spriteCx-24} y={shoulderY-6}  width="10" height="6" fill={wColor}  shapeRendering="crispEdges"/>
+        <rect x={spriteCx-28} y={shoulderY}    width="14" height="4" fill={wColor}  shapeRendering="crispEdges"/>
+        <rect x={spriteCx-30} y={shoulderY+4}  width="14" height="4" fill={wColor}  shapeRendering="crispEdges"/>
+        {/* feather lines */}
+        <rect x={spriteCx-20} y={shoulderY+2}  width="2"  height="6" fill={wDetail} shapeRendering="crispEdges"/>
+        <rect x={spriteCx-24} y={shoulderY+6}  width="2"  height="6" fill={wDetail} shapeRendering="crispEdges"/>
+      </g>
+    );
+    // RIGHT wing (raised slightly higher — asymmetric pose)
+    bgFx.push(
+      <g key="wingR" opacity="0.96">
+        <rect x={spriteCx+12} y={shoulderY-4}  width="14" height="6" fill={wShadow} shapeRendering="crispEdges"/>
+        <rect x={spriteCx+14} y={shoulderY}    width="18" height="6" fill={wShadow} shapeRendering="crispEdges"/>
+        <rect x={spriteCx+16} y={shoulderY+4}  width="14" height="6" fill={wShadow} shapeRendering="crispEdges"/>
+        <rect x={spriteCx+14} y={shoulderY-8}  width="10" height="6" fill={wColor}  shapeRendering="crispEdges"/>
+        <rect x={spriteCx+14} y={shoulderY-2}  width="14" height="4" fill={wColor}  shapeRendering="crispEdges"/>
+        <rect x={spriteCx+16} y={shoulderY+2}  width="14" height="4" fill={wColor}  shapeRendering="crispEdges"/>
+        <rect x={spriteCx+22} y={shoulderY}    width="2"  height="6" fill={wDetail} shapeRendering="crispEdges"/>
+        <rect x={spriteCx+26} y={shoulderY+4}  width="2"  height="6" fill={wDetail} shapeRendering="crispEdges"/>
+      </g>
+    );
+  } else if (s.wings === 'bat' || s.wings === 'dragon') {
+    const wColor    = c2;
+    const wMembrane = c1;
+    const wEdge     = '#0a0410';
+    // Folded/spread bat wings extending from upper back
+    bgFx.push(
+      <g key="wingL" opacity="0.95">
+        <rect x={spriteCx-28} y={shoulderY-4} width="14" height="6"  fill={wMembrane} shapeRendering="crispEdges"/>
+        <rect x={spriteCx-32} y={shoulderY+2} width="16" height="6"  fill={wMembrane} shapeRendering="crispEdges"/>
+        <rect x={spriteCx-30} y={shoulderY+8} width="12" height="6"  fill={wMembrane} shapeRendering="crispEdges"/>
+        <rect x={spriteCx-24} y={shoulderY-2} width="2"  height="14" fill={wEdge}     shapeRendering="crispEdges"/>
+        <rect x={spriteCx-30} y={shoulderY+4} width="2"  height="8"  fill={wEdge}     shapeRendering="crispEdges"/>
+      </g>
+    );
+    bgFx.push(
+      <g key="wingR" opacity="0.95">
+        <rect x={spriteCx+14} y={shoulderY-4} width="14" height="6"  fill={wMembrane} shapeRendering="crispEdges"/>
+        <rect x={spriteCx+16} y={shoulderY+2} width="16" height="6"  fill={wMembrane} shapeRendering="crispEdges"/>
+        <rect x={spriteCx+18} y={shoulderY+8} width="12" height="6"  fill={wMembrane} shapeRendering="crispEdges"/>
+        <rect x={spriteCx+22} y={shoulderY-2} width="2"  height="14" fill={wEdge}     shapeRendering="crispEdges"/>
+        <rect x={spriteCx+28} y={shoulderY+4} width="2"  height="8"  fill={wEdge}     shapeRendering="crispEdges"/>
+      </g>
+    );
+  } else if (s.wings === 'jet' || s.wings === 'fire') {
+    // Energy/jet wings — flames or magic streaks at shoulder
+    fgFx.push(
+      <g key="jet" opacity="0.92">
+        <rect x={spriteCx-22} y={shoulderY+2} width="10" height="4" fill="#ff9020" shapeRendering="crispEdges"/>
+        <rect x={spriteCx-26} y={shoulderY+6} width="12" height="4" fill="#ff6010" shapeRendering="crispEdges"/>
+        <rect x={spriteCx+12} y={shoulderY+2} width="10" height="4" fill="#ff9020" shapeRendering="crispEdges"/>
+        <rect x={spriteCx+14} y={shoulderY+6} width="12" height="4" fill="#ff6010" shapeRendering="crispEdges"/>
+      </g>
+    );
+  }
+
+  // ---- Glow aura behind body ----
+  if (s.glow) {
+    bgFx.push(
+      <ellipse key="glow" cx={spriteCx} cy={(spriteTop+spriteBottom)/2}
+               rx={sprite.w*0.55} ry={spriteH*0.45}
+               fill={c1+'22'} stroke={c1+'66'} strokeWidth="0.5"/>
+    );
+  }
+
+  // ---- Horns (extend up from head crown, slight outward angle) ----
+  if (s.horns) {
+    const hh = 6 + s.horns * 4;
+    fgFx.push(
+      <g key="horns">
+        {/* Left horn */}
+        <rect x={spriteCx-9} y={headTop-hh+2} width="3" height={hh} fill="#d4b840" shapeRendering="crispEdges"/>
+        <rect x={spriteCx-10} y={headTop-hh+2} width="2" height={Math.round(hh*0.6)} fill="#f0d860" shapeRendering="crispEdges"/>
+        {/* Right horn */}
+        <rect x={spriteCx+6} y={headTop-hh+2} width="3" height={hh} fill="#d4b840" shapeRendering="crispEdges"/>
+        <rect x={spriteCx+7} y={headTop-hh+2} width="2" height={Math.round(hh*0.6)} fill="#f0d860" shapeRendering="crispEdges"/>
+      </g>
+    );
+  }
+
+  // ---- Flames (overlap silhouette — start from belt area, rise up & past head) ----
+  if (s.flames) {
+    const fl = s.flames;
+    const fbase = hipY;
+    const fh    = headBottom - fbase + 14 + fl * 4;
+    // Use jagged flame silhouette (small rects offset to mimic flicker)
+    fgFx.push(
+      <g key="flames" opacity="0.88">
+        {/* Outer red flame body */}
+        <rect x={spriteCx-9} y={fbase-fh+8} width="18" height={fh-8} fill="#e63a10" shapeRendering="crispEdges"/>
+        <rect x={spriteCx-7} y={fbase-fh+4} width="14" height={fh-4} fill="#ff5a18" shapeRendering="crispEdges"/>
+        <rect x={spriteCx-5} y={fbase-fh}   width="10" height={fh}   fill="#ff8030" shapeRendering="crispEdges"/>
+        {/* Inner orange */}
+        <rect x={spriteCx-4} y={fbase-fh+6} width="8"  height={fh-10} fill="#ffb040" shapeRendering="crispEdges"/>
+        <rect x={spriteCx-3} y={fbase-fh+10} width="6" height={fh-14} fill="#ffd870" shapeRendering="crispEdges"/>
+        {/* Top flicker tip */}
+        <rect x={spriteCx-2} y={fbase-fh-3} width="4"  height="6" fill="#ffe890" shapeRendering="crispEdges"/>
+        <rect x={spriteCx-1} y={fbase-fh-6} width="2"  height="4" fill="#fffadd" shapeRendering="crispEdges"/>
+        {/* Side jagged flicker (asymmetric) */}
+        <rect x={spriteCx-11} y={fbase-fh+12} width="3" height="4" fill="#ff8030" shapeRendering="crispEdges"/>
+        <rect x={spriteCx+9}  y={fbase-fh+10} width="3" height="6" fill="#ff8030" shapeRendering="crispEdges"/>
+        <rect x={spriteCx+10} y={fbase-fh+16} width="2" height="4" fill="#e63a10" shapeRendering="crispEdges"/>
+      </g>
+    );
+  }
+
+  // ---- Halo (renders ABOVE everything, just above head crown) ----
+  if (s.halo) {
+    const r = 11 + s.halo * 3;
+    let haloY = headTop - 4;
+    // If horns or flames, push halo up so all are visible
+    if (s.horns)  haloY -= s.horns * 4;
+    if (s.flames) haloY -= 4;
+    fgFx.push(
+      <g key="halo">
+        <ellipse cx={spriteCx} cy={haloY} rx={r}     ry={Math.round(r*0.32)}
+                 fill="none" stroke="#ffe888" strokeWidth={1.4 + s.halo*0.4} opacity="0.95"/>
+        <ellipse cx={spriteCx} cy={haloY} rx={r-2}   ry={Math.round(r*0.22)}
+                 fill="none" stroke="#fff8d8" strokeWidth="0.8" opacity="0.7"/>
+      </g>
+    );
+  }
+
+  // ---- Staff (humanoids only) ----
+  if (s.staff) {
+    fgFx.push(
+      <g key="staff">
+        <rect x={spriteCx+sprite.w*0.4} y={shoulderY-4} width="3" height={hipY-shoulderY+18} fill="#8a6a40" shapeRendering="crispEdges"/>
+        <rect x={spriteCx+sprite.w*0.4-2} y={shoulderY-10} width="7" height="7" fill="#ffe888" shapeRendering="crispEdges"/>
+        <rect x={spriteCx+sprite.w*0.4-1} y={shoulderY-9}  width="4" height="4" fill="#ffffff" shapeRendering="crispEdges"/>
+      </g>
+    );
+  }
+
+  // ---- Tail spike (extends past body to the right) ----
+  if (s.tailSpike) {
+    fgFx.push(
+      <g key="tspike">
+        <rect x={sprite.right-2} y={spriteBottom-12} width="6" height="3" fill={c2} shapeRendering="crispEdges"/>
+        <rect x={sprite.right+2} y={spriteBottom-10} width="4" height="3" fill={c2} shapeRendering="crispEdges"/>
+        <rect x={sprite.right+4} y={spriteBottom-8}  width="3" height="3" fill={c2} shapeRendering="crispEdges"/>
+      </g>
+    );
+  }
+
   return (
     <div style={{
-      width: W * scale, height: H * scale,
-      transform: facing === 'left' ? 'scaleX(-1)' : 'none',
+      width: W*scale, height: H*scale,
+      transform: facing==='left' ? 'scaleX(-1)' : 'none',
       filter,
     }}>
       <div style={{
@@ -7879,367 +10092,20 @@ function CreatureSprite({ creature, facing, scale = 1 }) {
         animation: flashing ? 'gtmEvoFlash 0.7s ease-in-out infinite alternate' : undefined,
         transformOrigin: 'center',
       }}>
-      <svg viewBox={`0 0 ${W} ${H}`} width={W * scale} height={H * scale}>
-        <defs>
-          <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
-            {cols.length <= 1 ? (
-              <>
-                <stop offset="0%" stopColor={c} />
-                <stop offset="100%" stopColor={d} />
-              </>
-            ) : (
-              cols.flatMap((col, i) => {
-                const pct = (i / (cols.length - 1)) * 100;
-                return [
-                  <stop key={`l${i}`} offset={`${pct}%`} stopColor={COLOR_HEX[col]} />,
-                ];
-              })
-            )}
-          </linearGradient>
-        </defs>
-        <ellipse cx={W/2} cy={H-4} rx="22" ry="4" fill="rgba(0,0,0,0.55)" />
-        {renderBackLayers(s, c, d, tier)}
-        {renderBody(s, gid, d, tier)}
-        {renderFrontLayers(s, c, d, tier)}
-      </svg>
+        <svg viewBox={'0 0 '+W+' '+H} width={W*scale} height={H*scale}>
+          <ellipse cx={W/2} cy={H-4} rx="22" ry="4" fill="rgba(0,0,0,0.55)"/>
+          {/* Background FX (wings, glow) */}
+          {bgFx}
+          {/* Body sprite */}
+          {sprite.elems}
+          {/* Foreground FX (halo, flames, horns) — overlap silhouette */}
+          {fgFx}
+        </svg>
       </div>
     </div>
   );
 }
 
-function renderBody(s, gid, d, tier) {
-  const stroke = '#0a0614';
-  switch (s.shape) {
-    case 'humanoid': {
-      const slim = s.slim ? 7 : (s.squat ? 13 : 10);
-      const h = s.slim ? 34 : (s.squat ? 26 : 32);
-      const cy = 50;
-      return (
-        <g>
-          <circle cx="36" cy="30" r="9" fill={`url(#${gid})`} stroke={stroke} strokeWidth="1.5" />
-          <path
-            d={`M ${36-slim} ${cy-h/2+6} Q 36 ${cy-h/2} ${36+slim} ${cy-h/2+6} L ${36+slim+2} ${cy+h/2} L ${36-slim-2} ${cy+h/2} Z`}
-            fill={`url(#${gid})`} stroke={stroke} strokeWidth="1.5"
-          />
-        </g>
-      );
-    }
-    case 'merfolk':
-      return (
-        <g>
-          <circle cx="36" cy="30" r="9" fill={`url(#${gid})`} stroke={stroke} strokeWidth="1.5" />
-          <path d="M 28 38 Q 36 34 44 38 L 48 62 Q 36 68 24 62 Z"
-                fill={`url(#${gid})`} stroke={stroke} strokeWidth="1.5" />
-          <path d="M 36 62 L 28 78 L 44 78 Z" fill={d} stroke={stroke} strokeWidth="1.5" />
-        </g>
-      );
-    case 'wisp':
-      return (
-        <path
-          d="M 36 18 Q 20 22 20 44 Q 20 62 28 66 Q 36 72 44 66 Q 52 62 52 44 Q 52 22 36 18 Z"
-          fill={`url(#${gid})`} stroke={stroke} strokeWidth="1.5" opacity="0.95"
-        />
-      );
-    case 'serpent': {
-      const big = s.big;
-      return (
-        <g>
-          <ellipse cx="36" cy="26" rx={big?12:10} ry={big?10:8}
-                   fill={`url(#${gid})`} stroke={stroke} strokeWidth="1.5" />
-          <path
-            d="M 20 44 Q 36 36 52 44 Q 60 58 44 66 Q 28 74 16 64 Q 10 52 20 44 Z"
-            fill={`url(#${gid})`} stroke={stroke} strokeWidth="1.5"
-          />
-        </g>
-      );
-    }
-    case 'drake':
-      return (
-        <g>
-          <ellipse cx="36" cy="50" rx="16" ry="16" fill={`url(#${gid})`} stroke={stroke} strokeWidth="1.5" />
-          <ellipse cx="44" cy="34" rx="10" ry="9" fill={`url(#${gid})`} stroke={stroke} strokeWidth="1.5" />
-          <path d="M 22 60 Q 10 68 8 76 L 14 72 Q 20 68 26 64 Z"
-                fill={`url(#${gid})`} stroke={stroke} strokeWidth="1.5" />
-        </g>
-      );
-    case 'beast':
-      return (
-        <g>
-          <ellipse cx="36" cy="48" rx="18" ry="16" fill={`url(#${gid})`} stroke={stroke} strokeWidth="1.5" />
-          <ellipse cx="36" cy="42" rx="6" ry="4" fill={d} opacity="0.7" />
-        </g>
-      );
-    case 'blob':
-    default:
-      return (
-        <path
-          d="M 18 36 Q 36 16 54 36 Q 58 56 44 66 Q 36 70 28 66 Q 14 56 18 36 Z"
-          fill={`url(#${gid})`} stroke={stroke} strokeWidth="1.5"
-        />
-      );
-  }
-}
-
-function renderBackLayers(s, c, d, tier) {
-  const stroke = '#0a0614';
-  const out = [];
-  if (s.wings === 'angel') {
-    const spread = 20 + tier * 4;
-    out.push(
-      <g key="wings">
-        <path d={`M 28 34 Q ${36 - spread} 20 ${36 - spread + 2} 46 Q 30 44 28 40 Z`}
-              fill="#f8f0d0" stroke={stroke} strokeWidth="1.2" />
-        <path d={`M 44 34 Q ${36 + spread} 20 ${36 + spread - 2} 46 Q 42 44 44 40 Z`}
-              fill="#f8f0d0" stroke={stroke} strokeWidth="1.2" />
-      </g>
-    );
-  } else if (s.wings === 'bird') {
-    out.push(
-      <g key="wings">
-        <path d="M 28 36 Q 14 28 10 46 Q 22 46 30 42 Z" fill="#e8dcc0" stroke={stroke} strokeWidth="1.2" />
-        <path d="M 44 36 Q 58 28 62 46 Q 50 46 42 42 Z" fill="#e8dcc0" stroke={stroke} strokeWidth="1.2" />
-      </g>
-    );
-  } else if (s.wings === 'bat') {
-    out.push(
-      <g key="wings">
-        <path d="M 26 36 Q 10 30 8 50 L 16 46 L 18 52 L 24 44 Z" fill={d} stroke={stroke} strokeWidth="1.2" />
-        <path d="M 46 36 Q 62 30 64 50 L 56 46 L 54 52 L 48 44 Z" fill={d} stroke={stroke} strokeWidth="1.2" />
-      </g>
-    );
-  } else if (s.wings === 'dragon') {
-    out.push(
-      <g key="wings">
-        <path d="M 24 40 Q 6 30 2 52 L 14 46 L 12 54 L 22 48 Z" fill={d} stroke={stroke} strokeWidth="1.2" />
-        <path d="M 48 40 Q 66 30 70 52 L 58 46 L 60 54 L 50 48 Z" fill={d} stroke={stroke} strokeWidth="1.2" />
-      </g>
-    );
-  }
-  if (s.segments) {
-    out.push(
-      <g key="segs" opacity="0.6">
-        <ellipse cx="36" cy="46" rx="3" ry="1.5" fill={d} />
-        <ellipse cx="36" cy="54" rx="3" ry="1.5" fill={d} />
-        <ellipse cx="36" cy="62" rx="3" ry="1.5" fill={d} />
-      </g>
-    );
-  }
-  return out;
-}
-
-function renderFrontLayers(s, c, d, tier) {
-  const stroke = '#0a0614';
-  const out = [];
-  let eyeY = 30, eyeDx = 3, eyeCX = 36;
-  if (s.shape === 'wisp') eyeY = 36;
-  if (s.shape === 'serpent') { eyeY = 26; eyeDx = 3.5; }
-  if (s.shape === 'drake') { eyeY = 32; eyeCX = 44; eyeDx = 2.5; }
-  if (s.shape === 'beast') { eyeY = 40; eyeDx = 4; }
-  if (s.shape === 'blob') eyeY = 34;
-  if (s.shape === 'merfolk') eyeY = 28;
-  if (s.shape === 'humanoid') eyeY = 29;
-  const eyeFill = s.glow || s.ember ? '#ffeaa0' : '#1a0a20';
-  if (s.hood) {
-    out.push(
-      <g key="eyes">
-        <ellipse cx={eyeCX - eyeDx} cy={eyeY} rx="1.8" ry="1.3" fill="#ff8844" />
-        <ellipse cx={eyeCX + eyeDx} cy={eyeY} rx="1.8" ry="1.3" fill="#ff8844" />
-      </g>
-    );
-  } else {
-    out.push(
-      <g key="eyes">
-        <circle cx={eyeCX - eyeDx} cy={eyeY} r="1.6" fill={eyeFill} />
-        <circle cx={eyeCX + eyeDx} cy={eyeY} r="1.6" fill={eyeFill} />
-      </g>
-    );
-  }
-  if (s.fangs) {
-    out.push(
-      <g key="fangs">
-        <path d={`M ${eyeCX - 2} ${eyeY + 5} L ${eyeCX - 1} ${eyeY + 8} L ${eyeCX} ${eyeY + 5} Z`}
-              fill="#fff" stroke={stroke} strokeWidth="0.6" />
-        <path d={`M ${eyeCX} ${eyeY + 5} L ${eyeCX + 1} ${eyeY + 8} L ${eyeCX + 2} ${eyeY + 5} Z`}
-              fill="#fff" stroke={stroke} strokeWidth="0.6" />
-      </g>
-    );
-  }
-  if (s.beak) {
-    out.push(
-      <path key="beak" d={`M 33 ${eyeY + 3} L 39 ${eyeY + 3} L 36 ${eyeY + 8} Z`}
-            fill="#e0a040" stroke={stroke} strokeWidth="0.8" />
-    );
-  }
-  if (s.ears === 'pointy') {
-    out.push(
-      <g key="ears">
-        <path d="M 28 24 L 24 14 L 31 22 Z" fill={d} stroke={stroke} strokeWidth="1" />
-        <path d="M 44 24 L 48 14 L 41 22 Z" fill={d} stroke={stroke} strokeWidth="1" />
-      </g>
-    );
-  } else if (s.ears === 'long') {
-    out.push(
-      <g key="ears">
-        <path d="M 28 24 L 20 4 L 32 22 Z" fill={d} stroke={stroke} strokeWidth="1" />
-        <path d="M 44 24 L 52 4 L 40 22 Z" fill={d} stroke={stroke} strokeWidth="1" />
-      </g>
-    );
-  } else if (s.ears === 'round') {
-    out.push(
-      <g key="ears">
-        <circle cx="24" cy="32" r="5" fill={d} stroke={stroke} strokeWidth="1" />
-        <circle cx="48" cy="32" r="5" fill={d} stroke={stroke} strokeWidth="1" />
-        <circle cx="24" cy="32" r="2.5" fill={c} opacity="0.7" />
-        <circle cx="48" cy="32" r="2.5" fill={c} opacity="0.7" />
-      </g>
-    );
-  }
-  if (s.horns) {
-    const hh = 6 + s.horns * 4;
-    out.push(
-      <g key="horns">
-        <path d={`M 30 24 L 27 ${24 - hh} L 33 22 Z`} fill="#d8c080" stroke={stroke} strokeWidth="1" />
-        <path d={`M 42 24 L 45 ${24 - hh} L 39 22 Z`} fill="#d8c080" stroke={stroke} strokeWidth="1" />
-      </g>
-    );
-  }
-  if (s.halo) {
-    const hr = 6 + s.halo * 4;
-    out.push(
-      <ellipse key="halo" cx="36" cy="16" rx={hr} ry={hr * 0.35}
-               fill="none" stroke="#ffe888" strokeWidth={1.5 + s.halo * 0.5} opacity="0.9" />
-    );
-  }
-  if (s.headFin) {
-    out.push(
-      <path key="hfin" d="M 36 22 L 34 14 L 38 14 Z" fill={d} stroke={stroke} strokeWidth="1" />
-    );
-  }
-  if (s.sideFins) {
-    const y = s.shape === 'serpent' ? 44 : 42;
-    out.push(
-      <g key="sfins">
-        <path d={`M 22 ${y} L 14 ${y + 4} L 20 ${y + 6} Z`} fill={d} stroke={stroke} strokeWidth="1" />
-        <path d={`M 50 ${y} L 58 ${y + 4} L 52 ${y + 6} Z`} fill={d} stroke={stroke} strokeWidth="1" />
-      </g>
-    );
-  }
-  if (s.dorsalFin) {
-    out.push(
-      <path key="dfin" d="M 36 18 L 30 6 L 34 14 L 38 6 L 42 14 L 36 18 Z"
-            fill={d} stroke={stroke} strokeWidth="1" />
-    );
-  }
-  if (s.wispTails) {
-    const tails = [];
-    for (let i = 0; i < s.wispTails; i++) {
-      const x = 28 + i * 8;
-      tails.push(
-        <path key={`wt${i}`}
-              d={`M ${x} 64 Q ${x + 2} 74 ${x} 82 Q ${x - 3} 76 ${x} 64 Z`}
-              fill={d} opacity="0.75" />
-      );
-    }
-    out.push(<g key="wtails">{tails}</g>);
-  }
-  if (s.tailSpike) {
-    out.push(
-      <path key="tspike" d="M 18 68 L 6 78 L 14 72 L 10 82 L 22 70 Z"
-            fill={d} stroke={stroke} strokeWidth="1" />
-    );
-  }
-  if (s.tailBushy) {
-    out.push(
-      <g key="btail">
-        <ellipse cx="54" cy="52" rx="6" ry="10" fill={d} stroke={stroke} strokeWidth="1" />
-        <ellipse cx="54" cy="52" rx="3" ry="6" fill={c} opacity="0.6" />
-      </g>
-    );
-  }
-  if (s.flames) {
-    const tallness = 6 + s.flames * 3;
-    out.push(
-      <g key="flames">
-        <path d={`M 36 22 Q 30 ${22 - tallness} 34 10 Q 36 ${18 - tallness} 38 10 Q 42 ${22 - tallness} 36 22 Z`}
-              fill="#ffaa30" />
-        <path d={`M 30 26 Q 26 ${26 - tallness*0.6} 30 18 Q 32 22 34 20 Q 34 ${26 - tallness*0.4} 30 26 Z`}
-              fill="#ff7020" />
-        <path d={`M 42 26 Q 46 ${26 - tallness*0.6} 42 18 Q 40 22 38 20 Q 38 ${26 - tallness*0.4} 42 26 Z`}
-              fill="#ff7020" />
-      </g>
-    );
-  }
-  if (s.hood) {
-    out.push(
-      <path key="hood"
-            d="M 22 18 Q 36 0 50 18 Q 48 30 44 32 L 28 32 Q 24 30 22 18 Z"
-            fill="#1a0a24" stroke={stroke} strokeWidth="1.2" />
-    );
-  }
-  if (s.staff) {
-    out.push(
-      <g key="staff">
-        <line x1="52" y1="34" x2="56" y2="70" stroke="#8a6a40" strokeWidth="2" />
-        <circle cx="52" cy="32" r="3" fill="#ffe888" stroke={stroke} strokeWidth="0.8" />
-      </g>
-    );
-  }
-  if (s.bow) {
-    out.push(
-      <g key="bow">
-        <path d="M 52 36 Q 60 50 52 64" fill="none" stroke="#8a6a40" strokeWidth="1.5" />
-        <line x1="52" y1="36" x2="52" y2="64" stroke="#c8b088" strokeWidth="0.8" />
-      </g>
-    );
-  }
-  if (s.leaves) {
-    out.push(
-      <g key="leaves">
-        <ellipse cx="32" cy="18" rx="3" ry="5" fill="#5a9030"
-                 transform="rotate(-25 32 18)" stroke={stroke} strokeWidth="0.6" />
-        <ellipse cx="40" cy="18" rx="3" ry="5" fill="#5a9030"
-                 transform="rotate(25 40 18)" stroke={stroke} strokeWidth="0.6" />
-      </g>
-    );
-  }
-  if (s.scales) {
-    out.push(
-      <g key="scales" opacity="0.5">
-        <path d="M 30 48 Q 34 44 38 48 Q 42 44 46 48" fill="none" stroke={d} strokeWidth="0.8" />
-        <path d="M 30 54 Q 34 50 38 54 Q 42 50 46 54" fill="none" stroke={d} strokeWidth="0.8" />
-      </g>
-    );
-  }
-  if (s.ember) {
-    out.push(
-      <circle key="ember" cx="36" cy="50" r="6" fill="#ffaa40" opacity="0.5" />
-    );
-  }
-  return out;
-}
-
-function TeamPicker({ team, myIdx, onPick, forced }) {
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 6 }}>
-      {forced && <div style={{ fontSize: 12, color: '#d8a040' }}>Choose a creature to summon:</div>}
-      {team.map((c, i) => {
-        const disabled = c.hp <= 0 || i === myIdx;
-        return (
-          <button key={c.uid} className="mtgBtn" onClick={() => !disabled && onPick(i)} disabled={disabled}
-            style={{ textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 8, borderColor: COLOR_DEEP[primaryColor(c.c)] }}>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <ManaBadge identity={c.c} size={16} label={colorsOf(c.c).length === 1} />
-              <span style={{ fontSize: 14 }}>{c.name}</span>
-              <span className="pixelFont" style={{ fontSize: 10, color: '#9888b0' }}>Lv.{c.level}</span>
-              {i === myIdx && <span className="pixelFont" style={{ fontSize: 9, color: '#d8a040' }}>[ACTIVE]</span>}
-            </div>
-            <span className="pixelFont" style={{ fontSize: 10 }}>{c.hp}/{c.maxHp}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 function BattleItemsPanel({ team, myIdx, items, onUse, onBack }) {
   const [selectedKey, setSelectedKey] = useState(null);
@@ -8938,7 +10804,7 @@ function HeldItemPicker({ creature, items, onEquip, onUnequip }) {
   );
 }
 
-function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, storageBroken, defeated, trainerCycles, medallions, planeswalkerDefeated, currentPlane, planeBaseLevel, vaultCount, lastDailyEncounters, hourOfDay, currentMap, onUseItem, onEquipItem, onCall, onRename, onSwapMoves, onOpenVault, onClose, onReset, onSaveQuit, onRelease, onCheckStorage }) {
+function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, storageBroken, defeated, trainerCycles, medallions, planeswalkerDefeated, currentPlane, planeBaseLevel, planeDualPairs, dualMedallions, vaultCount, lastDailyEncounters, hourOfDay, currentMap, onUseItem, onEquipItem, onCall, onRename, onSwapMoves, onOpenVault, onClose, onReset, onSaveQuit, onRelease, onCheckStorage }) {
   const [tab, setTab] = useState('team');
   const [pickingFor, setPickingFor] = useState(null); // item key to use, waiting for team pick
   const [releaseConfirm, setReleaseConfirm] = useState(null); // index of creature awaiting release confirmation
