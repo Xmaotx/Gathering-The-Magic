@@ -192,7 +192,9 @@ const DEX = {
 
   // ---- Final boss (Planeswalker) — WUBRG, the ultimate challenge ----
   // Its kit pulls one signature attack from each color shrine, plus its own planar specials.
-  the_planeswalker: { name: 'The Planeswalker',      c: 'WUBRG', t: 'Legendary Avatar', hp: 130, atk: 24, m: ['planar_collapse','spark_burst','dragons_wrath','sunken_tempest'], learnset: {} },
+  // Named "Veyl, the Pale Walker" — a planeswalker who came before, lost their
+  // way during the Mending, and now haunts the central shrine.
+  the_planeswalker: { name: 'Veyl, the Pale Walker',  c: 'WUBRG', t: 'Legendary Avatar', hp: 130, atk: 24, m: ['planar_collapse','spark_burst','dragons_wrath','sunken_tempest'], learnset: {} },
 
   // ---- Dual-zone legendary wardens (Plane 1+) — one per guild pair ----
   // These guard the mid-boss 'L' tile in each dual-color rift zone.
@@ -649,7 +651,7 @@ const ITEMS = {
   // kind: 'key' so the items list won't render a "Use" button (it's not consumable).
   vault_sigil: {
     name: 'Vault Sigil', kind: 'key', amount: 0, price: 0,
-    desc: 'Calls the Hollow Vault from any menu. A gift from the Planeswalker.', icon: '✦',
+    desc: 'Calls the Hollow Vault from any menu. A gift from Veyl.', icon: '✦',
   },
   // Granted when the player defeats all three town duellists (Bran, Ria, Dax).
   // Owning it surfaces a "Phone" tab in the Spellbook, listing every defeated
@@ -743,7 +745,7 @@ const WEATHER = {
     // We instead want planar storm to chip everyone equally — set tickAffects to []
     // so the "not in" check passes for all colors. Above is a bug-prone form;
     // the actual logic uses [] below to mean "no one is immune".
-    desc: 'The Planeswalker bends magic itself. All creatures lose 3% HP each turn.',
+    desc: 'Veyl bends magic itself. All creatures lose 3% HP each turn.',
   },
 };
 // Fix planar's tickAffects to the intended empty list (all creatures take damage).
@@ -1393,17 +1395,17 @@ const NPCS_TOWN = [
   { id: 'guide', x: 2, y: 11, face: 'right', color: '#c4a664', noBattle: true,
     name: 'Old Wanderer',
     dialog: "Five planes touch this hollow. South: the Mana Wilds, soft-spoken and green. Southwest: the Plains of Light — beautiful, and merciless. East: the Ashen Wastes, all teeth and embers. West: the Sunken Sanctum, where the deep keeps its secrets. North: the Umbral Grove, where shadows have weight. Each breeds its own color — bring what the wheel favors. The shrine restores any creature you've bound." },
-  { id: 'merle', x: 11, y: 4, face: 'down', color: '#9a6e3a', noBattle: true, isShop: true,
+  { id: 'merle', x: 11, y: 4, face: 'down', color: '#9a6e3a', noBattle: true, isShop: true, dialogProgress: true,
     name: 'Merle the Provisioner',
     dialog: "Potions, revives, fresh Creature Cards — whatever a planeswalker-in-training needs for the road." },
   // ---- The Hollow Vault — overflow storage for caught creatures beyond the 6-slot team ----
   // Themed as runic spirit-cages tended by a quiet keeper. Stationary, no battle, opens
   // the VaultScene where the player can swap creatures freely between team and storage.
-  { id: 'vaultkeeper', x: 6, y: 10, face: 'down', color: '#5a7088', noBattle: true, isVault: true,
+  { id: 'vaultkeeper', x: 6, y: 10, face: 'down', color: '#5a7088', noBattle: true, isVault: true, dialogProgress: true,
     name: 'Keeper Solenne',
     dialog: "Spirits whisper louder when caged in rune-iron. I tend them between your travels — if your hand is full, leave one with me. They'll keep, and they'll wait." },
   // ---- Lorekeeper hints at the shrine bosses (gating becomes lore exposition) ----
-  { id: 'lorekeeper', x: 5, y: 5, face: 'right', color: '#7050a0', noBattle: true,
+  { id: 'lorekeeper', x: 5, y: 5, face: 'right', color: '#7050a0', noBattle: true, dialogProgress: true,
     name: 'Lorekeeper Vey',
     dialog: "Old stories say each color has a sleeping warden — Avatar, Colossus, Voidlord, Dragon, Wurm. They wake only for those who've proved themselves to all five guardians of the wheel. Bring back five medallions and the Hollow's central shrine will sing for the first time in an age." },
   // ---- Easter egg: Yugi and Ash arguing about whose card game is correct ----
@@ -1414,12 +1416,159 @@ const NPCS_TOWN = [
     name: 'Cap-Wearing Tourist',
     dialog: "It do be what it do, Yugi. My buddy Pikachu doesn't need 'tributes' — just love, loyalty, and a thunderbolt. You're overcomplicating it, dude." },
   // ---- A notice board with dynamic flavor (kept as noBattle NPC for simplicity) ----
-  { id: 'board', x: 9, y: 6, face: 'down', color: '#7a5a40', noBattle: true,
+  { id: 'board', x: 9, y: 6, face: 'down', color: '#7a5a40', noBattle: true, dialogProgress: true,
     name: 'Town Notice Board',
     dialog: "Pinned: 'Five challengers patrol the zones — defeat them all and they'll return, hungrier.' / Scrawled below: 'When five medallions hang at the shrine, the Hollow's heart will wake.'" },
 ];
 
-// ---------- Hidden items (sparkle nodes) ----------
+// =========================================================================
+// HOLLOW NPC PROGRESS DIALOG — give the four key Hollow NPCs (Solenne, Vey,
+// Merle, Notice Board) three-state dialogue that responds to player progress.
+// Each function returns either a single string or an array of strings (which
+// the dialog system pages through). Called from the interact handler when
+// `n.dialogProgress` is set in the NPC entry.
+// =========================================================================
+const HOLLOW_DIALOG = {
+  // Keeper Solenne — your guide, the one who saw you arrive. Warms over time.
+  vaultkeeper(progress) {
+    const { medallions, planeswalkerDefeated, currentPlane } = progress;
+    if (currentPlane >= 1) {
+      return [
+        "You came through. Through Veyl. I felt the rift tear and I thought — that's the end of another one.",
+        "I haven't been wrong in a long time. It's good to be wrong.",
+        "The Vault is still yours. Always was. Spirits are easier to keep than walkers.",
+      ];
+    }
+    if (planeswalkerDefeated) {
+      return [
+        "Veyl is gone. For a moment. Long enough that the shrine remembers your name now, not theirs.",
+        "Spend that moment well. The Vault is open whenever you need it.",
+      ];
+    }
+    if (medallions.length >= 5) {
+      return [
+        "Five medallions. The shrine has been singing since you brought the last one in — I've never heard it sing.",
+        "Whatever's behind the light at the heart of town — I cannot follow you. None of us can.",
+        "But the Vault will hold what you leave behind. Always.",
+      ];
+    }
+    if (medallions.length >= 3) {
+      return [
+        "Halfway, more or less. I'd say you've grown, but you knew that already.",
+        "Three medallions. Two more, and the shrine starts asking questions of you that I can't answer.",
+        "Bring me anything heavy. The cages keep, and they wait.",
+      ];
+    }
+    if (medallions.length >= 1) {
+      return [
+        "One medallion. The shrine pulsed when you brought it in — first time in a long time.",
+        "Spirits whisper louder when caged in rune-iron. I tend them between your travels. Leave anything heavy with me.",
+      ];
+    }
+    // Pre-first-medallion (default opening flavor).
+    return "Spirits whisper louder when caged in rune-iron. I tend them between your travels — if your hand is full, leave one with me. They'll keep, and they'll wait.";
+  },
+
+  // Lorekeeper Vey — the historian. Each tier drops more of what they actually know.
+  lorekeeper(progress) {
+    const { medallions, planeswalkerDefeated, currentPlane } = progress;
+    if (currentPlane >= 1) {
+      return [
+        "You stepped through. None of my books predicted that. They predicted a corpse.",
+        "Veyl's name is older than this hollow. Older than the wardens. They were one of the Mending's architects — the ones who tried to seal the planes from each other after the spark-wars.",
+        "Something broke them. I have theories. None of them are pleasant.",
+        "Find what you find. Bring me anything written. I'll be here.",
+      ];
+    }
+    if (planeswalkerDefeated) {
+      return [
+        "You came out. That alone is worth a chapter.",
+        "I've been reading the shrine's old plates while you were gone. There was a name no one would say. Veyl.",
+        "I think they were the first walker to bind all five colors. I don't think they survived doing it. Not in the way that counts.",
+        "Be careful with what you've become.",
+      ];
+    }
+    if (medallions.length >= 5) {
+      return [
+        "Five medallions. I had to read the old texts twice — no one's brought five in two hundred years.",
+        "The shrine in the center — it doesn't wake for the medallions. It wakes for *you*. Remember that.",
+        "There's a name carved beneath the moss at the shrine's base. Veyl. Don't say it out loud unless you mean it.",
+      ];
+    }
+    if (medallions.length >= 3) {
+      return [
+        "Three. You've earned the longer version of the story now.",
+        "The wardens aren't guardians. They're locks. Each one was a planeswalker, once. Each one chose to root themselves in a single color to hold something shut.",
+        "What they're holding shut — that's the next chapter. Bring me two more medallions and I'll read it to you.",
+      ];
+    }
+    if (medallions.length >= 1) {
+      return [
+        "First medallion. Hold onto that feeling — most newcomers don't earn one.",
+        "Old stories say each color has a sleeping warden. Avatar, Colossus, Voidlord, Dragon, Wurm. They wake only for those who've proved themselves to all five.",
+        "Five medallions, and the Hollow's central shrine will sing for the first time in an age. I'd like to be alive to hear it.",
+      ];
+    }
+    return "Old stories say each color has a sleeping warden — Avatar, Colossus, Voidlord, Dragon, Wurm. They wake only for those who've proved themselves to all five guardians of the wheel. Bring back five medallions and the Hollow's central shrine will sing for the first time in an age.";
+  },
+
+  // Merle the Provisioner — shopkeep banter. Shorter, lighter than the others.
+  merle(progress) {
+    const { medallions, planeswalkerDefeated, currentPlane } = progress;
+    if (currentPlane >= 1) {
+      return "Heard you went through. Heard you came back. I'd ask, but I think I'd rather not know. Same prices. Better stock — figure you've earned it.";
+    }
+    if (planeswalkerDefeated) {
+      return "Whatever you did at the shrine — half the town's still flinching. Me, I just need to know if you need more potions. So. Do you?";
+    }
+    if (medallions.length >= 5) {
+      return "Five medallions hanging at the shrine and you're in MY shop? Either you're brave or you're stalling. Either way, stock up.";
+    }
+    if (medallions.length >= 1) {
+      return "One down, four to go. You'll want more cards before the next one — the wardens don't go easy.";
+    }
+    return "Potions, revives, fresh Creature Cards — whatever a planeswalker-in-training needs for the road.";
+  },
+
+  // Notice Board — bulletin flavor that tracks the shrine's awakening.
+  board(progress) {
+    const { medallions, planeswalkerDefeated, currentPlane } = progress;
+    if (currentPlane >= 1) {
+      return [
+        "Pinned: 'Sky cracked open last week. Anyone seen Solenne's new walker since?'",
+        "Scrawled below: 'They came back. Through the rift. Don't ask them how. They don't know.'",
+        "Newest: 'Veyl walks again, somewhere. Patrol the central shrine at your own risk.'",
+      ];
+    }
+    if (planeswalkerDefeated) {
+      return [
+        "Pinned: 'The shrine cracked open. Whoever did it — thank you. Whatever you did to do it — never tell us.'",
+        "Scrawled below: 'They say the light at the shrine has a name now. Veyl. Don't say it twice.'",
+      ];
+    }
+    if (medallions.length >= 5) {
+      return [
+        "Pinned: 'Five medallions are hanging at the shrine. None of us have ever seen this.'",
+        "Scrawled below: 'The shrine is singing. Stay away if you can't fight. Go closer if you can.'",
+      ];
+    }
+    if (medallions.length >= 3) {
+      return [
+        "Pinned: 'Three medallions at the shrine. The light's getting harder to look at.'",
+        "Scrawled below: 'Two more wardens left. Whichever walker is doing this — don't slow down now.'",
+      ];
+    }
+    if (medallions.length >= 1) {
+      return [
+        "Pinned: 'A new walker's been seen at the wardens. One medallion already.'",
+        "Scrawled below: 'Either they go five for five or they don't come back. They never come back.'",
+      ];
+    }
+    return "Pinned: 'Five challengers patrol the zones — defeat them all and they'll return, hungrier.' / Scrawled below: 'When five medallions hang at the shrine, the Hollow's heart will wake.'";
+  },
+};
+
+
 // Spread across all maps. Each entry re-appears every real-world day (via realDayNumber()).
 // loot: 'potion' | 'elixir' | 'card' | 'gold'   amount: gold quantity (only for 'gold' loot)
 const HIDDEN_ITEMS = [
@@ -1443,8 +1592,119 @@ const HIDDEN_ITEMS = [
   { map: 'plains',  x: 4,  y: 4,  loot: 'elixir' },
   { map: 'plains',  x: 12, y: 8,  loot: 'gold',   amount: 40  },
 ];
-// Quick lookup key for state map
+// Quick lookup key for state map (one per coordinate per map).
 const hiddenItemKey = (item) => `${item.map}:${item.x}:${item.y}`;
+// =========================================================================
+// LORE FRAGMENTS — torn pages, stone tablets, ghostly recordings, etc.
+// Players discover these as sparkle nodes scattered across the planes. Unlike
+// regular hidden items, they're permanent (one-shot per save) and open a
+// dialog panel with a paragraph of worldbuilding text on pickup.
+// The full set tells the story of the Mending, Veyl's fall, and the rifts.
+//
+// `id`     : stable key for the foundLoreFragments map.
+// `title`  : shown as the headline ("Recovered: ...").
+// `text`   : array of paragraphs — one per dialog page.
+// `map/x/y`: where the fragment lives in the world.
+// =========================================================================
+const LORE_FRAGMENTS = [
+  // ── TOWN ────────────────────────────────────────────────────────────────
+  {
+    id: 'lore_town_1', map: 'town', x: 14, y: 4,
+    title: 'Torn Page (1/?) — found behind the shop',
+    text: [
+      "...and so the Mending was struck, eleven planeswalkers in a circle, each binding a single color to the seal. The planes were cut from each other for what we believed was forever.",
+      "We knew one of them would break. We did not know which. We did not know it would be Veyl.",
+    ],
+  },
+  {
+    id: 'lore_town_2', map: 'town', x: 5, y: 3,
+    title: 'Stone Tablet — half-buried by the lorekeeper\'s door',
+    text: [
+      "OF THE FIVE WARDENS, EACH ONE STOOD A WALKER. EACH ONE GAVE UP THE OTHER FOUR COLORS TO HOLD A SINGLE WARD.",
+      "AVATAR FOR WHITE. COLOSSUS FOR GREEN. DRAGON FOR RED. VOIDLORD FOR BLACK. TIDEWARDEN FOR BLUE.",
+      "EACH ONE WAS PROMISED THIS: THE WARD WILL HOLD UNTIL A WALKER BINDS ALL FIVE AND ASKS FOR PASSAGE.",
+    ],
+  },
+  // ── WILDS ───────────────────────────────────────────────────────────────
+  {
+    id: 'lore_wilds_1', map: 'wilds', x: 6, y: 2,
+    title: 'Bark-Carved Note — pinned to a tree',
+    text: [
+      "the wurms remember the first walker who came here. the patriarch was small then. she fed it, named it, then left to chase her spark.",
+      "we found her bones five winters later. the patriarch had grown around them.",
+      "do not name what you do not intend to keep.",
+    ],
+  },
+  {
+    id: 'lore_wilds_2', map: 'wilds', x: 12, y: 11,
+    title: 'Soaked Journal Page — Mira\'s handwriting',
+    text: [
+      "Day forty in the grove. The wurm spoke to me today. It said its name. I refuse to write it.",
+      "I think it is older than the Mending. I think it remembers a time before the planes were cut apart. I think it is waiting.",
+    ],
+  },
+  // ── ASHEN ───────────────────────────────────────────────────────────────
+  {
+    id: 'lore_ashen_1', map: 'ashen', x: 8, y: 4,
+    title: 'Charred Letter — pinned with a knife',
+    text: [
+      "Kalr — if you read this, the dragon woke. I tried to bind it the way the others did. Pyromancers don't bind. We burn alongside.",
+      "Tell whoever takes my circle that the fire is not the warden. The fire is what the warden is holding back.",
+    ],
+  },
+  // ── SANCTUM ─────────────────────────────────────────────────────────────
+  {
+    id: 'lore_sanctum_1', map: 'sanctum', x: 7, y: 11,
+    title: 'Coral Tablet — written in salt and pressure',
+    text: [
+      "THE TIDEWARDEN ASKED ME ONCE WHY I HAD ONLY ONE COLOR. I SAID BECAUSE I CHOSE.",
+      "THE TIDEWARDEN ASKED ME ONCE WHY VEYL HAD FIVE. I SAID BECAUSE THEY COULD NOT.",
+      "THE TIDEWARDEN LAUGHED. THE OCEAN LAUGHED WITH IT.",
+    ],
+  },
+  // ── UMBRAL ──────────────────────────────────────────────────────────────
+  {
+    id: 'lore_umbral_1', map: 'umbral', x: 5, y: 9,
+    title: 'Bone Etching — pulled from a root-tangle',
+    text: [
+      "the voidlord told me what veyl asked for. veyl wanted what every walker wants. veyl wanted to bind all five and be whole.",
+      "the voidlord told veyl what every warden tells them. you will be everything and nothing. you will be a door, not a person.",
+      "veyl said yes anyway. veyl always says yes.",
+    ],
+  },
+  {
+    id: 'lore_umbral_2', map: 'umbral', x: 11, y: 3,
+    title: 'Whispering Sigil — hums when held',
+    text: [
+      "...the seventh time veyl walked through this grove, they no longer cast a shadow. the sixth time, they no longer answered to their old name. the fifth time...",
+      "I will not write the fifth time. I will not write the fourth. We do not speak of what veyl was before they were veyl.",
+    ],
+  },
+  // ── PLAINS ──────────────────────────────────────────────────────────────
+  {
+    id: 'lore_plains_1', map: 'plains', x: 7, y: 7,
+    title: 'Stained-Glass Shard — humming with old prayer',
+    text: [
+      "BLESSED ARE THE WARDENS, WHO GAVE UP FOUR COLORS TO HOLD ONE.",
+      "BLESSED ARE THE WALKERS, WHO CARRY ALL FIVE AND CHOOSE NONE.",
+      "BLESSED ARE THOSE WHO KNOW THE DIFFERENCE. PITY THE ONES WHO DO NOT.",
+    ],
+  },
+  {
+    id: 'lore_plains_2', map: 'plains', x: 2, y: 9,
+    title: 'Avatar\'s Lament — heard, not read',
+    text: [
+      "(The voice is not in your ears. It is in the bones behind your ears.)",
+      "I was a girl once. I had eyes. I had a name that wasn't a title. I gave them up to hold this ward.",
+      "Veyl came to me when their spark first burned. I told them: do not bind all five. I told them: the price is your name. They thanked me. They did it anyway.",
+      "Be better than Veyl. Or at least be smaller. Smaller things break more cleanly.",
+    ],
+  },
+];
+
+const loreFragmentKey = (frag) => frag.id;
+
+
 const NPCS_ZONE = {
   wilds: [
     { id: 'mira', x: 10, y: 11, face: 'up', color: '#4a8030',
@@ -1520,9 +1780,92 @@ for (const cA of _COLORS5) {
     }];
   }
 }
-// Town trainers — the three duellists in Runesmith Hollow. Defeating all three
-// is what unlocks the Runic Phone (a key item that opens the Phone tab in the
-// Spellbook menu, allowing remote rematches with any defeated trainer).
+// =========================================================================
+// THE RIVAL — Kessen, a Red/Black walker whose spark lit the same week as yours.
+// Appears at five fixed beats in the run. Stages 0 and 2 are battles. Stages
+// 1, 3, and 4 are dialog-only. Each appearance advances `rivalStage` by one;
+// later stages also have progress gates (medallions / planeswalkerDefeated /
+// currentPlane) so the rival can never skip ahead of the player's arc.
+//
+// Stage 0  — Town plaza, before any medallion. First meeting + intro fight.
+// Stage 1  — Town plaza, after the first medallion. Acknowledgement only.
+// Stage 2  — Umbral Grove entrance, after 3 medallions. Mid-arc fight.
+// Stage 3  — Town near shrine, after all medallions. Last warning, no fight.
+// Stage 4  — Town in any later plane. Reconciliation; arc terminates.
+// =========================================================================
+const RIVAL_NAME = 'Kessen';
+const RIVAL_COLOR = '#9a2a3a';  // sprite tint — bruised red, recognizable across maps
+
+const RIVAL_DATA = {
+  // ---- Stage 0: town plaza, intro fight ----------------------------------
+  stage0: {
+    id: 'rival_stage_0', x: 3, y: 7, face: 'right', color: RIVAL_COLOR,
+    name: RIVAL_NAME,
+    dialog: "So you're the new spark Solenne's been mothering. Same dream? Five colors burning? Half of us get that one. Show me what you've got — if you can't beat me here, the wardens will eat you raw.",
+    team: [{ id: 'shade_whelp', lv: 4 }, { id: 'emberkin', lv: 5 }],
+    reward: 60,
+    isRival: true,
+  },
+  // ---- Stage 1: town plaza, post-first-medallion (no fight) --------------
+  stage1: {
+    id: 'rival_stage_1', x: 8, y: 8, face: 'down', color: RIVAL_COLOR, noBattle: true,
+    name: RIVAL_NAME,
+    dialog: [
+      "Heard the shrine sing a new note this morning. Yours, apparently.",
+      "One medallion. Don't get comfortable — the wardens get nastier from here.",
+      "I'd wish you luck, but luck is for people who don't deserve to win.",
+    ],
+    isRival: true,
+  },
+  // ---- Stage 2: umbral grove, mid-arc rematch ----------------------------
+  stage2: {
+    id: 'rival_stage_2', x: 3, y: 5, face: 'down', color: RIVAL_COLOR,
+    name: RIVAL_NAME,
+    dialog: "Three medallions. You're either lucky or dangerous. I came to find out which — and the grove felt like the right place for an answer.",
+    team: [{ id: 'blood_imp', lv: 14 }, { id: 'goblin_raider', lv: 14 }, { id: 'hellraiser', lv: 16 }],
+    reward: 320,
+    isRival: true,
+  },
+  // ---- Stage 3: town near shrine, pre-Planeswalker warning ---------------
+  stage3: {
+    id: 'rival_stage_3', x: 4, y: 6, face: 'right', color: RIVAL_COLOR, noBattle: true,
+    name: RIVAL_NAME,
+    dialog: [
+      "All five medallions. I... wasn't sure you'd make it.",
+      "I'm not going in there with you. You shouldn't either.",
+      "The shrine has a name carved beneath the dust. Veyl. I asked Solenne — she went pale.",
+      "Whatever Veyl is — it isn't someone you defeat. It's someone you become, or someone you join.",
+      "If you make it back out, find me. I have questions I can't ask anyone else.",
+    ],
+    isRival: true,
+  },
+  // ---- Stage 4: post-plane-shift, reconciliation -------------------------
+  stage4: {
+    id: 'rival_stage_4', x: 10, y: 7, face: 'left', color: RIVAL_COLOR, noBattle: true,
+    name: RIVAL_NAME,
+    dialog: [
+      "You made it. You actually made it through.",
+      "I came after you. Two weeks later, through a rift that almost ate me.",
+      "Veyl remembered me. Said they'd seen me before — in another loop. Whatever that means.",
+      "There's a name for what's happening here. They called it the Mending — and it broke. The planes don't seal anymore. They bleed.",
+      "I'm not your rival anymore. I'm not anyone's. But the next walker you meet — assume they're like I was. And like Veyl is. Sparked, hungry, and scared.",
+    ],
+    isRival: true,
+  },
+};
+
+// Returns the rival NPC object to inject into the current map's NPC list, or
+// null if the rival isn't due to appear right now. Pure function — easy to test.
+function getRivalForMap(rivalStage, currentMap, medallions, planeswalkerDefeated, currentPlane) {
+  if (rivalStage === 0 && currentMap === 'town' && currentPlane === 0) return RIVAL_DATA.stage0;
+  if (rivalStage === 1 && currentMap === 'town' && currentPlane === 0 && medallions.length >= 1) return RIVAL_DATA.stage1;
+  if (rivalStage === 2 && currentMap === 'umbral' && currentPlane === 0 && medallions.length >= 3) return RIVAL_DATA.stage2;
+  if (rivalStage === 3 && currentMap === 'town' && currentPlane === 0 && medallions.length >= 5 && !planeswalkerDefeated) return RIVAL_DATA.stage3;
+  if (rivalStage === 4 && currentMap === 'town' && currentPlane >= 1) return RIVAL_DATA.stage4;
+  return null;
+}
+
+
 const TOWN_TRAINER_IDS = new Set(['bran', 'ria', 'dax']);
 // Generate a fresh 3-creature team for a zone trainer.
 // Levels scale with cycles cleared: each cycle adds 2 levels to the entire team.
@@ -2690,6 +3033,9 @@ export default function GatheringTheMagic() {
   const [lastDailyEncounters, setLastDailyEncounters] = useState({});
   // Hidden-item found log — { 'mapId:x:y': realDayNumber }. Sparkles reappear the next day.
   const [hiddenItemsFound, setHiddenItemsFound] = useState({});
+  // Lore fragments discovered this save. { fragmentId: true }. Permanent (no
+  // daily reset) — once collected, the fragment is gone from the world.
+  const [foundLoreFragments, setFoundLoreFragments] = useState({});
   const [defeated, setDefeated] = useState([]); // npc ids
   // How many times the player has cleared all five zone trainers. Each cycle the trainer
   // teams reroll fresh from the zone pool with levels = base + (2 × cycles).
@@ -2716,11 +3062,27 @@ export default function GatheringTheMagic() {
   const [planePending, setPlanePending] = useState(false);
   const [planeDualPairs, setPlaneDualPairs] = useState(null);
   const [dualMedallions, setDualMedallions] = useState([]);
+  // ── Rival arc ─────────────────────────────────────────────────────────
+  // rivalStage advances 0 → 4 as the player meets Kessen at each fixed beat
+  // (see RIVAL_DATA / getRivalForMap). Persisted across saves; resets on new
+  // game. Stage 5 is terminal (Kessen no longer appears).
+  const [rivalStage, setRivalStage] = useState(0);
   const [tokens, setTokens] = useState(5); // Creature Cards (used to catch creatures)
   const [gold, setGold] = useState(0);
   const [items, setItems] = useState({ potion: 2 }); // consumable items inventory
   const [mode, setMode] = useState('classic'); // 'classic' | 'commander'
   const [commanderColor, setCommanderColor] = useState(''); // color identity string of chosen starter, e.g. 'W', 'WU', 'WUBRG'
+
+  // Unified NPC list for the current map. The base list (NPCS_TOWN or a zone
+  // entry from NPCS_ZONE) is augmented with the rival when they're due to
+  // appear. Every render path that needs to know "who lives here" reads from
+  // this memo so the rival shows up consistently in collision, drawing, and
+  // interaction code.
+  const activeNpcs = useMemo(() => {
+    const base = currentMap === 'town' ? NPCS_TOWN : (NPCS_ZONE[currentMap] || []);
+    const rival = getRivalForMap(rivalStage, currentMap, medallions, planeswalkerDefeated, currentPlane);
+    return rival ? [...base, rival] : base;
+  }, [currentMap, rivalStage, medallions, planeswalkerDefeated, currentPlane]);
 
   // ---- transient ----
   const [battle, setBattle] = useState(null);
@@ -2782,7 +3144,7 @@ export default function GatheringTheMagic() {
     setNpcMoveState({});
     const id = setInterval(() => {
       setNpcMoveState(prev => {
-        const npcs = currentMap === 'town' ? NPCS_TOWN : (NPCS_ZONE[currentMap] || []);
+        const npcs = activeNpcs;
         if (npcs.length === 0) return prev;
         const next = { ...prev };
         const livePlayer = playerRef.current;
@@ -2927,8 +3289,8 @@ export default function GatheringTheMagic() {
   const currentStateRef = useRef(null);
   // Keep a ref of the latest state so save callbacks always grab fresh values.
   useEffect(() => {
-    currentStateRef.current = { currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, hiddenItemsFound, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated, currentPlane, planeBaseLevel, planeZoneOrder, planeDualPairs, dualMedallions };
-  }, [currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, hiddenItemsFound, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated, currentPlane, planeBaseLevel, planeZoneOrder, planeDualPairs, dualMedallions]);
+    currentStateRef.current = { currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, hiddenItemsFound, foundLoreFragments, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated, currentPlane, planeBaseLevel, planeZoneOrder, planeDualPairs, dualMedallions, rivalStage };
+  }, [currentMap, player, team, vaultCreatures, codex, lastDailyEncounters, hiddenItemsFound, foundLoreFragments, defeated, tokens, gold, items, mode, commanderColor, trainerCycles, medallions, planeswalkerDefeated, currentPlane, planeBaseLevel, planeZoneOrder, planeDualPairs, dualMedallions, rivalStage]);
 
   const performSave = async () => {
     const snap = currentStateRef.current;
@@ -2948,10 +3310,12 @@ export default function GatheringTheMagic() {
     audio.wake();
     setCurrentMap('town'); setPlayer({ x: 7, y: 11, face: 'down' });
     setTeam([]); setVaultCreatures([]); setCodex({}); setLastDailyEncounters({}); setDefeated([]); setTokens(5); setGold(60); setItems({ potion: 2 });
+    setHiddenItemsFound({}); setFoundLoreFragments({});
     setMode('classic'); setCommanderColor(""); setTrainerCycles(0);
     setMedallions([]); setPlaneswalkerDefeated(false); setChampionLearnPending(false);
     setCurrentPlane(0); setPlaneBaseLevel(0); setPlaneZoneOrder(null); setPlanePending(false);
     setPlaneDualPairs(null); setDualMedallions([]);
+    setRivalStage(0);
     // Mark tutorial pending — the effect above will fire once the player lands
     // in the world (after picking mode + starter).
     setTutorialPending(true);
@@ -2974,7 +3338,15 @@ export default function GatheringTheMagic() {
     const id = setTimeout(() => {
       setDialog({
         lines: [
-          "Welcome to Runesmith Hollow, planeswalker.",
+          // ── Prologue / Awakening ─────────────────────────────────────────
+          "Your spark ignited three nights ago.",
+          "Not with thunder. Not with fire. Just a small pressure behind the eyes that wouldn't leave, and dreams of five colors that wouldn't fade.",
+          "By dawn you were walking. By dusk you were here — Runesmith Hollow, where the planes still touch.",
+          "Keeper Solenne met you at the bridge. She didn't ask your name. She just nodded, said \"Another one,\" and pointed inside.",
+          "Solenne: \"You have a year, maybe two, before your spark either roots itself — or burns you hollow. Bind a creature. Earn the wardens' medallions. The shrine will tell you what comes next.\"",
+          "Solenne: \"And — another walker arrived this morning. Same dream as you, I'd wager. They're in the plaza, full of themselves. You'll know them when you see them.\"",
+          "She turned away. You stood in the square. Somewhere far off, someone laughed.",
+          // ── Controls tutorial ────────────────────────────────────────────
           "Use the d-pad to walk. Press the ⚡ button (or R on keyboard) to sprint.",
           "Press A to talk to people, examine signs, or interact with the shrine in the center of town.",
           "Tall grass, lava, and other special tiles in the wilds may spawn wild creatures. Throw a Creature Card to bind them to your team.",
@@ -3011,6 +3383,8 @@ export default function GatheringTheMagic() {
       // Older saves won't have this — default to {} so the daily lock starts fresh.
       setLastDailyEncounters(s.lastDailyEncounters || {});
       setHiddenItemsFound(s.hiddenItemsFound || {});
+      // Older saves won't have lore fragment state — default to empty so the player can find them all.
+      setFoundLoreFragments(s.foundLoreFragments || {});
       setDefeated(s.defeated || []);
       setTokens(s.tokens ?? 5);
       setGold(s.gold ?? 0);
@@ -3025,6 +3399,8 @@ export default function GatheringTheMagic() {
       setPlaneZoneOrder(s.planeZoneOrder || null);
       setPlaneDualPairs(s.planeDualPairs || null);
       setDualMedallions(s.dualMedallions || []);
+      // Older saves won't have a rival stage — default to 0 (intro fight still pending).
+      setRivalStage(s.rivalStage ?? 0);
       setPlanePending(false);
       setScene(s.scene === 'battle' ? 'world' : (s.scene || 'world'));
     } catch (err) {
@@ -3076,7 +3452,7 @@ export default function GatheringTheMagic() {
       if (!isWalkable(t)) return { ...pp, face };
 
       // Block on NPCs (using their wandered live position, not authored)
-      const npcList = currentMap === 'town' ? NPCS_TOWN : (NPCS_ZONE[currentMap] || []);
+      const npcList = activeNpcs;
       if (npcList.some(n => {
         const off = npcMoveState[n.id];
         const lx = n.x + (off ? off.dx : 0);
@@ -3302,6 +3678,26 @@ export default function GatheringTheMagic() {
     return true;
   }, [currentMap, hiddenItemsFound]);
 
+  // ---------- Lore fragment pickup ----------
+  // Permanent (no daily reset). On pickup, opens a multi-page dialog with the
+  // fragment's text. Counted toward a "fragments found" total surfaced in the
+  // toast so players know they're collecting a set.
+  const checkLoreFragment = useCallback((checkX, checkY) => {
+    const frag = LORE_FRAGMENTS.find(f =>
+      f.map === currentMap && f.x === checkX && f.y === checkY && !foundLoreFragments[f.id]
+    );
+    if (!frag) return false;
+    setFoundLoreFragments(prev => ({ ...prev, [frag.id]: true }));
+    audio.sfx.confirm();
+    const foundCount = Object.keys(foundLoreFragments).length + 1;
+    showToast(`✦ Lore fragment recovered (${foundCount}/${LORE_FRAGMENTS.length})`);
+    setDialog({
+      lines: [`${frag.title}`, ...frag.text],
+      onDone: () => setDialog(null),
+    });
+    return true;
+  }, [currentMap, foundLoreFragments]);
+
   // ---------- Interact ----------
   const interact = useCallback(() => {
     if (scene !== 'world') return;
@@ -3316,6 +3712,8 @@ export default function GatheringTheMagic() {
     // Hidden item check — facing tile first, then standing tile.
     // Returns true if an item was found so we don't fall through to NPC/shrine logic.
     if (checkHiddenItem(tx, ty) || checkHiddenItem(p.x, p.y)) return;
+    // Lore fragment check (permanent pickups separate from hidden items).
+    if (checkLoreFragment(tx, ty) || checkLoreFragment(p.x, p.y)) return;
 
     // Shrine — heals normally, but if the player has all medallions (5 mono + 5 dual in Plane 1+),
     // becomes the gateway to The Planeswalker (the final boss).
@@ -3338,11 +3736,14 @@ export default function GatheringTheMagic() {
               ? "Ten medallions — five shrines, five rifts — all answered. The shrine erupts in planar fire."
               : "Five medallions, five wakings. The shrine flares to life beneath your fingertips.",
             currentPlane > 0
-              ? `A figure crystallizes — more powerful than before. Eyes burning with planar fury.`
-              : `A figure crystallizes at the heart of the light — eyes burning with all five colors.`,
+              ? `A figure crystallizes from the light — Veyl, pale and burning, more terrible than before.`
+              : `A figure crystallizes at the heart of the light — pale-eyed, robed in five colors, achingly familiar somehow.`,
             currentPlane > 0
-              ? `"You found me again, walker. I've been growing stronger." — Level ${getPlaneswalkerLevel(currentPlane)} Planeswalker awakens.`
-              : `"You've gathered the magic. Now spend it." — The Planeswalker draws its spark.`,
+              ? `Veyl: "You followed me through. Of course you did. They all do, eventually."`
+              : `Veyl: "I was you, once. Sparked. Hungry. Sure I'd be the one to fix what broke. I wasn't."`,
+            currentPlane > 0
+              ? `Veyl: "Let's see how much of you is left after this loop." — Level ${getPlaneswalkerLevel(currentPlane)} Veyl awakens.`
+              : `Veyl: "Gather the magic if you must. I'll show you what it costs." — Veyl draws their spark.`,
           ],
           onDone: () => { setDialog(null); startPlaneswalkerBattle(); },
         });
@@ -3357,10 +3758,10 @@ export default function GatheringTheMagic() {
           setDialog({
             lines: [
               "The shrine hums with recognition. Your team is restored.",
-              "The Planeswalker's torn essence lingers here — a rift bleeds through the stone.",
+              "Veyl's torn essence lingers in the cracks — a rift bleeds through the stone.",
               "You sense a doorway to a harder plane. Creatures you've never seen. Power you haven't tasted.",
-              `The Shattered Rift (Plane 1) awaits — base level ${getPlaneswalkerLevel(0) + 2}, new Planeswalker at Lv. ${getPlaneswalkerLevel(1)}.`,
-              "Will you step through? Your team, vault, gold and items carry over.",
+              `The Shattered Rift (Plane 1) awaits — base level ${getPlaneswalkerLevel(0) + 2}, Veyl reformed at Lv. ${getPlaneswalkerLevel(1)}.`,
+              "Veyl is woven into every plane. They'll reach for you in each one. Will you step through? Your team, vault, gold and items carry over.",
             ],
             choices: [
               {
@@ -3373,7 +3774,7 @@ export default function GatheringTheMagic() {
                       `The shrine shatters outward in five colors.`,
                       `You are pulled through — into ${newPlaneName}.`,
                       `${easyZone} stirs with level ${defeatedPWLevel + 2}–${defeatedPWLevel + 6} creatures. ${hardZone} holds things far worse.`,
-                      `The medallion bearers have been reset. A new Planeswalker waits at level ${getPlaneswalkerLevel(nextPlane)}.`,
+                      `The medallion bearers have been reset. Veyl reforms at level ${getPlaneswalkerLevel(nextPlane)} — and remembers you.`,
                     ],
                     onDone: () => setDialog(null),
                   }), 300);
@@ -3407,7 +3808,7 @@ export default function GatheringTheMagic() {
     }
 
     // NPC interaction (town or zone) — match against the wandered live position.
-    const npcList = currentMap === 'town' ? NPCS_TOWN : (NPCS_ZONE[currentMap] || []);
+    const npcList = activeNpcs;
     const n = npcList.find(n => {
       const off = npcMoveState[n.id];
       const lx = n.x + (off ? off.dx : 0);
@@ -3415,14 +3816,28 @@ export default function GatheringTheMagic() {
       return lx === tx && ly === ty;
     });
     if (n) {
+      // Resolve dialog content: if dialogProgress is set, ask HOLLOW_DIALOG for
+      // the right line based on player progress. Returns either a string or
+      // an array of strings; both are normalized into the dialog `lines` shape.
+      const resolveDialog = () => {
+        if (n.dialogProgress && HOLLOW_DIALOG[n.id]) {
+          const result = HOLLOW_DIALOG[n.id]({ medallions, planeswalkerDefeated, currentPlane, rivalStage });
+          if (Array.isArray(result)) return result.map(l => `${n.name}: "${l}"`);
+          return [`${n.name}: "${result}"`];
+        }
+        return null;
+      };
+
       if (n.isShop) {
+        const progressLines = resolveDialog();
         setDialog({
-          lines: [`${n.name}: "${n.dialog}"`],
+          lines: progressLines || [`${n.name}: "${n.dialog}"`],
           onDone: () => { setDialog(null); setScene('shop'); }
         });
       } else if (n.isVault) {
+        const progressLines = resolveDialog();
         setDialog({
-          lines: [`${n.name}: "${n.dialog}"`],
+          lines: progressLines || [`${n.name}: "${n.dialog}"`],
           onDone: () => { setDialog(null); setVaultOrigin('world'); setScene('vault'); }
         });
       } else if (n.noBattle) {
@@ -3443,10 +3858,21 @@ export default function GatheringTheMagic() {
             `${slotLabel[slot]}: ${zoneDesc[ezMap[slot]] || ezMap[slot]}`
           ).join('. ');
           npcLines = [`${n.name}: "Five planes touch this hollow. ${dirs}. Each breeds its own color — bring what the wheel favors. The shrine restores any creature you've bound."`];
+        } else if (n.dialogProgress && HOLLOW_DIALOG[n.id]) {
+          // Progress-aware Hollow NPC: Solenne, Vey, Board, etc.
+          npcLines = resolveDialog();
+        } else if (Array.isArray(n.dialog)) {
+          // Multi-line dialog (rival uses this) — each entry becomes its own page.
+          npcLines = n.dialog.map(l => `${n.name}: "${l}"`);
         } else {
           npcLines = [`${n.name}: "${n.dialog}"`];
         }
-        setDialog({ lines: npcLines, onDone: () => setDialog(null) });
+        // Rival no-battle stages advance rivalStage on finish so each beat fires
+        // exactly once across the whole run. Other NPCs are reusable.
+        const onDoneAction = n.isRival
+          ? () => { setDialog(null); setRivalStage(s => s + 1); }
+          : () => setDialog(null);
+        setDialog({ lines: npcLines, onDone: onDoneAction });
       } else if (defeated.includes(n.id)) {
         const isZone = ZONE_TRAINER_IDS.has(n.id);
         const line = isZone
@@ -4127,6 +4553,15 @@ export default function GatheringTheMagic() {
         lines.push(`You won! +${totalReward} gold.`);
         setGold(g => g + totalReward);
         setTimeout(() => audio.sfx.victory(), 400);
+        // ── Rival defeat: advance the arc and tail in a parting line ──────────
+        if (b.npc.isRival) {
+          setRivalStage(s => s + 1);
+          if (b.npc.id === 'rival_stage_0') {
+            lines.push(`${RIVAL_NAME}: "...Fine. You hit harder than you look. I'll be watching."`);
+          } else if (b.npc.id === 'rival_stage_2') {
+            lines.push(`${RIVAL_NAME}: "...Dangerous, then. Don't let it go to your head — the wardens haven't even started."`);
+          }
+        }
         // ── Town trainer milestone hints ──────────────────────────────────────
         // Track the player's progress through the three town duellists. The third
         // win unlocks the Runic Phone (key item that adds a Phone tab to the menu).
@@ -4222,16 +4657,17 @@ export default function GatheringTheMagic() {
         const reward = 2000;
         if (currentPlane === 0) {
           // First defeat — standard flavor, vault sigil, champion learn
-          lines.push(`THE PLANESWALKER bows its head. "The spark... is yours."`);
+          lines.push(`Veyl sinks to one knee. "The spark... is yours. For now."`);
+          lines.push(`"I held five colors too. I held them all. None of them held me."`);
           lines.push(`Your commander absorbs a fragment of planar power!`);
           lines.push(`+${reward} gold.`);
-          lines.push(`The Planeswalker presses a rune-iron sigil into your palm — "For the spirits that wait. Call them when you must."`);
+          lines.push(`Veyl presses a rune-iron sigil into your palm — "For the spirits that wait. Call them when you must."`);
           lines.push(`Received the Vault Sigil!`);
           setItems(it => ({ ...it, vault_sigil: 1 }));
           setChampionLearnPending(true);
         } else {
-          lines.push(`THE PLANESWALKER staggers. "Again... how?"`);
-          lines.push(`Its eyes burn with all five colors — then go dark.`);
+          lines.push(`Veyl staggers. "Again. Of course. Always again."`);
+          lines.push(`Their eyes burn with all five colors — then go dark.`);
           lines.push(`+${reward} gold.`);
         }
         setGold(g => g + reward);
@@ -4621,14 +5057,15 @@ export default function GatheringTheMagic() {
         setTimeout(() => {
           setDialog({
             lines: [
-              `With their dying breath, the Planeswalker reaches out — and tears a rift between planes.`,
+              `With their dying breath, Veyl reaches out — and tears a rift between planes.`,
+              `Veyl: "You... don't understand yet. You will."`,
               `The sky above Runesmith Hollow peels back like burning parchment. Reality folds.`,
               `You are pulled through — dragged into a new plane. Darker. Stranger. Hungrier.`,
               `✦ You have entered: ${newPlaneName} (Plane ${nextPlane})`,
               `The creatures here remember your face. They've been waiting.`,
               `The land has shifted. ${easyZone} stirs with level ${defeatedPWLevel + 2}–${defeatedPWLevel + 6} creatures. ${hardZone} harbors things far worse.`,
               `The medallion bearers have been reset. Five new wardens have taken their place.`,
-              `Somewhere in this plane, a new Planeswalker draws power — level ${getPlaneswalkerLevel(nextPlane)}.`,
+              `Somewhere in this plane, Veyl reforms — level ${getPlaneswalkerLevel(nextPlane)}, and they remember.`,
             ],
             onDone: () => setDialog(null),
           });
@@ -6285,7 +6722,7 @@ export default function GatheringTheMagic() {
         drawList.push({ y: gy, draw: () => drawObject(t, gx, gy) });
       }
     }
-    const npcs = currentMap === 'town' ? NPCS_TOWN : (NPCS_ZONE[currentMap] || []);
+    const npcs = activeNpcs;
     for (const n of npcs) {
       // Read the wandered live position so the sprite draws where the NPC
       // actually is, not their authored home.
@@ -6350,6 +6787,40 @@ export default function GatheringTheMagic() {
       ctx.globalAlpha = 0.70 * pulse2;
       ctx.fillRect(sx,     sy - 8, 1, 7); // vertical arm
       ctx.fillRect(sx - 3, sy - 5, 7, 1); // horizontal arm
+      ctx.globalAlpha = 1;
+    }
+
+    // ---- PASS 3b: lore fragment sparkles (violet) ──────────────────────────
+    // Permanent collectibles — once found, they're gone. Drawn in a distinct
+    // violet/purple palette so players can tell them apart from the gold ✦
+    // hidden items above. Same pulse pattern, different palette.
+    for (const frag of LORE_FRAGMENTS) {
+      if (frag.map !== currentMap) continue;
+      if (foundLoreFragments[frag.id]) continue; // already collected
+      const fragTile = tileAt(currentMap, frag.x, frag.y);
+      if (!isWalkable(fragTile)) continue;
+      if (frag.x < camX || frag.x >= camX + VW || frag.y < camY || frag.y >= camY + VH) continue;
+      const sx = (frag.x - camX) * TILE + TILE / 2;
+      const sy = (frag.y - camY) * TILE;
+      const pulse  = 0.5 + 0.5 * Math.abs(Math.sin(animFrame * 0.14 + frag.x * 1.1 + frag.y * 0.9));
+      const pulse2 = 0.6 + 0.4 * Math.abs(Math.cos(animFrame * 0.22 + frag.x * 0.7));
+      // Outer violet halo
+      ctx.globalAlpha = 0.32 * pulse;
+      ctx.fillStyle = '#c89cff';
+      ctx.fillRect(sx - 5, sy - 9, 10, 10);
+      // Middle glow
+      ctx.globalAlpha = 0.58 * pulse;
+      ctx.fillStyle = '#9a6edc';
+      ctx.fillRect(sx - 3, sy - 7, 6, 6);
+      // Bright lavender core
+      ctx.globalAlpha = 0.92 * pulse2;
+      ctx.fillStyle = '#f0dcff';
+      ctx.fillRect(sx - 1, sy - 5, 3, 3);
+      // Cross arms — a slim scroll-rune look instead of the gold ✦ pattern
+      ctx.fillStyle = '#ffffff';
+      ctx.globalAlpha = 0.72 * pulse2;
+      ctx.fillRect(sx,     sy - 8, 1, 7); // vertical
+      ctx.fillRect(sx - 2, sy - 5, 5, 1); // shorter horizontal — distinct from the gold sparkle
       ctx.globalAlpha = 1;
     }
 
@@ -6426,7 +6897,7 @@ export default function GatheringTheMagic() {
         ctx.fillRect(0, 0, CW, CH);
       }
     }
-  }, [player, currentMap, scene, defeated, medallions, animFrame, npcMoveState, hourOfDay, hiddenItemsFound]);
+  }, [player, currentMap, scene, defeated, medallions, animFrame, npcMoveState, hourOfDay, hiddenItemsFound, foundLoreFragments]);
 
   // ==========================================================================
   // RENDER
@@ -6833,7 +7304,7 @@ export default function GatheringTheMagic() {
               <MiniMap
                 map={MAPS[currentMap]}
                 player={player}
-                npcs={currentMap === 'town' ? NPCS_TOWN : (NPCS_ZONE[currentMap] || [])}
+                npcs={activeNpcs}
                 npcMoveState={npcMoveState}
                 defeated={defeated}
                 onClose={() => setMiniMapOpen(false)}
@@ -7001,11 +7472,12 @@ export default function GatheringTheMagic() {
           }}
           onReset={async () => {
             await clearSave(mode);
-            setTeam([]); setVaultCreatures([]); setCodex({}); setLastDailyEncounters({}); setHiddenItemsFound({}); setDefeated([]); setTokens(5); setGold(0); setItems({ potion: 2 });
+            setTeam([]); setVaultCreatures([]); setCodex({}); setLastDailyEncounters({}); setHiddenItemsFound({}); setFoundLoreFragments({}); setDefeated([]); setTokens(5); setGold(0); setItems({ potion: 2 });
             setMode('classic'); setCommanderColor(""); setTrainerCycles(0);
             setMedallions([]); setPlaneswalkerDefeated(false); setChampionLearnPending(false);
             setCurrentPlane(0); setPlaneBaseLevel(0); setPlaneZoneOrder(null); setPlanePending(false);
             setPlaneDualPairs(null); setDualMedallions([]);
+            setRivalStage(0);
             if (mode === 'commander') setHasSaveCommander(false);
             else setHasSaveClassic(false);
             setScene('title');
@@ -7348,7 +7820,7 @@ function StarterScene({ mode, onPick }) {
               ◆ <b>Attack milestones (Lv 6 / 11 / 16 / 21):</b> the level after each color milestone you'll be offered an attack. If you grafted, the pool focuses on your new color. If you skipped or locked, the pool is drawn from your current colors. These continue forever — even at the 5-color cap.
             </div>
             <div style={{ marginBottom: 4 }}>
-              ◆ <b>The endgame:</b> defeat a legendary warden in each of the five zones to gather their medallions. With all five, the town shrine becomes the gateway to The Planeswalker — defeat it to earn the Champion badge and a final attack of your choice.
+              ◆ <b>The endgame:</b> defeat a legendary warden in each of the five zones to gather their medallions. With all five, the town shrine becomes the gateway to Veyl, the Pale Walker — defeat them to earn the Champion badge and a final attack of your choice.
             </div>
             <div>
               ◆ Your commander never evolves through normal level-ups; grafting is its evolution path.
@@ -8125,6 +8597,95 @@ function BattleScene({ battle, me, enemy }) {
 function enemyShake_ph(s) { return s || ''; }
 
 // =========================================================================
+// TEAM PICKER — used in battle for swaps and forced post-faint switches.
+// `forced` = the active creature fainted; player MUST pick another. We omit
+// the "back" affordance in this mode (the parent BattleScreen handles that)
+// and gate fainted / active rows so they can't be tapped.
+// =========================================================================
+function TeamPicker({ team, myIdx, onPick, forced }) {
+  return (
+    <div style={{
+      background: 'linear-gradient(180deg, #1a1428 0%, #0a0614 100%)',
+      border: `2px solid ${forced ? '#c9a664' : '#4a3a68'}`,
+      borderRadius: 6, padding: 10,
+      boxShadow: forced ? '0 0 18px rgba(201, 166, 100, 0.35)' : undefined,
+    }}>
+      {forced && (
+        <div style={{
+          fontSize: 12, fontWeight: 700, marginBottom: 8,
+          color: '#f4e5a8', fontFamily: "'Cinzel', serif",
+          textAlign: 'center', letterSpacing: 0.6,
+        }}>
+          ✦ Choose your next champion
+        </div>
+      )}
+      <div style={{ display: 'grid', gap: 4 }}>
+        {team.map((c, i) => {
+          const isActive  = i === myIdx;
+          const isFainted = c.hp <= 0;
+          const disabled  = isActive || isFainted;
+          const pct       = Math.max(0, c.hp / c.maxHp);
+          const barColor  = pct > 0.5 ? '#5ab85a' : pct > 0.2 ? '#d8a040' : '#d84040';
+          const primary   = primaryColor(c.c);
+          const status    = c.status ? STATUSES[c.status.kind] : null;
+          return (
+            <button key={c.uid} className="mtgBtn"
+              disabled={disabled}
+              onClick={() => { if (!disabled) onPick(i); }}
+              title={isFainted ? `${displayName(c)} has fainted` : isActive ? `${displayName(c)} is already out` : `Send out ${displayName(c)}`}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '6px 8px', textAlign: 'left',
+                borderColor: isFainted ? '#5a3040' : COLOR_DEEP[primary],
+                opacity: disabled ? 0.55 : 1,
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                filter: isFainted ? 'grayscale(0.7)' : undefined,
+              }}>
+              <ManaBadge identity={c.c} size={16} label={colorsOf(c.c).length === 1} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{
+                    fontSize: 12, fontWeight: 700,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    color: '#e8dcc0',
+                  }}>
+                    {displayName(c)}
+                  </span>
+                  {status && (
+                    <span title={status.desc} style={{
+                      fontSize: 9, padding: '0 4px', borderRadius: 2,
+                      background: status.color, color: '#0a0614', fontWeight: 700,
+                      border: '1px solid #0a0614',
+                    }}>{status.icon}</span>
+                  )}
+                </div>
+                <div style={{
+                  height: 5, background: '#0a0614',
+                  border: '1px solid #4a3a68', borderRadius: 2,
+                  marginTop: 3, overflow: 'hidden',
+                }}>
+                  <div style={{ width: `${pct * 100}%`, height: '100%', background: barColor, transition: 'width 0.4s' }} />
+                </div>
+              </div>
+              <div style={{ textAlign: 'right', minWidth: 56 }}>
+                <div className="pixelFont" style={{ fontSize: 9, color: '#9888b0' }}>Lv.{c.level}</div>
+                <div className="pixelFont" style={{
+                  fontSize: 9,
+                  color: isFainted ? '#d84040' : isActive ? '#c9a664' : '#9888b0',
+                  fontWeight: isFainted || isActive ? 700 : 400,
+                }}>
+                  {isFainted ? 'FAINTED' : isActive ? 'ACTIVE' : `${c.hp}/${c.maxHp}`}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// =========================================================================
 // BATTLE SCREEN
 // =========================================================================
 function BattleScreen({ battle, team, tokens, items, mode, commanderColor, transitionFx, onMove, onCatch, onFlee, onSwitch, onEnd, onResolveLearn, onResolveGraft, onUseBattleItem }) {
@@ -8428,8 +8989,33 @@ const SPRITE_SPEC = {
   the_planeswalker:{ shape: 'humanoid', wings: 'angel', halo: 2, staff: true, regal: true, flames: 2, big: true, glow: true },
 };
 
-function specFor(id) {
-  return SPRITE_SPEC[id] || { shape: 'blob' };
+// Color → signature body-part mapping for grafted colors.
+// When a commander grafts a new color, the corresponding part is fused onto its
+// silhouette so the player can SEE the graft happen. Parts are additive — they
+// only attach if the base spec doesn't already carry that feature, so naturally
+// multi-color creatures (e.g. Skybinder) don't get crowded.
+const COLOR_GRAFT_PART = {
+  W: { halo:    1 },         // White → angelic halo
+  U: { headFin: 1 },         // Blue  → cranial fin / antenna
+  B: { horns:   1 },         // Black → demonic horns
+  R: { flames:  1 },         // Red   → ember aura
+  G: { leaves:  true },      // Green → leafy growths
+};
+
+function specFor(id, identity) {
+  const base = { ...(SPRITE_SPEC[id] || { shape: 'blob' }) };
+  if (!identity) return base;
+  // Graft a signature feature for every color in the identity that the base
+  // sprite doesn't already represent. This is what makes the creature visibly
+  // mutate as you add colors at lv 5 / 10 / 15 / 20.
+  for (const c of colorsOf(identity)) {
+    const parts = COLOR_GRAFT_PART[c];
+    if (!parts) continue;
+    for (const [k, v] of Object.entries(parts)) {
+      if (base[k] == null || base[k] === false) base[k] = v;
+    }
+  }
+  return base;
 }
 
 // ================================================================
@@ -9882,7 +10468,7 @@ function CreatureSprite({ creature, facing, scale = 1 }) {
   const c3 = COLOR_HEX[secondary];
 
   const W = 72, H = 88;
-  const s = specFor(creature.id);
+  const s = specFor(creature.id, creature.c);
   const tier = creature.tier || 0;
   const flashing = creature.flashUntil && creature.flashUntil > Date.now();
   const glowColor = c1 + '88';
@@ -10066,6 +10652,55 @@ function CreatureSprite({ creature, facing, scale = 1 }) {
         <rect x={spriteCx+sprite.w*0.4} y={shoulderY-4} width="3" height={hipY-shoulderY+18} fill="#8a6a40" shapeRendering="crispEdges"/>
         <rect x={spriteCx+sprite.w*0.4-2} y={shoulderY-10} width="7" height="7" fill="#ffe888" shapeRendering="crispEdges"/>
         <rect x={spriteCx+sprite.w*0.4-1} y={shoulderY-9}  width="4" height="4" fill="#ffffff" shapeRendering="crispEdges"/>
+      </g>
+    );
+  }
+
+  // ---- Head fin (Blue graft / merfolk) — finned dorsal crest rising from the head ----
+  if (s.headFin) {
+    const finH = 6 + s.headFin * 3;
+    const finBlue   = '#6cb8e0';   // bright fin
+    const finShadow = '#235b82';   // outline
+    const finHi     = '#b4dcef';   // highlight
+    fgFx.push(
+      <g key="headFin">
+        {/* main fin blade rising above crown, swept slightly back */}
+        <rect x={spriteCx-1} y={headTop-finH}   width="3"  height={finH}   fill={finBlue}   shapeRendering="crispEdges"/>
+        <rect x={spriteCx-3} y={headTop-finH+2} width="2"  height={finH-2} fill={finBlue}   shapeRendering="crispEdges"/>
+        <rect x={spriteCx+2} y={headTop-finH+1} width="2"  height={finH-1} fill={finBlue}   shapeRendering="crispEdges"/>
+        {/* membrane webbing at base */}
+        <rect x={spriteCx-4} y={headTop-2}      width="9"  height="2"      fill={finShadow} shapeRendering="crispEdges"/>
+        {/* spine outline */}
+        <rect x={spriteCx}   y={headTop-finH-1} width="1"  height="2"      fill={finShadow} shapeRendering="crispEdges"/>
+        {/* highlight streak */}
+        <rect x={spriteCx-1} y={headTop-finH+1} width="1"  height={Math.round(finH*0.55)} fill={finHi}     shapeRendering="crispEdges"/>
+      </g>
+    );
+  }
+
+  // ---- Leaves (Green graft) — leafy growths sprouting from shoulders / crown ----
+  if (s.leaves) {
+    const leafBright = '#7ec873';
+    const leafMid    = '#3f8a48';
+    const leafDark   = '#1f5028';
+    fgFx.push(
+      <g key="leaves" opacity="0.95">
+        {/* Crown sprout — small leaf rising from top of head */}
+        <rect x={spriteCx-1} y={headTop-5} width="3" height="3" fill={leafBright} shapeRendering="crispEdges"/>
+        <rect x={spriteCx}   y={headTop-7} width="2" height="3" fill={leafMid}    shapeRendering="crispEdges"/>
+        <rect x={spriteCx-2} y={headTop-3} width="2" height="2" fill={leafDark}   shapeRendering="crispEdges"/>
+        {/* Left shoulder leaf cluster */}
+        <rect x={spriteCx-12} y={shoulderY-1} width="4" height="3" fill={leafMid}    shapeRendering="crispEdges"/>
+        <rect x={spriteCx-14} y={shoulderY+1} width="3" height="3" fill={leafBright} shapeRendering="crispEdges"/>
+        <rect x={spriteCx-13} y={shoulderY+3} width="2" height="2" fill={leafDark}   shapeRendering="crispEdges"/>
+        {/* Right shoulder leaf cluster */}
+        <rect x={spriteCx+8}  y={shoulderY-1} width="4" height="3" fill={leafMid}    shapeRendering="crispEdges"/>
+        <rect x={spriteCx+11} y={shoulderY+1} width="3" height="3" fill={leafBright} shapeRendering="crispEdges"/>
+        <rect x={spriteCx+11} y={shoulderY+3} width="2" height="2" fill={leafDark}   shapeRendering="crispEdges"/>
+        {/* Vine wrapping around hip */}
+        <rect x={spriteCx-6}  y={hipY+1}      width="12" height="1" fill={leafDark}   shapeRendering="crispEdges"/>
+        <rect x={spriteCx-4}  y={hipY-1}      width="2"  height="2" fill={leafBright} shapeRendering="crispEdges"/>
+        <rect x={spriteCx+3}  y={hipY-1}      width="2"  height="2" fill={leafBright} shapeRendering="crispEdges"/>
       </g>
     );
   }
@@ -10419,7 +11054,7 @@ function ChampionLearnPanel({ creature, onLearn, onSkip }) {
       </div>
       <div style={{ fontSize: 11, color: '#e8d8b0', marginBottom: 10, lineHeight: 1.4 }}>
         {stage === 'pick'
-          ? `${creature.name} has touched the spark of The Planeswalker. Choose a single attack from any color — the wheel itself will teach it.`
+          ? `${creature.name} has touched the spark of Veyl. Choose a single attack from any color — the wheel itself will teach it.`
           : `${creature.name} already knows four moves. Which will you forget to make room for ${MOVES[chosen]?.name}?`}
       </div>
       {stage === 'pick' && (
@@ -10946,7 +11581,7 @@ function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, st
                         color: '#1a0e28',
                         borderRadius: 3, border: '1.5px solid #1a0e28',
                         boxShadow: '0 0 8px rgba(232, 200, 96, 0.5)',
-                      }} title="Defeated The Planeswalker">★ CHAMPION</div>
+                      }} title="Defeated Veyl, the Pale Walker">★ CHAMPION</div>
                     )}
                   </div>
                   <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -11225,7 +11860,7 @@ function MenuScreen({ team, codex, tokens, gold, items, mode, commanderColor, st
               })}
               <div style={{ flex: 1 }} />
               {planeswalkerDefeated && (
-                <div title="The Planeswalker has been defeated"
+                <div title="Veyl, the Pale Walker has been defeated"
                   style={{
                     width: 22, height: 22, borderRadius: '50%',
                     background: 'linear-gradient(135deg, #f3e3a8 0%, #6cb8e0 25%, #8a7a92 50%, #e06d5a 75%, #6fb06f 100%)',
